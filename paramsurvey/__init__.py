@@ -1,4 +1,5 @@
 import os
+import sys
 
 from . import psmultiprocessing
 
@@ -39,13 +40,17 @@ backends = {
 }
 
 our_backend = None
+our_verbose = None
 
 
-def init(backend=None, ncores=None, **kwargs):
+def init(backend=None, ncores=None, verbose=None, **kwargs):
     if backend is None:
-        if 'PARAMSURVEY_BACKEND' not in os.environ:  # pragma: no cover
-            raise ValueError('must set PARAMSURVEY_BACKEND env var or pass in backend= to init')
-        backend = os.environ['PARAMSURVEY_BACKEND']
+        backend = os.environ.get('PARAMSURVEY_BACKEND', 'multiprocessing')
+
+    if verbose:
+        global our_verbose
+        our_verbose = verbose
+        print('initializing paramsurvey {} backend'.format(backend), file=sys.stderr)
 
     global our_backend
     if backend in backends:
@@ -59,6 +64,8 @@ def init(backend=None, ncores=None, **kwargs):
 
 
 def finalize(*args, **kwargs):
+    if our_verbose:
+        print('finalizing paramsurvey', file=sys.stderr)
     return our_backend['finalize'](*args, **kwargs)
 
 
@@ -67,4 +74,6 @@ def current_core_count(*args, **kwargs):
 
 
 def map(*args, **kwargs):
+    if our_verbose and 'verbose' not in kwargs:
+        kwargs['verbose'] = our_verbose
     return our_backend['map'](*args, **kwargs)

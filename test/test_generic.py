@@ -99,7 +99,7 @@ def test_args(capsys, paramsurvey_init):
 
     # because of progress_dt being 0., we should have at least len(psets) progress lines
     has_name = [line for line in captured.err.splitlines() if 'progress' in line and name in line]
-    assert len(has_name) == len(psets)
+    assert len(has_name) >= len(psets)
 
     ret = paramsurvey.map(do_test_args, [])
     assert ret is None

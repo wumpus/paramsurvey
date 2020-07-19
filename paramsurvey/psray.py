@@ -142,13 +142,13 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
 
 
 def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
-        progress_dt=60., group_size=None, name='pset', **kwargs):
+        progress_dt=60., group_size=None, name='pset', verbose=None, **kwargs):
     if not psets:
         return
 
     psets = psets.copy()  # we are going to be popping it
 
-    system_stats, system_kwargs = utils.map_prep(name, chdir, outfile, out_subdirs, len(psets), **kwargs)
+    system_stats, system_kwargs = utils.map_prep(name, chdir, outfile, out_subdirs, len(psets), verbose, **kwargs)
 
     progress = system_kwargs['progress']
     cores = current_core_count()
@@ -158,8 +158,9 @@ def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=N
         # make this dynamic someday
         group_size = 1
 
-    print('inital core count is', cores)
-    sys.stdout.flush()
+    if verbose:
+        print('inital core count is', cores, file=sys.stderr)
+        sys.stderr.flush()
 
     futures = []
 
@@ -171,13 +172,16 @@ def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=N
         # cores and group_size can change within this function
         futures, cores, group_size = progress_until_fewer(futures, cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 
-    print('getting the residue, length', utils.remaining(system_kwargs))
-    sys.stdout.flush()
+    if verbose:
+        print('getting the residue, length', utils.remaining(system_kwargs), file=sys.stderr)
+        sys.stderr.flush()
 
     progress_until_fewer(futures, cores, 0, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 
-    print('finished getting results')
-    sys.stdout.flush()
+    if verbose:
+        print('finished getting results', file=sys.stderr)
+        sys.stderr.flush()
+    utils.report_progress(system_kwargs, final=True)
 
     system_stats.print_histograms(name)
 

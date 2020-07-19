@@ -4,7 +4,6 @@ import random
 import traceback
 import json
 import functools
-from collections import defaultdict
 import multiprocessing
 
 from . import utils
@@ -13,19 +12,20 @@ from . import stats
 pool = None
 
 
-def init(ncores=None):
+def init(ncores=None, verbose=None):
     global pool
     if pool:  # yes we can be called multiple times  # pragma: no cover
         return
 
     if ncores is None:
         ncores = multiprocessing.cpu_count()
-    print('initializing multiprocessing pool with {} processes'.format(ncores))
+    if verbose:
+        print('initializing multiprocessing pool with {} processes'.format(ncores), file=sys.stderr)
     pool = multiprocessing.Pool(processes=ncores)
 
 
 def finalize():
-    # needed to make things like test coverage reporting work
+    # needed to make things like pytest coverage reporting work
     pool.close()
     pool.join()
 
@@ -94,11 +94,11 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
 
 
 def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
-        progress_dt=60., group_size=None, name='default', **kwargs):
+        progress_dt=60., group_size=None, name='default', verbose=None, **kwargs):
     if not psets:
         return
 
-    system_stats, system_kwargs = utils.map_prep(name, chdir, outfile, out_subdirs, len(psets))
+    system_stats, system_kwargs = utils.map_prep(name, chdir, outfile, out_subdirs, len(psets), verbose)  # XXX bug fix me **kwargs and test failure
 
     do_partial = functools.partial(do_work_wrapper, func, system_kwargs, user_kwargs)
 
@@ -116,8 +116,10 @@ def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=N
     for ret in pool.imap_unordered(do_partial, psets, chunksize):
         handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
 
-    print('finished getting results for', name)
-    sys.stdout.flush()
+    if verbose:
+        print('finished getting results for', name, file=sys.stderr)
+        sys.stderr.flush()
+    utils.report_progress(system_kwargs, final=True)
 
     system_stats.print_histograms(name)
 

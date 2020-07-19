@@ -11,9 +11,9 @@ def accumulate_return(user_ret, system_kwargs, user_kwargs):
     system_kwargs['user_ret'].append(user_ret)
 
 
-def report_progress(system_kwargs):
+def report_progress(system_kwargs, final=False):
     t = time.time()
-    if t - system_kwargs['progress_last'] > system_kwargs['progress_dt']:
+    if final or t - system_kwargs['progress_last'] > system_kwargs['progress_dt']:
         system_kwargs['progress_last'] = t
         print(system_kwargs['name'], 'progress:',
               ', '.join([k+': '+str(v) for k, v in system_kwargs['progress'].items()]),
@@ -36,7 +36,7 @@ def get_pset_group(psets, group_size):
     return group
 
 
-def map_prep(name, chdir, outfile, out_subdirs, psets_len, **kwargs):
+def map_prep(name, chdir, outfile, out_subdirs, psets_len, verbose, **kwargs):
     print('starting work on', name, file=sys.stderr)
     sys.stderr.flush()
 
@@ -49,6 +49,8 @@ def map_prep(name, chdir, outfile, out_subdirs, psets_len, **kwargs):
         system_kwargs['out_subdirs'] = out_subdirs
     if name:
         system_kwargs['name'] = name
+    if verbose:
+        system_kwargs['verbose'] = verbose
 
     if 'raise_in_wrapper' in kwargs:
         system_kwargs['raise_in_wrapper'] = kwargs['raise_in_wrapper']
