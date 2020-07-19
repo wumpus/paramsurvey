@@ -9,17 +9,20 @@ packages = [
     'paramsurvey',
 ]
 
+test_requirements = ['pytest>=3.0.0', 'coverage', 'pytest-cov', 'pytest-sugar', 'coveralls']
+
 requires = [
     'astropy',
     'hdrhistogram',
 ]
+
 extras_require = {
     'ray': ['ray', 'pyarrow'],
     'mpi': ['mpi4py'],
+    'test': test_requirements,  # setup no longer tests
 }
 
 setup_requires = ['setuptools_scm']
-test_requirements = ['pytest>=3.0.0', 'coverage', 'pytest-cov', 'pytest-sugar', 'coveralls']
 
 scripts = []
 

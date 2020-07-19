@@ -34,6 +34,7 @@ git:
 
 install:
   - pip install .
+  - pip install .[test]
   - pip install .[ray]
 #  - pip install .[mpi]
 
