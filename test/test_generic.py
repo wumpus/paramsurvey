@@ -101,6 +101,9 @@ def test_args(capsys, paramsurvey_init):
     has_name = [line for line in captured.err.splitlines() if 'progress' in line and name in line]
     assert len(has_name) == len(work)
 
+    ret = paramsurvey.map(do_test_args, [])
+    assert ret is None
+
 
 def do_raise(work_unit, system_kwargs, user_kwargs, stats_dict):
     raise ValueError('foo')
@@ -112,7 +115,7 @@ def test_worker_exception(capsys, paramsurvey_init):
     ret = paramsurvey.map(do_raise, work)
     assert len(ret) == 1
     assert 'work_unit' in ret[0]
-    # XXX should the exception be visible here? -- it's in system_ret
+    # XXX should the exception be visible in ret? -- it's in system_ret
     # XXX we only put work_unit in user_ret if there is an exception
 
     out, err = capsys.readouterr()
@@ -123,3 +126,24 @@ def test_worker_exception(capsys, paramsurvey_init):
 
     # the standard progress function prints this
     assert 'failures: 1' in out or 'failures: 1' in err
+
+
+def do_nothing(work_unit, system_kwargs, user_kwargs, stats_dict):
+    return
+
+
+def test_wrapper_exception(capsys, paramsurvey_init):
+    work = [{}]
+
+    ret = paramsurvey.map(do_nothing, work, raise_in_wrapper=ValueError('test_wrapper_exception'))
+
+    # XXX ray returns None, multiprocessing returns [None]
+    assert ret == [None] or ret is None
+
+    # XXX ray prints traceback in the worker, multiprocessing and ray local_mode prints in the parent
+
+    # XXX no failures: in progress? just spew on stdout/stderr
+
+
+def test_overlarge_work_unit():
+    pass

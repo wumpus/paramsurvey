@@ -36,7 +36,7 @@ def get_work_units(work, group_size):
     return work_units
 
 
-def map_prep(name, chdir, outfile, out_subdirs, work_len):
+def map_prep(name, chdir, outfile, out_subdirs, work_len, **kwargs):
     print('starting work on', name, file=sys.stderr)
     sys.stderr.flush()
 
@@ -49,6 +49,10 @@ def map_prep(name, chdir, outfile, out_subdirs, work_len):
         system_kwargs['out_subdirs'] = out_subdirs
     if name:
         system_kwargs['name'] = name
+
+    if 'raise_in_wrapper' in kwargs:
+        system_kwargs['raise_in_wrapper'] = kwargs['raise_in_wrapper']
+
 
     system_stats = stats.StatsObject()
     progress = defaultdict(int)

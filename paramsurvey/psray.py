@@ -6,7 +6,6 @@ import json
 
 import ray
 import pyarrow
-from ray.exceptions import RayTaskError
 
 from . import utils
 from . import stats
@@ -47,7 +46,7 @@ def finalize():
 def current_core_count():
     cores = 0
     for node in ray.nodes():
-        if not node.get('Alive', False):
+        if not node.get('Alive', False):  # pragma: no cover
             continue
         cores += node.get('Resources', {}).get('CPU', 0)
     return int(cores)
@@ -55,6 +54,9 @@ def current_core_count():
 
 @ray.remote
 def do_work_wrapper(func, system_kwargs, user_kwargs, work_units):
+    if 'raise_in_wrapper' in system_kwargs:
+        raise system_kwargs['raise_in_wrapper']
+
     if 'out_subdirs' in system_kwargs:
         # the entire work unit group gets the same out_subdir
         system_kwargs['out_subdir'] = 'ray'+str(random.randint(0, system_kwargs['out_subdirs'])).zfill(5)
@@ -86,15 +88,8 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, work_units):
 def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
     try:
         ret = ray.get(ret)
-    except RayTaskError as e:
-        # In theory do_work_wrapper mostly catches these before ray does
-        print('\nremote ray task raised an unhandled exception of {},\n'
-              'an unknown number of results lost\n'.format(e), file=sys.stderr)
-        traceback.print_exc()
-        sys.stderr.flush()
-        return
     except Exception as e:
-        # None of these ever observed
+        # RayTaskError has been seen here
         print('\nSurprised by exception {} getting a result,\n'
               'an unknown number of results lost\n'.format(e), file=sys.stderr)
         traceback.print_exc()
@@ -153,7 +148,7 @@ def map(func, work, out_func=utils.accumulate_return, user_kwargs=None, chdir=No
 
     work = work.copy()  # we are going to be popping it
 
-    system_stats, system_kwargs = utils.map_prep(name, chdir, outfile, out_subdirs, len(work))
+    system_stats, system_kwargs = utils.map_prep(name, chdir, outfile, out_subdirs, len(work), **kwargs)
 
     progress = system_kwargs['progress']
     cores = current_core_count()

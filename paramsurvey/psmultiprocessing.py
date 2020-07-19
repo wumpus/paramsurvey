@@ -48,11 +48,14 @@ def pick_chunksize(length, factor=4):
 
 
 def do_work_wrapper(func, system_kwargs, user_kwargs, work_units):
+    if 'raise_in_wrapper' in system_kwargs:
+        raise system_kwargs['raise_in_wrapper']
+
     if 'out_subdirs' in system_kwargs:
         # the entire work unit group gets the same out_subdir
         system_kwargs['out_subdir'] = 'ray'+str(random.randint(0, system_kwargs['out_subdirs'])).zfill(5)
 
-    # ray workers start at "cd ~"
+    # multiprocesing workers start with parent's PWD so this probably won't get used
     if 'chdir' in system_kwargs:
         os.chdir(system_kwargs['chdir'])
 
