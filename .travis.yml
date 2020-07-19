@@ -7,8 +7,8 @@ python:
   - 3.6
   - 3.7
   - 3.8
-  - 3.9-dev
-  - nightly
+#  - 3.9-dev
+#  - nightly
 
 matrix:
   fast_finish: true
@@ -25,10 +25,12 @@ matrix:
     install:
       - pip install .
       - pip install .[test]
+  - python: 3.5
+    env: PARAMSURVEY_VERBOSE=2
   - python: 3.8
     arch: arm64
-  - python: 3.8
-    arch: s390x
+#  - python: 3.8
+#    arch: s390x
 
 git:
   depth: 99999

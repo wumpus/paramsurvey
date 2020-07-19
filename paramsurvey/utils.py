@@ -13,7 +13,11 @@ def accumulate_return(user_ret, system_kwargs, user_kwargs):
 
 def report_progress(system_kwargs, final=False):
     t = time.time()
-    if final or t - system_kwargs['progress_last'] > system_kwargs['progress_dt']:
+    if final or 'verbose' in system_kwargs and system_kwargs.get('verbose', 0) > 1:
+        force = True
+    else:
+        force = False
+    if force or t - system_kwargs['progress_last'] > system_kwargs['progress_dt']:
         system_kwargs['progress_last'] = t
         print(system_kwargs['name'], 'progress:',
               ', '.join([k+': '+str(v) for k, v in system_kwargs['progress'].items()]),

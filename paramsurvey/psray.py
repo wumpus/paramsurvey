@@ -159,7 +159,7 @@ def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=N
         group_size = 1
 
     if verbose:
-        print('inital core count is', cores, file=sys.stderr)
+        print('starting map, inital core count is', cores, file=sys.stderr)
         sys.stderr.flush()
 
     futures = []

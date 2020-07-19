@@ -119,6 +119,10 @@ def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=N
     # form our work into groups of length 1, to disable our groups feature
     psets = [[x] for x in psets]
 
+    if verbose:
+        print('starting map, chunksize is', chunksize, file=sys.stderr)
+        sys.stderr.flush()
+
     for ret in pool.imap_unordered(do_partial, psets, chunksize):
         if ret is not None:
             handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
