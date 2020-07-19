@@ -53,12 +53,12 @@ def current_core_count():
 
 
 @ray.remote
-def do_work_wrapper(func, system_kwargs, user_kwargs, work_units):
+def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
     if 'raise_in_wrapper' in system_kwargs:
         raise system_kwargs['raise_in_wrapper']
 
     if 'out_subdirs' in system_kwargs:
-        # the entire work unit group gets the same out_subdir
+        # the entire pset group gets the same out_subdir
         system_kwargs['out_subdir'] = 'ray'+str(random.randint(0, system_kwargs['out_subdirs'])).zfill(5)
 
     # ray workers start at "cd ~"
@@ -68,18 +68,18 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, work_units):
     name = system_kwargs['name']
 
     ret = []
-    for work_unit in work_units:
+    for pset in psets:
         raw_stats = dict()
         system_ret = {'raw_stats': raw_stats}
 
         try:
             with stats.record_wallclock(name, raw_stats):
-                user_ret = func(work_unit, system_kwargs, user_kwargs, raw_stats)
+                user_ret = func(pset, system_kwargs, user_kwargs, raw_stats)
         except Exception as e:
-            user_ret = {'work_unit': work_unit}
+            user_ret = {'pset': pset}
             system_ret['exception'] = str(e)
             print('saw an exception in the worker function', file=sys.stderr)
-            print('it was working on', json.dumps(work_unit, sort_keys=True), file=sys.stderr)
+            print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
             traceback.print_exc()
         ret.append([user_ret, system_ret])
     return ret
@@ -141,18 +141,18 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
     return futures, cores, group_size
 
 
-def map(func, work, out_func=utils.accumulate_return, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
-        progress_dt=60., group_size=None, name='work_unit', **kwargs):
-    if not work:
+def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
+        progress_dt=60., group_size=None, name='pset', **kwargs):
+    if not psets:
         return
 
-    work = work.copy()  # we are going to be popping it
+    psets = psets.copy()  # we are going to be popping it
 
-    system_stats, system_kwargs = utils.map_prep(name, chdir, outfile, out_subdirs, len(work), **kwargs)
+    system_stats, system_kwargs = utils.map_prep(name, chdir, outfile, out_subdirs, len(psets), **kwargs)
 
     progress = system_kwargs['progress']
     cores = current_core_count()
-    factor = check_serialized_size((work[0], user_kwargs), factor=1.2)
+    factor = check_serialized_size((psets[0], user_kwargs), factor=1.2)
 
     if group_size is None:
         # make this dynamic someday
@@ -163,10 +163,10 @@ def map(func, work, out_func=utils.accumulate_return, user_kwargs=None, chdir=No
 
     futures = []
 
-    while work:
-        work_units = utils.get_work_units(work, group_size)
-        futures.append(do_work_wrapper.remote(func, system_kwargs, user_kwargs, work_units))
-        progress['started'] += len(work_units)
+    while psets:
+        pset_group = utils.get_pset_group(psets, group_size)
+        futures.append(do_work_wrapper.remote(func, system_kwargs, user_kwargs, pset_group))
+        progress['started'] += len(psets)
 
         # cores and group_size can change within this function
         futures, cores, group_size = progress_until_fewer(futures, cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size)

@@ -26,17 +26,17 @@ def remaining(system_kwargs):
     return progress['started'] - progress.get('retired', 0)
 
 
-def get_work_units(work, group_size):
-    work_units = []
+def get_pset_group(psets, group_size):
+    group = []
     for _ in range(group_size):
         try:
-            work_units.append(work.pop(0))
+            group.append(psets.pop(0))
         except IndexError:
             pass
-    return work_units
+    return group
 
 
-def map_prep(name, chdir, outfile, out_subdirs, work_len, **kwargs):
+def map_prep(name, chdir, outfile, out_subdirs, psets_len, **kwargs):
     print('starting work on', name, file=sys.stderr)
     sys.stderr.flush()
 
@@ -53,10 +53,9 @@ def map_prep(name, chdir, outfile, out_subdirs, work_len, **kwargs):
     if 'raise_in_wrapper' in kwargs:
         system_kwargs['raise_in_wrapper'] = kwargs['raise_in_wrapper']
 
-
     system_stats = stats.StatsObject()
     progress = defaultdict(int)
-    progress['total'] = work_len
+    progress['total'] = psets_len
     system_kwargs['progress'] = progress
     system_kwargs['progress_last'] = 0.
     system_kwargs['progress_dt'] = 0.

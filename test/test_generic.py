@@ -6,16 +6,16 @@ import pytest
 import paramsurvey
 
 
-def do_sleep(work_unit, system_kwargs, user_kwargs, stats_dict):
-    time.sleep(work_unit['duration'])
-    return {'slept': work_unit['duration']}
+def do_sleep(pset, system_kwargs, user_kwargs, stats_dict):
+    time.sleep(pset['duration'])
+    return {'slept': pset['duration']}
 
 
-def do_burn(work_unit, system_kwargs, user_kwargs, stats_dict):
+def do_burn(pset, system_kwargs, user_kwargs, stats_dict):
     start = time.time()
-    while time.time() < start + work_unit['duration']:
+    while time.time() < start + pset['duration']:
         pass
-    return {'burned': work_unit['duration']}
+    return {'burned': pset['duration']}
 
 
 @pytest.fixture(scope="module")
@@ -34,31 +34,31 @@ def test_basics(paramsurvey_init):
     ncores = max(4, paramsurvey.current_core_count())
 
     duration = 0.1
-    work = [{'duration': duration}] * ncores * 4
+    psets = [{'duration': duration}] * ncores * 4
 
     start = time.time()
-    ret = paramsurvey.map(do_sleep, work, name='simple')
+    ret = paramsurvey.map(do_sleep, psets, name='simple')
     assert [r['slept'] == duration for r in ret], 'everyone slept '+str(duration)
-    assert len(ret) == len(work), 'one return for each work unit'
+    assert len(ret) == len(psets), 'one return for each pset'
     elapsed = time.time() - start
     assert elapsed > duration, 'must take at least {} time'.format(duration)
 
-    work = work[:ncores]
+    psets = psets[:ncores]
     start = time.time()
-    ret = paramsurvey.map(do_sleep, work, name='group_size 4', group_size=4)
+    ret = paramsurvey.map(do_sleep, psets, name='group_size 4', group_size=4)
     assert [r['slept'] == duration for r in ret], 'everyone slept '+str(duration)
-    assert len(ret) == len(work), 'one return for each work unit'
+    assert len(ret) == len(psets), 'one return for each pset'
     elapsed = time.time() - start
     assert elapsed > duration*4, 'must take at least {} time'.format(duration)
 
-    ret = paramsurvey.map(do_burn, work, name='burn group_size 4', group_size=4)
+    ret = paramsurvey.map(do_burn, psets, name='burn group_size 4', group_size=4)
     assert [r['burned'] == duration for r in ret], 'everyone burned '+str(duration)
-    assert len(ret) == len(work), 'one return for each work unit'
+    assert len(ret) == len(psets), 'one return for each pset'
     elapsed = time.time() - start
     assert elapsed > duration*4, 'must take at least {} time'.format(duration)
 
 
-def do_test_args(work_unit, system_kwargs, user_kwargs, stats_dict):
+def do_test_args(pset, system_kwargs, user_kwargs, stats_dict):
     # this function cannot be nested inside test_args() because nested funcs can't be pickled
     assert os.getcwd() == user_kwargs['expected_cwd'], 'chdir appears to work'
     assert 'out_subdir' in system_kwargs
@@ -83,9 +83,9 @@ def test_args(capsys, paramsurvey_init):
         assert 'outfile' in system_kwargs
         assert system_kwargs['outfile'] == outfile
 
-    work = [{'duration': 0.1}] * 2
+    psets = [{'duration': 0.1}] * 2
 
-    ret = paramsurvey.map(do_test_args, work,
+    ret = paramsurvey.map(do_test_args, psets,
                           out_func=out_func, user_kwargs=test_user_kwargs,
                           chdir=chdir, outfile=outfile, out_subdirs=10,
                           progress_dt=0., name=name)
@@ -95,28 +95,28 @@ def test_args(capsys, paramsurvey_init):
     assert ret is None  # because of out_func
 
     captured = capsys.readouterr()
-    assert len(captured.err.splitlines()) >= len(work)
+    assert len(captured.err.splitlines()) >= len(psets)
 
-    # because of progress_dt being 0., we should have at least len(work) progress lines
+    # because of progress_dt being 0., we should have at least len(psets) progress lines
     has_name = [line for line in captured.err.splitlines() if 'progress' in line and name in line]
-    assert len(has_name) == len(work)
+    assert len(has_name) == len(psets)
 
     ret = paramsurvey.map(do_test_args, [])
     assert ret is None
 
 
-def do_raise(work_unit, system_kwargs, user_kwargs, stats_dict):
+def do_raise(pset, system_kwargs, user_kwargs, stats_dict):
     raise ValueError('foo')
 
 
 def test_worker_exception(capsys, paramsurvey_init):
-    work = [{}]
+    psets = [{}]
 
-    ret = paramsurvey.map(do_raise, work)
+    ret = paramsurvey.map(do_raise, psets)
     assert len(ret) == 1
-    assert 'work_unit' in ret[0]
+    assert 'pset' in ret[0]
     # XXX should the exception be visible in ret? -- it's in system_ret
-    # XXX we only put work_unit in user_ret if there is an exception
+    # XXX we only put pset in user_ret if there is an exception
 
     out, err = capsys.readouterr()
 
@@ -128,14 +128,14 @@ def test_worker_exception(capsys, paramsurvey_init):
     assert 'failures: 1' in out or 'failures: 1' in err
 
 
-def do_nothing(work_unit, system_kwargs, user_kwargs, stats_dict):
+def do_nothing(pset, system_kwargs, user_kwargs, stats_dict):
     return
 
 
 def test_wrapper_exception(capsys, paramsurvey_init):
-    work = [{}]
+    psets = [{}]
 
-    ret = paramsurvey.map(do_nothing, work, raise_in_wrapper=ValueError('test_wrapper_exception'))
+    ret = paramsurvey.map(do_nothing, psets, raise_in_wrapper=ValueError('test_wrapper_exception'))
 
     # XXX ray returns None, multiprocessing returns [None]
     assert ret == [None] or ret is None
@@ -145,5 +145,5 @@ def test_wrapper_exception(capsys, paramsurvey_init):
     # XXX no failures: in progress? just spew on stdout/stderr
 
 
-def test_overlarge_work_unit():
+def test_overlarge_pset():
     pass

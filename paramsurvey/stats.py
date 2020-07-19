@@ -29,7 +29,7 @@ class StatsObject(object):
     def all_stat_names(self):
         return self.d.keys()
 
-    def print_histograms(self, name='work_unit', file=sys.stdout):
+    def print_histograms(self, name='default', file=sys.stdout):
         self.print_histogram(name, file=file)
         for n in sorted(self.all_stat_names()):
             if n != name:

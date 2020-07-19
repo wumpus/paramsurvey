@@ -5,11 +5,14 @@
 paramsurvey is a set of tools for creating and executing parameter surveys.
 
 paramsurvey has a pluggable parallel backend. The supported backends at present
-are python's multiprocessing module, and computing cluster software `ray` and `mpi`.
+are python's multiprocessing module, and computing cluster software `ray`. An `mpi` backend is planned.
 
 ## Installing
 
 ```
 $ pip install paramsurvey
+$ pip install paramsurvey[ray]
 ```
+
+## Philosophy
 
