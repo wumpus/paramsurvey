@@ -9,7 +9,7 @@ packages = [
     'paramsurvey',
 ]
 
-requires = []
+requires = ['astropy']
 extras_require = {
     'ray': ['ray', 'pyarrow'],
     'mpi': ['mpi4py'],
