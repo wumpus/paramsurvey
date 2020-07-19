@@ -76,14 +76,14 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
         ret = ray.get(ret)
     except RayTaskError as e:
         # In theory do_work_wrapper mostly catches these before ray does
-        print('\nremote ray task raised an unhandled exception of {}, '
+        print('\nremote ray task raised an unhandled exception of {},\n'
               'an unknown number of results lost\n'.format(e), file=sys.stderr)
         traceback.print_exc()
         sys.stderr.flush()
         return
     except Exception as e:
         # None of these ever observed
-        print('\nSurprised by exception {} getting a result, '
+        print('\nSurprised by exception {} getting a result,\n'
               'an unknown number of results lost\n'.format(e), file=sys.stderr)
         traceback.print_exc()
         sys.stderr.flush()
@@ -91,6 +91,8 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
 
     progress = system_kwargs['progress']
     progress['retired'] += len(ret)
+
+    print('DEBUG: ret=', repr(ret))
 
     for user_ret, system_ret in ret:
         out_func(user_ret, system_kwargs, user_kwargs)
@@ -105,7 +107,8 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
 def check_serialized_size(args, factor=1.2):
     big_data = 10 * 1024 * 1024 * 1024  # TODO: make this dynamic with cluster resources
     cores = current_core_count()
-    serialized_size = len(pyarrow.serialize(args))
+    serialized_size = len(pyarrow.serialize(args).to_buffer())
+
     if serialized_size*cores*factor > big_data:
         print('warning: in-flight data size seems to be too big', file=sys.stderr)
     if serialized_size*cores*factor < big_data/3:
@@ -138,6 +141,8 @@ def map(func, work, out_func=utils.accumulate_return, user_kwargs=None, chdir=No
     if not work:
         return
 
+    work = work.copy()  # we are going to be popping it
+
     system_stats, system_kwargs = utils.map_prep(name, chdir, outfile, out_subdirs, len(work))
 
     progress = system_kwargs['progress']
@@ -159,14 +164,17 @@ def map(func, work, out_func=utils.accumulate_return, user_kwargs=None, chdir=No
         progress['started'] += len(work_units)
 
         # cores and group_size can change within this function
-        futures, cores, group_size = progress_until_fewer(futures, cores, factor, group_size)
+        futures, cores, group_size = progress_until_fewer(futures, cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 
     print('getting the residue, length', utils.remaining(system_kwargs))
     sys.stdout.flush()
 
-    progress_until_fewer(futures, cores, 0)
+    progress_until_fewer(futures, cores, 0, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 
     print('finished getting results')
     sys.stdout.flush()
 
     system_stats.print_histograms(name)
+
+    if 'user_ret' in system_kwargs:
+        return system_kwargs['user_ret']

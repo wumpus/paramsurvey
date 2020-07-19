@@ -7,16 +7,16 @@ from . import psmultiprocessing
 
 
 def lazy_load_ray():
-    import psray
+    from . import psray
     return {
         'init': psray.init,
         'map': psray.map,
-        'curent_core_count': psray.current_core_count,
+        'current_core_count': psray.current_core_count,
     }
 
 
 def lazy_load_mpi():
-    import psmpi
+    from . import psmpi
     return {
         'init': psmpi.init,
         'map': psmpi.map,

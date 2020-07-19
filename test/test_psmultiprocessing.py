@@ -48,7 +48,6 @@ def test_basics():
 
 def do_test_args(work_unit, system_kwargs, user_kwargs, stats_dict):
     # this function cannot be nested inside test_args() because nested funcs can't be pickled
-    print('user kwargs is', repr(user_kwargs))
     assert os.getcwd() == user_kwargs['expected_cwd'], 'chdir appears to work'
     assert 'out_subdir' in system_kwargs
 

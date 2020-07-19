@@ -112,6 +112,5 @@ def map(func, work, out_func=utils.accumulate_return, user_kwargs=None, chdir=No
 
     system_stats.print_histograms(name)
 
-    print(system_kwargs)
     if 'user_ret' in system_kwargs:
         return system_kwargs['user_ret']
