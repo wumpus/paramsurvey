@@ -48,35 +48,41 @@ def pick_chunksize(length, factor=4):
 
 
 def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
-    if 'raise_in_wrapper' in system_kwargs:
-        raise system_kwargs['raise_in_wrapper']
+    try:
+        if 'raise_in_wrapper' in system_kwargs:
+            raise system_kwargs['raise_in_wrapper']
 
-    if 'out_subdirs' in system_kwargs:
-        # the entire pset group gets the same out_subdir
-        system_kwargs['out_subdir'] = 'ray'+str(random.randint(0, system_kwargs['out_subdirs'])).zfill(5)
+        if 'out_subdirs' in system_kwargs:
+            # the entire pset group gets the same out_subdir
+            system_kwargs['out_subdir'] = 'ray'+str(random.randint(0, system_kwargs['out_subdirs'])).zfill(5)
 
-    # multiprocesing workers start with parent's PWD so this probably won't get used
-    if 'chdir' in system_kwargs:
-        os.chdir(system_kwargs['chdir'])
+        # multiprocesing workers start with parent's PWD so this probably won't get used
+        if 'chdir' in system_kwargs:
+            os.chdir(system_kwargs['chdir'])
 
-    name = system_kwargs['name']
+        name = system_kwargs['name']
 
-    ret = []
-    for pset in psets:
-        raw_stats = dict()
-        system_ret = {'raw_stats': raw_stats}
+        ret = []
+        for pset in psets:
+            raw_stats = dict()
+            system_ret = {'raw_stats': raw_stats}
 
-        try:
-            with stats.record_wallclock(name, raw_stats):
-                user_ret = func(pset, system_kwargs, user_kwargs, raw_stats)
-        except Exception as e:
-            user_ret = {'pset': pset}
-            system_ret['exception'] = str(e)
-            print('saw an exception in the worker function', file=sys.stderr)
-            print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
-            traceback.print_exc()
-        ret.append([user_ret, system_ret])
-    return ret
+            try:
+                with stats.record_wallclock(name, raw_stats):
+                    user_ret = func(pset, system_kwargs, user_kwargs, raw_stats)
+            except Exception as e:
+                user_ret = {'pset': pset}
+                system_ret['exception'] = str(e)
+                print('saw an exception in the worker function', file=sys.stderr)
+                print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
+                traceback.print_exc()
+            ret.append([user_ret, system_ret])
+        return ret
+    except Exception as e:
+        print('\nException {} raised in the do_work_wrapper,\n'
+              'an unknown number of results lost\n'.format(e), file=sys.stderr)
+        traceback.print_exc()
+        sys.stderr.flush()
 
 
 def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
@@ -98,7 +104,7 @@ def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=N
     if not psets:
         return
 
-    system_stats, system_kwargs = utils.map_prep(name, chdir, outfile, out_subdirs, len(psets), verbose)  # XXX bug fix me **kwargs and test failure
+    system_stats, system_kwargs = utils.map_prep(name, chdir, outfile, out_subdirs, len(psets), verbose, **kwargs)
 
     do_partial = functools.partial(do_work_wrapper, func, system_kwargs, user_kwargs)
 
@@ -114,7 +120,8 @@ def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=N
     psets = [[x] for x in psets]
 
     for ret in pool.imap_unordered(do_partial, psets, chunksize):
-        handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
+        if ret is not None:
+            handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
 
     if verbose:
         print('finished getting results for', name, file=sys.stderr)
