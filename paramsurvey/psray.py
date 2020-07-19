@@ -39,7 +39,7 @@ def current_core_count():
         if not node.get('Alive', False):
             continue
         cores += node.get('Resources', {}).get('CPU', 0)
-    return cores
+    return int(cores)
 
 
 @ray.remote
