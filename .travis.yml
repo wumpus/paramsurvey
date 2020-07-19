@@ -24,6 +24,7 @@ matrix:
     env: ONLY_BUILTINS=1
     install:
       - pip install .
+      - pip install .[test]
   - python: 3.8
     arch: arm64
   - python: 3.8
