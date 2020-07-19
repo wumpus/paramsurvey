@@ -92,8 +92,6 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
     progress = system_kwargs['progress']
     progress['retired'] += len(ret)
 
-    print('DEBUG: ret=', repr(ret))
-
     for user_ret, system_ret in ret:
         out_func(user_ret, system_kwargs, user_kwargs)
         if 'raw_stats' in system_ret:
