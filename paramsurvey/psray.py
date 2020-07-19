@@ -14,7 +14,7 @@ from . import stats
 
 def read_ray_config():
     rayfile = os.environ.get('RAY_HEAD_FILE', None)
-    if rayfile is None:
+    if rayfile is None:  # pragma: no cover
         rayfile = os.path.expanduser('~/.ray-head-details')
     with open(rayfile) as f:
         address, password = f.read().split()

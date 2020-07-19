@@ -53,7 +53,7 @@ def init(backend=None, ncores=None, **kwargs):
     astropy_workarounds()
 
     if backend is None:
-        if 'PARAMSURVEY_BACKEND' not in os.environ:
+        if 'PARAMSURVEY_BACKEND' not in os.environ:  # pragma: no cover
             raise ValueError('must set PARAMSURVEY_BACKEND env var or pass in backend= to init')
         backend = os.environ['PARAMSURVEY_BACKEND']
 
@@ -64,7 +64,7 @@ def init(backend=None, ncores=None, **kwargs):
             our_backend.update(our_backend['lazy']())
         print('our_backend', our_backend)
         our_backend['init'](ncores=ncores, **kwargs)
-    else:
+    else:  # pragma: no cover
         raise ValueError('unknown backend '+backend+', valid backends: '+', '.join(backends.keys()))
 
 

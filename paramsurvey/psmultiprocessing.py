@@ -15,7 +15,7 @@ pool = None
 
 def init(ncores=None):
     global pool
-    if pool:  # yes we can be called multiple times
+    if pool:  # yes we can be called multiple times  # pragma: no cover
         return
 
     if ncores is None:
