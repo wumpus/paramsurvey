@@ -47,9 +47,9 @@ def init(backend=None, ncores=None, verbose=None, **kwargs):
     if backend is None:
         backend = os.environ.get('PARAMSURVEY_BACKEND', 'multiprocessing')
 
-    if verbose or os.environ.get('PARAMSURVEY_VERBOSE', 0) > 1:
+    if verbose or int(os.environ.get('PARAMSURVEY_VERBOSE', '0')) > 1:
         global our_verbose
-        our_verbose = verbose or os.environ.get('PARAMSURVEY_VERBOSE', 0)
+        our_verbose = verbose or int(os.environ.get('PARAMSURVEY_VERBOSE', '0'))
         print('initializing paramsurvey {} backend'.format(backend), file=sys.stderr)
 
     global our_backend
