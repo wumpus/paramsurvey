@@ -9,7 +9,8 @@ packages = [
     'paramsurvey',
 ]
 
-test_requirements = ['pytest', 'coverage', 'pytest-cov', 'pytest-sugar', 'coveralls']
+test_requirements = ['pytest>=4.6', 'coverage', 'pytest-cov', 'pytest-sugar', 'coveralls']
+# pytest-cov requires pytest >= 4.6, dunno why this doesn't just work
 
 requires = [
     'astropy',
@@ -19,7 +20,7 @@ requires = [
 extras_require = {
     'ray': ['ray', 'pyarrow'],
     'mpi': ['mpi4py'],
-    'test': test_requirements,  # setup no longer tests
+    'test': test_requirements,  # setup no longer tests, so make them an extra
 }
 
 setup_requires = ['setuptools_scm']
