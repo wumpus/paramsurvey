@@ -1,6 +1,7 @@
 import time
 import os
 import tempfile
+import pytest
 
 import paramsurvey
 
@@ -17,8 +18,12 @@ def do_burn(work_unit, system_kwargs, user_kwargs, stats_dict):
     return {'burned': work_unit['duration']}
 
 
-def test_basics():
-    paramsurvey.init()  # XXX should this be done exactly once, or in every test_* function
+@pytest.fixture(scope="module")
+def paramsurvey_init():
+    paramsurvey.init()
+
+
+def test_basics(paramsurvey_init):
     ncores = min(4, paramsurvey.current_core_count())
 
     duration = 0.1
@@ -52,7 +57,7 @@ def do_test_args(work_unit, system_kwargs, user_kwargs, stats_dict):
     assert 'out_subdir' in system_kwargs
 
 
-def test_args(capsys):
+def test_args(capsys, paramsurvey_init):
     chdir = tempfile.gettempdir()
     if os.getcwd() == chdir:
         # whoops

@@ -26,10 +26,11 @@ def init(**kwargs):
     if 'ncores' in kwargs:
         # what does this actually do, if the the cluster pre-exists?
         ray_kwargs['num_cpus'] = kwargs['ncores']
+        kwargs.pop('ncores')
     address, password = read_ray_config()
 
     # XXX if the cluster does not pre-exist, should we create it?
-    ray.init(address=address, redis_password=password, **ray_kwargs)
+    ray.init(address=address, redis_password=password, **kwargs)
 
 
 def current_core_count():
