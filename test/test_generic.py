@@ -24,7 +24,7 @@ def paramsurvey_init():
 
 
 def test_basics(paramsurvey_init):
-    ncores = min(4, paramsurvey.current_core_count())
+    ncores = max(4, paramsurvey.current_core_count())
 
     duration = 0.1
     work = [{'duration': duration}] * ncores * 4
