@@ -33,8 +33,7 @@ install:
 #  - pip install .[mpi]
 
 script:
-  - test/test-multiprocessing.sh
-  - cd test && ./test-ray.sh
+  - make test_coverage
 
-#after_success:
-#  coveralls
+after_success:
+  coveralls

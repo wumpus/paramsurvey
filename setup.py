@@ -16,7 +16,7 @@ extras_require = {
 }
 
 setup_requires = ['setuptools_scm']
-test_requirements = ['pytest>=3.0.0']  # 'coverage', 'pytest-cov']
+test_requirements = ['pytest>=3.0.0', 'coverage', 'pytest-cov', 'pytest-sugar', 'coveralls']
 
 scripts = []
 
