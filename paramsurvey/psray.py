@@ -24,7 +24,7 @@ def read_ray_config():
 def init(**kwargs):
     ray_kwargs = {}
     if 'ncores' in kwargs:
-        # what does this actually do, if the the cluster pre-exists?
+        # what does num_cpus actually do if the the cluster pre-exists?
         ray_kwargs['num_cpus'] = kwargs['ncores']
         kwargs.pop('ncores')
     address, password = read_ray_config()
