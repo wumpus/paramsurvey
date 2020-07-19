@@ -101,6 +101,23 @@ def test_args(capsys, paramsurvey_init):
     has_name = [line for line in captured.err.splitlines() if 'progress' in line and name in line]
     assert len(has_name) >= len(psets)
 
+    # same as previous but verbose=2 instead of progress_dt=0
+    ret = paramsurvey.map(do_test_args, psets,
+                          out_func=out_func, user_kwargs=test_user_kwargs,
+                          chdir=chdir, outfile=outfile, out_subdirs=10,
+                          verbose=2, name=name)
+
+    assert out_func_called
+    assert test_user_kwargs.get('out_func_called')
+    assert ret is None  # because of out_func
+
+    captured = capsys.readouterr()
+    assert len(captured.err.splitlines()) >= len(psets)
+
+    # because of progress_dt being 0., we should have at least len(psets) progress lines
+    has_name = [line for line in captured.err.splitlines() if 'progress' in line and name in line]
+    assert len(has_name) >= len(psets)
+
     ret = paramsurvey.map(do_test_args, [])
     assert ret is None
 
