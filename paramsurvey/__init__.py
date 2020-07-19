@@ -33,7 +33,7 @@ backends = {
     'ray': {
         'lazy': lazy_load_ray,
     },
-    'map': {
+    'mpi': {
         'lazy': lazy_load_mpi,
     },
 }
@@ -53,6 +53,8 @@ def init(backend=None, ncores=None, **kwargs):
     astropy_workarounds()
 
     if backend is None:
+        if 'PARAMSURVEY_BACKEND' not in os.environ:
+            raise ValueError('must set PARAMSURVEY_BACKEND env var or pass in backend= to init')
         backend = os.environ['PARAMSURVEY_BACKEND']
 
     global our_backend
@@ -63,7 +65,7 @@ def init(backend=None, ncores=None, **kwargs):
         print('our_backend', our_backend)
         our_backend['init'](ncores=ncores, **kwargs)
     else:
-        raise ValueError('unknown backend '+backend)
+        raise ValueError('unknown backend '+backend+', valid backends: '+', '.join(backends.keys()))
 
 
 def map(*args, **kwargs):
