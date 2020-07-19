@@ -1,7 +1,4 @@
-import warnings
 import os
-
-from astropy.utils.exceptions import ErfaWarning
 
 from . import psmultiprocessing
 
@@ -44,17 +41,7 @@ backends = {
 our_backend = None
 
 
-def astropy_workarounds():
-    # https://github.com/astropy/astropy/issues/9603
-    # ERFA function "d2dtf" yielded N of "dubious year (Note 5)" [astropy._erfa.core]
-    # ERFA function "utctai" yielded N of "dubious year (Note 3)" [astropy._erfa.core]
-    # ERFA function "utcut1" yielded N of "dubious year (Note 3)" [astropy._erfa.core]
-    warnings.simplefilter('ignore', ErfaWarning)
-
-
 def init(backend=None, ncores=None, **kwargs):
-    astropy_workarounds()
-
     if backend is None:
         if 'PARAMSURVEY_BACKEND' not in os.environ:  # pragma: no cover
             raise ValueError('must set PARAMSURVEY_BACKEND env var or pass in backend= to init')

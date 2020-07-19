@@ -13,14 +13,13 @@ test_requirements = ['pytest>=4.6', 'coverage', 'pytest-cov', 'pytest-sugar', 'c
 # pytest-cov requires pytest >= 4.6, dunno why this doesn't just work
 
 requires = [
-    'astropy',
     'hdrhistogram',
 ]
 
 extras_require = {
     'ray': ['ray', 'pyarrow'],
     'mpi': ['mpi4py'],
-    'test': test_requirements,  # setup no longer tests, so make them an extra
+    'test': test_requirements,  # setup no longer tests, so make them an extra that .travis.yml uses
 }
 
 setup_requires = ['setuptools_scm']
