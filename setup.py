@@ -9,7 +9,7 @@ packages = [
     'paramsurvey',
 ]
 
-test_requirements = ['pytest>=3.0.0', 'coverage', 'pytest-cov', 'pytest-sugar', 'coveralls']
+test_requirements = ['pytest', 'coverage', 'pytest-cov', 'pytest-sugar', 'coveralls']
 
 requires = [
     'astropy',
