@@ -19,8 +19,15 @@ def do_burn(work_unit, system_kwargs, user_kwargs, stats_dict):
 
 
 @pytest.fixture(scope="module")
-def paramsurvey_init():
+def paramsurvey_init(request):
     paramsurvey.init()
+
+    def finalize():
+        print('cleanup finalize actually called')
+        paramsurvey.finalize()
+
+    request.addfinalizer(finalize)
+    print('add finalizer called')
 
 
 def test_basics(paramsurvey_init):

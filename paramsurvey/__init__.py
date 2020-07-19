@@ -12,6 +12,7 @@ def lazy_load_ray():
         'init': psray.init,
         'map': psray.map,
         'current_core_count': psray.current_core_count,
+        'finalize': psray.finalize,
     }
 
 
@@ -21,6 +22,7 @@ def lazy_load_mpi():
         'init': psmpi.init,
         'map': psmpi.map,
         'curent_core_count': psmpi.current_core_count,
+        'finalize': psmpi.finalize,
     }
 
 
@@ -29,6 +31,7 @@ backends = {
         'init': psmultiprocessing.init,
         'map': psmultiprocessing.map,
         'current_core_count': psmultiprocessing.current_core_count,
+        'finalize': psmultiprocessing.finalize,
     },
     'ray': {
         'lazy': lazy_load_ray,
@@ -68,9 +71,13 @@ def init(backend=None, ncores=None, **kwargs):
         raise ValueError('unknown backend '+backend+', valid backends: '+', '.join(backends.keys()))
 
 
-def map(*args, **kwargs):
-    return our_backend['map'](*args, **kwargs)
+def finalize(*args, **kwargs):
+    return our_backend['finalize'](*args, **kwargs)
 
 
 def current_core_count(*args, **kwargs):
     return our_backend['current_core_count'](*args, **kwargs)
+
+
+def map(*args, **kwargs):
+    return our_backend['map'](*args, **kwargs)

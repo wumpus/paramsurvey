@@ -33,6 +33,10 @@ def init(**kwargs):
     ray.init(address=address, redis_password=password, **kwargs)
 
 
+def finalize():
+    pass
+
+
 def current_core_count():
     cores = 0
     for node in ray.nodes():

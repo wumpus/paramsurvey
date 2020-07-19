@@ -24,6 +24,12 @@ def init(ncores=None):
     pool = multiprocessing.Pool(processes=ncores)
 
 
+def finalize():
+    # needed to make things like test coverage reporting work
+    pool.close()
+    pool.join()
+
+
 def current_core_count():
     # XXX should be the pool size
     # XXX also affected by os.sched_getaffinity
