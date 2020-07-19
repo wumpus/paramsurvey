@@ -94,9 +94,29 @@ def test_args(capsys, paramsurvey_init):
     assert test_user_kwargs.get('out_func_called')
     assert ret is None  # because of out_func
 
-    # because of progress_dt being 0., we should have at least len(work) lines of stderr
-    # of which len(work) should have name
     captured = capsys.readouterr()
     assert len(captured.err.splitlines()) >= len(work)
+
+    # because of progress_dt being 0., we should have at least len(work) progress lines
     has_name = [line for line in captured.err.splitlines() if 'progress' in line and name in line]
     assert len(has_name) == len(work)
+
+
+def do_raise(work_unit, system_kwargs, user_kwargs, stats_dict):
+    raise ValueError('foo')
+
+
+def test_worker_exception(capsys, paramsurvey_init):
+    work = [{}]
+
+    ret = paramsurvey.map(do_raise, work)
+    assert len(ret) == 1
+    assert 'work_unit' in ret[0]
+    # XXX should the exception be visible here? -- it's in system_ret
+    # XXX we only put work_unit in user_ret if there is an exception
+
+    out, err = capsys.readouterr()
+    # ray redirects stderr to stdout, while multiprocessing preserves it
+    assert 'Traceback:' in out or 'Traceback:' in err
+
+    # XXX progress failure == 1
