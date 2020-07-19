@@ -9,8 +9,13 @@ packages = [
     'paramsurvey',
 ]
 
-requires = ['pyarrow', 'ray', '']
+requires = []
+extras_require = {
+    'ray': ['ray', 'pyarrow'],
+    'mpi': ['mpi4py'],
+}
 
+setup_requires = ['setuptools_scm']
 test_requirements = ['pytest>=3.0.0']  # 'coverage', 'pytest-cov']
 
 scripts = []
@@ -29,7 +34,8 @@ setup(
     url='https://github.com/wumpus/paramsurvey',
     packages=packages,
     python_requires=">=3.5.*",
-    setup_requires=['setuptools_scm'],
+    extras_require=extras_require,
+    setup_requires=setup_requires,
     install_requires=requires,
     scripts=scripts,
     license='Apache 2.0',
