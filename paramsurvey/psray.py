@@ -23,14 +23,21 @@ def read_ray_config():
 
 def init(**kwargs):
     ray_kwargs = {}
+
     if 'ncores' in kwargs:
         # what does num_cpus actually do if the the cluster pre-exists?
         ray_kwargs['num_cpus'] = kwargs['ncores']
         kwargs.pop('ncores')
+
     address, password = read_ray_config()
+    kwargs['address'] = address
+    kwargs['redis_password'] = password
+
+    if os.environ.get('RAY_LOCAL_MODE', False):
+        kwargs['local_mode'] = True
 
     # XXX if the cluster does not pre-exist, should we create it?
-    ray.init(address=address, redis_password=password, **kwargs)
+    ray.init(**kwargs)
 
 
 def finalize():
