@@ -14,7 +14,7 @@ def lazy_load_ray():
     }
 
 
-def lazy_load_mpi():
+def lazy_load_mpi():  # pragma: no cover
     from . import psmpi
     return {
         'init': psmpi.init,
@@ -47,7 +47,7 @@ def init(backend=None, ncores=None, verbose=None, **kwargs):
     if backend is None:
         backend = os.environ.get('PARAMSURVEY_BACKEND', 'multiprocessing')
 
-    if verbose or int(os.environ.get('PARAMSURVEY_VERBOSE', '0')) > 1:
+    if verbose or int(os.environ.get('PARAMSURVEY_VERBOSE', '0')) > 0:
         global our_verbose
         our_verbose = verbose or int(os.environ.get('PARAMSURVEY_VERBOSE', '0'))
         print('initializing paramsurvey {} backend'.format(backend), file=sys.stderr)
@@ -57,7 +57,6 @@ def init(backend=None, ncores=None, verbose=None, **kwargs):
         our_backend = backends[backend]
         if 'lazy' in our_backend:
             our_backend.update(our_backend['lazy']())
-        print('our_backend', our_backend)
         our_backend['init'](ncores=ncores, **kwargs)
     else:  # pragma: no cover
         raise ValueError('unknown backend '+backend+', valid backends: '+', '.join(backends.keys()))
