@@ -49,8 +49,8 @@ def pick_chunksize(length, factor=4):
 
 def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
     try:
-        if 'raise_in_wrapper' in system_kwargs:
-            raise system_kwargs['raise_in_wrapper']
+        if 'raise_in_wrapper' in system_kwargs and 'actually_raise' in psets[0]:
+            raise system_kwargs['raise_in_wrapper']  # for testing
 
         if 'out_subdirs' in system_kwargs:
             # the entire pset group gets the same out_subdir

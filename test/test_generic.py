@@ -123,15 +123,16 @@ def test_args(capsys, paramsurvey_init):
 
 
 def do_raise(pset, system_kwargs, user_kwargs, stats_dict):
-    raise ValueError('foo')
+    if 'raise' in pset and pset['raise']:
+        raise ValueError('foo')
 
 
 def test_worker_exception(capsys, paramsurvey_init):
-    psets = [{}]
+    psets = [{}, {}, {}, {'raise': True}, {}, {}, {}]
 
     ret = paramsurvey.map(do_raise, psets)
-    assert len(ret) == 1
-    assert 'pset' in ret[0]
+    assert len(ret) == 7
+    assert sum('pset' in r for r in ret if r is not None) == 1
     # XXX should the exception be visible in ret? -- it's in system_ret
     # XXX we only put pset in user_ret if there is an exception
 
@@ -146,16 +147,16 @@ def test_worker_exception(capsys, paramsurvey_init):
 
 
 def do_nothing(pset, system_kwargs, user_kwargs, stats_dict):
-    return
+    return {'foo': True}
 
 
 def test_wrapper_exception(capsys, paramsurvey_init):
-    psets = [{}]
+    psets = [{}, {'actually_raise': True}, {}, {}, {}]
 
     ret = paramsurvey.map(do_nothing, psets, raise_in_wrapper=ValueError('test_wrapper_exception'))
 
-    # XXX ray returns None, multiprocessing returns [{'pset': {}]
-    assert ret is None or len(ret) == 1 and 'pset' in ret[0]
+    # ray eats a return when it raises
+    assert len(ret) == 5 and sum('pset' in r for r in ret) == 1 or len(ret) == 4 and all('foo' in r for r in ret)
 
     # XXX ray prints traceback in the worker, multiprocessing and ray local_mode prints in the parent
 
