@@ -37,7 +37,7 @@ def test_basics(paramsurvey_init):
 
     start = time.time()
     ret = paramsurvey.map(do_sleep, psets, name='simple')
-    assert [r['slept'] == duration for r in ret], 'everyone slept '+str(duration)
+    assert [r['result']['slept'] == duration for r in ret], 'everyone slept '+str(duration)
     assert len(ret) == len(psets), 'one return for each pset'
     elapsed = time.time() - start
     assert elapsed > duration, 'must take at least {} time'.format(duration)
@@ -45,13 +45,13 @@ def test_basics(paramsurvey_init):
     psets = psets[:ncores]
     start = time.time()
     ret = paramsurvey.map(do_sleep, psets, name='group_size 5', group_size=5)
-    assert [r['slept'] == duration for r in ret], 'everyone slept '+str(duration)
+    assert [r['result']['slept'] == duration for r in ret], 'everyone slept '+str(duration)
     assert len(ret) == len(psets), 'one return for each pset'
     elapsed = time.time() - start
     assert elapsed > duration*3, 'must take at least {} time'.format(duration)
 
     ret = paramsurvey.map(do_burn, psets, name='burn group_size 5', group_size=4)
-    assert [r['burned'] == duration for r in ret], 'everyone burned '+str(duration)
+    assert [r['result']['burned'] == duration for r in ret], 'everyone burned '+str(duration)
     assert len(ret) == len(psets), 'one return for each pset'
     elapsed = time.time() - start
     assert elapsed > duration*3, 'must take at least {} time'.format(duration)
@@ -124,6 +124,7 @@ def test_args(capsys, paramsurvey_init):
 def do_raise(pset, system_kwargs, user_kwargs, stats_dict):
     if 'raise' in pset and pset['raise']:
         raise ValueError('foo')
+    return {'foo': 'bar'}
 
 
 def test_worker_exception(capsys, paramsurvey_init):
@@ -131,9 +132,9 @@ def test_worker_exception(capsys, paramsurvey_init):
 
     ret = paramsurvey.map(do_raise, psets)
     assert len(ret) == 7
-    assert sum('pset' in r for r in ret if r is not None) == 1
-    # XXX should the exception be visible in ret? -- it's in system_ret
-    # XXX we only put pset in user_ret if there is an exception
+    assert sum('exception' in r for r in ret if r is not None) == 1
+    assert sum('pset' in r for r in ret) == 7
+    assert sum('result' in r for r in ret) == 6
 
     out, err = capsys.readouterr()
 
@@ -155,7 +156,12 @@ def test_wrapper_exception(capsys, paramsurvey_init):
     ret = paramsurvey.map(do_nothing, psets, raise_in_wrapper=ValueError('test_wrapper_exception'))
 
     # ray eats a return when it raises
-    assert len(ret) == 5 and sum('pset' in r for r in ret) == 1 or len(ret) == 4 and all('foo' in r for r in ret)
+    assert len(ret) == 5 or len(ret) == 4
+    assert sum('result' in r for r in ret) == 4  # same for ray and multi
+    if len(ret) == 5:
+        assert sum('exception' in r for r in ret) == 1
+    else:
+        assert sum('exception' in r for r in ret) == 0
 
     # XXX ray prints traceback in the worker, multiprocessing and ray local_mode prints in the parent
 

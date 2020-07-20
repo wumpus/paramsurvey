@@ -71,13 +71,14 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
     for pset in psets:
         raw_stats = dict()
         system_ret = {'raw_stats': raw_stats}
+        user_ret = {'pset': pset}
 
         try:
             with stats.record_wallclock(name, raw_stats):
-                user_ret = func(pset, system_kwargs, user_kwargs, raw_stats)
+                result = func(pset, system_kwargs, user_kwargs, raw_stats)
+            user_ret['result'] = result
         except Exception as e:
-            user_ret = {'pset': pset}
-            system_ret['exception'] = str(e)
+            user_ret['exception'] = str(e)
             print('saw an exception in the worker function', file=sys.stderr)
             print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
             traceback.print_exc()
@@ -103,10 +104,12 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
     progress['retired'] += len(ret)
 
     for user_ret, system_ret in ret:
+        if 'result' in user_ret and not isinstance(user_ret['result'], dict) and user_ret['result'] is not None:
+            raise ValueError('user function did not return a dict')
         out_func(user_ret, system_kwargs, user_kwargs)
         if 'raw_stats' in system_ret:
             system_stats.combine_stats(system_ret['raw_stats'])
-        if 'exception' in system_ret:
+        if 'exception' in user_ret:
             progress['failures'] += 1
 
     utils.report_progress(system_kwargs)
