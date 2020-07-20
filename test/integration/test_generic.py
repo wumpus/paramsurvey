@@ -4,17 +4,19 @@ import tempfile
 import pytest
 
 import paramsurvey
+import paramsurvey.stats
 
 
-def do_sleep(pset, system_kwargs, user_kwargs, stats_dict):
+def do_sleep(pset, system_kwargs, user_kwargs, raw_stats):
     time.sleep(pset['duration'])
     return {'slept': pset['duration']}
 
 
-def do_burn(pset, system_kwargs, user_kwargs, stats_dict):
+def do_burn(pset, system_kwargs, user_kwargs, raw_stats):
     start = time.time()
-    while time.time() < start + pset['duration']:
-        pass
+    with paramsurvey.stats.record_wallclock('foo', raw_stats):
+        while time.time() < start + pset['duration']:
+            pass
     return {'burned': pset['duration']}
 
 
@@ -57,7 +59,7 @@ def test_basics(paramsurvey_init):
     assert elapsed > duration*3, 'must take at least {} time'.format(duration)
 
 
-def do_test_args(pset, system_kwargs, user_kwargs, stats_dict):
+def do_test_args(pset, system_kwargs, user_kwargs, raw_stats):
     # this function cannot be nested inside test_args() because nested funcs can't be pickled
     assert os.getcwd() == user_kwargs['expected_cwd'], 'chdir appears to work'
     assert 'out_subdir' in system_kwargs
@@ -121,7 +123,7 @@ def test_args(capsys, paramsurvey_init):
     assert ret is None
 
 
-def do_raise(pset, system_kwargs, user_kwargs, stats_dict):
+def do_raise(pset, system_kwargs, user_kwargs, raw_stats):
     if 'raise' in pset and pset['raise']:
         raise ValueError('foo')
     return {'foo': 'bar'}
@@ -146,7 +148,7 @@ def test_worker_exception(capsys, paramsurvey_init):
     assert 'failures: 1' in out or 'failures: 1' in err
 
 
-def do_nothing(pset, system_kwargs, user_kwargs, stats_dict):
+def do_nothing(pset, system_kwargs, user_kwargs, raw_stats):
     return {'foo': True}
 
 
