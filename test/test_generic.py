@@ -48,13 +48,13 @@ def test_basics(paramsurvey_init):
     assert [r['slept'] == duration for r in ret], 'everyone slept '+str(duration)
     assert len(ret) == len(psets), 'one return for each pset'
     elapsed = time.time() - start
-    assert elapsed > duration*5, 'must take at least {} time'.format(duration)
+    assert elapsed > duration*3, 'must take at least {} time'.format(duration)
 
     ret = paramsurvey.map(do_burn, psets, name='burn group_size 5', group_size=4)
     assert [r['burned'] == duration for r in ret], 'everyone burned '+str(duration)
     assert len(ret) == len(psets), 'one return for each pset'
     elapsed = time.time() - start
-    assert elapsed > duration*5, 'must take at least {} time'.format(duration)
+    assert elapsed > duration*3, 'must take at least {} time'.format(duration)
 
 
 def do_test_args(pset, system_kwargs, user_kwargs, stats_dict):
