@@ -10,8 +10,8 @@ class StatsObject(object):
     def __init__(self):
         self.d = dict()
 
-    def combine_stats(self, local_dict):
-        for name, elapsed in local_dict.items():
+    def combine_stats(self, raw_stats):
+        for name, elapsed in raw_stats.items():
             g = self.d.get(name, defaultdict(float))
             if 'hist' not in g:
                 maxhist = max(elapsed[0] * 2, 30) * 1000  # milliseconds
@@ -24,7 +24,8 @@ class StatsObject(object):
 
     def read_stats(self, name):
         if name in self.d:
-            return self.d['count'], self.d['time']/self.d['count'], self.d['hist']
+            entry = self.d[name]
+            return entry['count'], entry['time']/entry['count'], entry['hist']
 
     def all_stat_names(self):
         return self.d.keys()
@@ -52,11 +53,11 @@ class StatsObject(object):
                 print('counter {}, {}%tile: {:.1f}s'.format(name, pct, hist.get_value_at_percentile(pct)/1000.), file=file)
 
 @contextmanager
-def record_wallclock(name, stats_dict):
+def record_wallclock(name, raw_stats):
     try:
         start = time.time()
         yield
     finally:
-        if name not in stats_dict:
-            stats_dict[name] = []
-        stats_dict[name].append(time.time() - start)
+        if name not in raw_stats:
+            raw_stats[name] = []
+        raw_stats[name].append(time.time() - start)
