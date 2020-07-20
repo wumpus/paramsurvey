@@ -154,12 +154,13 @@ def test_wrapper_exception(capsys, paramsurvey_init):
 
     ret = paramsurvey.map(do_nothing, psets, raise_in_wrapper=ValueError('test_wrapper_exception'))
 
-    # XXX ray returns None, multiprocessing returns [None]
-    assert ret == [None] or ret is None
+    # XXX ray returns None, multiprocessing returns [{'pset': {}]
+    assert ret is None or len(ret) == 1 and 'pset' in ret[0]
 
     # XXX ray prints traceback in the worker, multiprocessing and ray local_mode prints in the parent
 
-    # XXX no failures: in progress? just spew on stdout/stderr
+    out, err = capsys.readouterr()
+    assert 'failures: 1' in out or 'failures: 1' in err
 
 
 def test_overlarge_pset():

@@ -94,6 +94,9 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
               'an unknown number of results lost\n'.format(e), file=sys.stderr)
         traceback.print_exc()
         sys.stderr.flush()
+        progress = system_kwargs['progress']
+        progress['failures'] += 1
+        utils.report_progress(system_kwargs)
         return
 
     progress = system_kwargs['progress']

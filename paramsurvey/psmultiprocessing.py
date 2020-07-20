@@ -83,6 +83,9 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
               'an unknown number of results lost\n'.format(e), file=sys.stderr)
         traceback.print_exc()
         sys.stderr.flush()
+        # cannot increment progress[failures] here because we are in the child & it is not returned
+        # fake up a single return value
+        return [[{'pset': psets[0]}, {'exception': str(e)}]]
 
 
 def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
