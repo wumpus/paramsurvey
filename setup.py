@@ -4,7 +4,6 @@ from os import path
 
 from setuptools import setup
 
-
 packages = [
     'paramsurvey',
 ]

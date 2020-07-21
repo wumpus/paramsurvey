@@ -1,7 +1,14 @@
 import os
 import sys
+from pkg_resources import get_distribution, DistributionNotFound
 
 from . import psmultiprocessing
+
+
+try:
+    __version__ = get_distribution(__name__).version
+except DistributionNotFound:  # pragma: no cover
+    __version__ = 'unknown'
 
 
 def lazy_load_ray():
