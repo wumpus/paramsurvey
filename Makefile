@@ -18,12 +18,12 @@ test_coverage_verbose:
 	PARAMSURVEY_VERBOSE=2 COVERAGE=1 PYTHONPATH=.:test/integration test/integration/test-ray.sh test/integration
 
 distclean:
-        rm -rf dist/
+	rm -rf dist/
 
 dist: distclean
 	echo "reminder, you must have tagged this commit or you'll end up failing"
 	echo "  git tag v0.x.x"
 	echo "  git push --tags"
-        python ./setup.py sdist
+	python ./setup.py sdist
 	twine check dist/*
-	twine upload --repository-url https://test.pypi.org/legacy/ dist/* -r pypi
+	twine upload dist/* -r pypi
