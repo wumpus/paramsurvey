@@ -67,3 +67,26 @@ def map_prep(name, chdir, outfile, out_subdirs, psets_len, verbose, **kwargs):
     system_kwargs['progress_dt'] = 0.
 
     return system_stats, system_kwargs
+
+
+def flatten_result(result, drop_exceptions=False):
+    raise ValueError('untested')
+    # promote pset and result but report clashes
+    seen_pset_keys = set()
+    seen_result_keys = set()
+    ret = []
+
+    for r in result:
+        if 'exception' in r:
+            if drop_exceptions:
+                continue
+            else:
+                raise ValueError(
+        if 'pset' in r:
+            seen_pset_keys.add(r['pset'].keys())
+        if 'result' in r:
+            seen_result_keys.add(r['result'].keys())
+        rr = r.get('pset', {})
+        rr.update(r.et('result', {}))
+        ret.append(rr)
+    return ret
