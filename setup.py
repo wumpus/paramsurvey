@@ -34,6 +34,7 @@ setup(
     use_scm_version=True,
     description='A toolkit for doing parameter surveys',
     long_description=description,
+    long_description_content_type='text/markdown',
     author='Greg Lindahl and others',
     author_email='lindahl@pbm.com',
     url='https://github.com/wumpus/paramsurvey',

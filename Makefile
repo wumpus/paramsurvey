@@ -1,4 +1,4 @@
-.PHONY: test clean_coverage test_coverage
+.PHONY: test clean_coverage test_coverage distclean dist_check dist
 
 test:
 	PYTHONPATH=. pytest test/unit
@@ -19,6 +19,10 @@ test_coverage_verbose:
 
 distclean:
 	rm -rf dist/
+
+distcheck: distclean
+	python ./setup.py sdist
+	twine check dist/*
 
 dist: distclean
 	echo "reminder, you must have tagged this commit or you'll end up failing"
