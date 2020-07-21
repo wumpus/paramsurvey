@@ -69,24 +69,27 @@ def map_prep(name, chdir, outfile, out_subdirs, psets_len, verbose, **kwargs):
     return system_stats, system_kwargs
 
 
-def flatten_result(result, drop_exceptions=False):
-    raise ValueError('untested')
-    # promote pset and result but report clashes
+def flatten_result(result, raise_if_exceptions=False):
     seen_pset_keys = set()
     seen_result_keys = set()
     ret = []
 
     for r in result:
         if 'exception' in r:
-            if drop_exceptions:
-                continue
+            if raise_if_exceptions:
+                raise ValueError('Exception seen: '+r['exception'])
             else:
-                raise ValueError(
+                continue
         if 'pset' in r:
-            seen_pset_keys.add(r['pset'].keys())
+            [seen_pset_keys.add(k) for k in r['pset'].keys()]
         if 'result' in r:
-            seen_result_keys.add(r['result'].keys())
-        rr = r.get('pset', {})
-        rr.update(r.et('result', {}))
+            [seen_result_keys.add(k) for k in r['result'].keys()]
+        rr = r.get('pset', {}).copy()
+        rr.update(r.get('result', {}))
         ret.append(rr)
+
+    conflict = seen_pset_keys.intersection(seen_result_keys)
+    if conflict:
+        raise ValueError('conflicting key(s) seen in both pset and result: '+repr(conflict))
+
     return ret
