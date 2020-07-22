@@ -16,13 +16,19 @@ from paramsurvey.examples import sleep_worker
 paramsurvey.init(backend='multiprocessing')  # or 'ray', if you installed it
 
 psets = [{'duration': 0.3}] * 5
-ret = paramsurvey.map(sleep_worker, psets, verbose=2)
 
-for r in ret:
+results = paramsurvey.map(sleep_worker, psets, verbose=2)
+
+for r in results:
     print(repr(r))
 ```
 
 prints, in addition to some debugging output, a result from each of the 5 sleep_worker calls.
+
+## Philosophy
+
+
+
 
 ## Installing
 
@@ -30,6 +36,4 @@ prints, in addition to some debugging output, a result from each of the 5 sleep_
 $ pip install paramsurvey
 $ pip install paramsurvey[ray]
 ```
-
-## Philosophy
 
