@@ -127,9 +127,9 @@ def test_worker_exception(capsys, paramsurvey_init):
     psets = [{}, {}, {}, {'raise': True}, {}, {}, {}]
 
     ret = paramsurvey.map(do_raise, psets, name='test_worker_exception')
-    assert len(ret) == 7
-    assert sum('exception' in r for r in ret if r is not None) == 1
-    assert sum('pset' in r for r in ret) == 7
+    assert len(ret) == 6
+    # XXX test for the exception
+    assert sum('pset' in r for r in ret) == 6
     assert sum('result' in r for r in ret) == 6
 
     captured = capsys.readouterr()
@@ -153,13 +153,8 @@ def test_wrapper_exception(capsys, paramsurvey_init):
 
     ret = paramsurvey.map(do_nothing, psets, raise_in_wrapper=ValueError('test_wrapper_exception'))
 
-    # ray eats a return when it raises XXX
-    assert len(ret) == 5 or len(ret) == 3
-    assert sum('result' in r for r in ret) == 3  # same for ray and multi
-    if len(ret) == 5:
-        assert sum('exception' in r for r in ret) == 2
-    else:
-        assert sum('exception' in r for r in ret) == 0
+    assert len(ret) == 3
+    assert sum('result' in r for r in ret) == 3
 
     # XXX ray prints traceback in the worker, multiprocessing and ray local_mode prints in the parent
 

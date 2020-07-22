@@ -7,6 +7,8 @@ from . import stats
 
 
 def accumulate_return(user_ret, system_kwargs, user_kwargs):
+    if 'exception' in user_ret:
+        return
     if 'user_ret' not in system_kwargs:
         system_kwargs['user_ret'] = []
     system_kwargs['user_ret'].append(user_ret)
