@@ -2,8 +2,8 @@
 
 test:
 	PYTHONPATH=. pytest test/unit
-	PYTHONPATH=. test/integration/test-multiprocessing.sh
-	PYTHONPATH=.:test/integration test/integration/test-ray.sh
+	PYTHONPATH=. test/integration/test-multiprocessing.sh test/integration
+	PYTHONPATH=.:test/integration test/integration/test-ray.sh test/integration
 
 clean_coverage:
 	rm -f .coverage
