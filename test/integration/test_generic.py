@@ -2,6 +2,7 @@ import time
 import os
 import tempfile
 import pytest
+import sys
 
 import paramsurvey
 import paramsurvey.stats
@@ -84,6 +85,8 @@ def test_args(capsys, paramsurvey_init):
     assert ret is None  # because of out_func
 
     captured = capsys.readouterr()
+    sys.stdout.write(captured.out)
+    sys.stderr.write(captured.err)
     assert len(captured.err.splitlines()) >= len(psets)
 
     # because of progress_dt being 0., we should have at least len(psets) progress lines
@@ -102,6 +105,8 @@ def test_args(capsys, paramsurvey_init):
     assert ret is None  # because of out_func
 
     captured = capsys.readouterr()
+    sys.stdout.write(captured.out)
+    sys.stderr.write(captured.err)
     assert len(captured.err.splitlines()) >= len(psets)
 
     # because of progress_dt being 0., we should have at least len(psets) progress lines
@@ -127,14 +132,16 @@ def test_worker_exception(capsys, paramsurvey_init):
     assert sum('pset' in r for r in ret) == 7
     assert sum('result' in r for r in ret) == 6
 
-    out, err = capsys.readouterr()
+    captured = capsys.readouterr()
+    sys.stdout.write(captured.out)
+    sys.stderr.write(captured.err)
 
     # ray redirects stderr to stdout, while multiprocessing prints it in the worker
     # TODO: add stderr/out capture everywhere and use it here
-    #assert 'Traceback ' in out or 'Traceback ' in err
+    #assert 'Traceback ' in captured.out or 'Traceback ' in captured.err
 
     # the standard progress function prints this
-    assert 'failures: 1' in out or 'failures: 1' in err
+    assert 'failures: 1' in captured.out or 'failures: 1' in captured.err
 
 
 def do_nothing(pset, system_kwargs, user_kwargs, raw_stats):
@@ -156,8 +163,10 @@ def test_wrapper_exception(capsys, paramsurvey_init):
 
     # XXX ray prints traceback in the worker, multiprocessing and ray local_mode prints in the parent
 
-    out, err = capsys.readouterr()
-    assert 'failures: 1' in out or 'failures: 1' in err
+    captured = capsys.readouterr()
+    sys.stdout.write(captured.out)
+    sys.stderr.write(captured.err)
+    assert 'failures: 1' in captured.out or 'failures: 1' in captured.err
 
 
 def test_overlarge_pset():
