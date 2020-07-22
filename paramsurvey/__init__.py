@@ -82,5 +82,7 @@ def current_core_count(*args, **kwargs):
 
 def map(*args, **kwargs):
     if our_verbose and 'verbose' not in kwargs:
+        if our_verbose > 1:
+            print('adding verbose= to map kwargs', file=sys.stderr)
         kwargs['verbose'] = our_verbose
     return our_backend['map'](*args, **kwargs)
