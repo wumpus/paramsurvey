@@ -13,7 +13,10 @@ except DistributionNotFound:  # pragma: no cover
 
 
 def lazy_load_ray():
-    from . import psray
+    try:
+        from . import psray
+    except ImportError:
+        raise ValueError('Import of ray module failed, did you "pip install paramsurvey[ray]"?')
     return {
         'init': psray.init,
         'map': psray.map,
@@ -23,7 +26,10 @@ def lazy_load_ray():
 
 
 def lazy_load_mpi():  # pragma: no cover
-    from . import psmpi
+    try:
+        from . import psmpi
+    except ImportError:
+        raise ValueError('Import of mpi module failed, did you "pip install paramsurvey[mpi]"?')
     return {
         'init': psmpi.init,
         'map': psmpi.map,
