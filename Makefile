@@ -1,4 +1,4 @@
-.PHONY: test clean_coverage test_coverage
+.PHONY: test clean_coverage test_coverage distclean dist_check dist
 
 test:
 	PYTHONPATH=. pytest test/unit
@@ -16,3 +16,18 @@ test_coverage: clean_coverage
 test_coverage_verbose:
 	PARAMSURVEY_VERBOSE=2 COVERAGE=1 PYTHONPATH=. test/integration/test-multiprocessing.sh test/integration
 	PARAMSURVEY_VERBOSE=2 COVERAGE=1 PYTHONPATH=.:test/integration test/integration/test-ray.sh test/integration
+
+distclean:
+	rm -rf dist/
+
+distcheck: distclean
+	python ./setup.py sdist
+	twine check dist/*
+
+dist: distclean
+	echo "reminder, you must have tagged this commit or you'll end up failing"
+	echo "  git tag v0.x.x"
+	echo "  git push --tags"
+	python ./setup.py sdist
+	twine check dist/*
+	twine upload dist/* -r pypi
