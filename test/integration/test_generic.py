@@ -149,15 +149,15 @@ def do_nothing(pset, system_kwargs, user_kwargs, raw_stats):
 
 
 def test_wrapper_exception(capsys, paramsurvey_init):
-    psets = [{}, {'actually_raise': True}, {}, {}, {}]
+    psets = [{}, {'actually_raise': True}, {}, {'actually_raise': True}, {}]
 
     ret = paramsurvey.map(do_nothing, psets, raise_in_wrapper=ValueError('test_wrapper_exception'))
 
     # ray eats a return when it raises XXX
-    assert len(ret) == 5 or len(ret) == 4
-    assert sum('result' in r for r in ret) == 4  # same for ray and multi
+    assert len(ret) == 5 or len(ret) == 3
+    assert sum('result' in r for r in ret) == 3  # same for ray and multi
     if len(ret) == 5:
-        assert sum('exception' in r for r in ret) == 1
+        assert sum('exception' in r for r in ret) == 2
     else:
         assert sum('exception' in r for r in ret) == 0
 
@@ -166,7 +166,7 @@ def test_wrapper_exception(capsys, paramsurvey_init):
     captured = capsys.readouterr()
     sys.stdout.write(captured.out)
     sys.stderr.write(captured.err)
-    assert 'failures: 1' in captured.out or 'failures: 1' in captured.err
+    assert 'failures: 2' in captured.out or 'failures: 2' in captured.err
 
 
 def test_overlarge_pset():

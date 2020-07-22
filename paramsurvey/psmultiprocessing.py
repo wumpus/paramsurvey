@@ -76,7 +76,7 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
                     result = func(pset, system_kwargs, user_kwargs, raw_stats)
                 user_ret['result'] = result
             except Exception as e:
-                user_ret['exception'] = str(e)
+                user_ret['exception'] = repr(e)
                 print('saw an exception in the worker function', file=sys.stderr)
                 print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
                 traceback.print_exc()
@@ -89,7 +89,7 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
         sys.stderr.flush()
         # cannot increment progress[failures] here because we are in the child & it is not returned
         # fake up a single return value
-        user_ret = {'pset': psets[0], 'exception': str(e)}
+        user_ret = {'pset': psets[0], 'exception': repr(e)}
         return [[user_ret, {}]]
 
 
@@ -103,8 +103,16 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
         out_func(user_ret, system_kwargs, user_kwargs)
         if 'raw_stats' in system_ret:
             system_stats.combine_stats(system_ret['raw_stats'])
+        pset_id = user_ret['pset']['_pset_id']
         if 'exception' in user_ret:
             progress['failures'] += 1
+            progress['exceptions'] += 1
+            system_kwargs['pset_ids'][pset_id]['exception'] = user_ret['exception']
+        else:
+            if pset_id not in system_kwargs['pset_ids']:
+                # about to crash
+                print('ack, pset_ids is', system_kwargs['pset_ids'])
+            del system_kwargs['pset_ids'][pset_id]
 
     utils.report_progress(system_kwargs)
 
@@ -114,7 +122,7 @@ def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=N
     if not psets:
         return
 
-    system_stats, system_kwargs = utils.map_prep(name, chdir, outfile, out_subdirs, len(psets), verbose, **kwargs)
+    psets, system_stats, system_kwargs = utils.map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs)
 
     do_partial = functools.partial(do_work_wrapper, func, system_kwargs, user_kwargs)
 
@@ -127,7 +135,7 @@ def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=N
         chunksize = pick_chunksize(len(psets), factor=100)
 
     # form our work into groups of length 1, to disable our groups feature
-    psets = [[x] for x in psets]
+    grouped_psets = [[x] for x in psets]
 
     if verbose:
         print('starting map, {} psets {} cores {} chunksize'.format(
@@ -135,16 +143,19 @@ def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=N
         ), file=sys.stderr)
         sys.stderr.flush()
 
-    for ret in pool.imap_unordered(do_partial, psets, chunksize):
+    for ret in pool.imap_unordered(do_partial, grouped_psets, chunksize):
         if ret is not None:
             handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
 
     if verbose:
         print('finished getting results for', name, file=sys.stderr)
         sys.stderr.flush()
+
+    utils.finalize_progress(system_kwargs)
     utils.report_progress(system_kwargs, final=True)
 
     system_stats.print_histograms(name)
 
     if 'user_ret' in system_kwargs:
         return system_kwargs['user_ret']
+    # XXX return and object including user_ret and pset_ids

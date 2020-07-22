@@ -78,7 +78,7 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
                 result = func(pset, system_kwargs, user_kwargs, raw_stats)
             user_ret['result'] = result
         except Exception as e:
-            user_ret['exception'] = str(e)
+            user_ret['exception'] = repr(e)
             print('saw an exception in the worker function', file=sys.stderr)
             print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
             traceback.print_exc()
@@ -109,8 +109,13 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
         out_func(user_ret, system_kwargs, user_kwargs)
         if 'raw_stats' in system_ret:
             system_stats.combine_stats(system_ret['raw_stats'])
+        pset_id = user_ret['pset']['_pset_id']
         if 'exception' in user_ret:
             progress['failures'] += 1
+            progress['exceptions'] += 1
+            system_kwargs['pset_ids'][pset_id]['exception'] = user_ret['exception']
+        else:
+            del system_kwargs['pset_ids'][pset_id]
 
     utils.report_progress(system_kwargs)
 
@@ -148,13 +153,11 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
 
 
 def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
-        progress_dt=60., group_size=None, name='pset', verbose=None, **kwargs):
+        progress_dt=60., group_size=None, name='default', verbose=None, **kwargs):
     if not psets:
         return
 
-    psets = psets.copy()  # we are going to be popping it
-
-    system_stats, system_kwargs = utils.map_prep(name, chdir, outfile, out_subdirs, len(psets), verbose, **kwargs)
+    psets, system_stats, system_kwargs = utils.map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs)
 
     progress = system_kwargs['progress']
     cores = current_core_count()
@@ -189,9 +192,12 @@ def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=N
     if verbose:
         print('finished getting results', file=sys.stderr)
         sys.stderr.flush()
+
+    utils.finalize_progress(system_kwargs)
     utils.report_progress(system_kwargs, final=True)
 
     system_stats.print_histograms(name)
 
     if 'user_ret' in system_kwargs:
         return system_kwargs['user_ret']
+    # XXX return and object including user_ret and pset_ids
