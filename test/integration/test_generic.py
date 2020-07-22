@@ -5,19 +5,7 @@ import pytest
 
 import paramsurvey
 import paramsurvey.stats
-
-
-def do_sleep(pset, system_kwargs, user_kwargs, raw_stats):
-    time.sleep(pset['duration'])
-    return {'slept': pset['duration']}
-
-
-def do_burn(pset, system_kwargs, user_kwargs, raw_stats):
-    start = time.time()
-    with paramsurvey.stats.record_wallclock('foo', raw_stats):
-        while time.time() < start + pset['duration']:
-            pass
-    return {'burned': pset['duration']}
+from paramsurvey.examples import sleep_worker, burn_worker
 
 
 @pytest.fixture(scope="module")
@@ -38,7 +26,7 @@ def test_basics(paramsurvey_init):
     psets = [{'duration': duration}] * ncores * 4
 
     start = time.time()
-    ret = paramsurvey.map(do_sleep, psets, name='simple')
+    ret = paramsurvey.map(sleep_worker, psets, name='simple')
     assert [r['result']['slept'] == duration for r in ret], 'everyone slept '+str(duration)
     assert len(ret) == len(psets), 'one return for each pset'
     elapsed = time.time() - start
@@ -46,13 +34,13 @@ def test_basics(paramsurvey_init):
 
     psets = psets[:ncores]
     start = time.time()
-    ret = paramsurvey.map(do_sleep, psets, name='group_size 5', group_size=5)
+    ret = paramsurvey.map(sleep_worker, psets, name='group_size 5', group_size=5)
     assert [r['result']['slept'] == duration for r in ret], 'everyone slept '+str(duration)
     assert len(ret) == len(psets), 'one return for each pset'
     elapsed = time.time() - start
     assert elapsed > duration*3, 'must take at least {} time'.format(duration)
 
-    ret = paramsurvey.map(do_burn, psets, name='burn group_size 5', group_size=4)
+    ret = paramsurvey.map(burn_worker, psets, name='burn group_size 5', group_size=4)
     assert [r['result']['burned'] == duration for r in ret], 'everyone burned '+str(duration)
     assert len(ret) == len(psets), 'one return for each pset'
     elapsed = time.time() - start
@@ -157,7 +145,7 @@ def test_wrapper_exception(capsys, paramsurvey_init):
 
     ret = paramsurvey.map(do_nothing, psets, raise_in_wrapper=ValueError('test_wrapper_exception'))
 
-    # ray eats a return when it raises
+    # ray eats a return when it raises XXX
     assert len(ret) == 5 or len(ret) == 4
     assert sum('result' in r for r in ret) == 4  # same for ray and multi
     if len(ret) == 5:
