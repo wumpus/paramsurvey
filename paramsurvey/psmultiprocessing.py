@@ -10,10 +10,12 @@ from . import utils
 from . import stats
 
 pool = None
+our_ncores = None
 
 
 def init(ncores=None, verbose=None):
     global pool
+    global our_ncores
     if pool:  # yes we can be called multiple times  # pragma: no cover
         return
 
@@ -22,6 +24,7 @@ def init(ncores=None, verbose=None):
     if verbose:
         print('initializing multiprocessing pool with {} processes'.format(ncores), file=sys.stderr)
     pool = multiprocessing.Pool(processes=ncores)
+    our_ncores = ncores
 
 
 def finalize():
@@ -127,7 +130,9 @@ def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=N
     psets = [[x] for x in psets]
 
     if verbose:
-        print('starting map, chunksize is', chunksize, file=sys.stderr)
+        print('starting map, {} psets {} cores {} chunksize'.format(
+            len(psets), our_ncores, chunksize
+        ), file=sys.stderr)
         sys.stderr.flush()
 
     for ret in pool.imap_unordered(do_partial, psets, chunksize):
