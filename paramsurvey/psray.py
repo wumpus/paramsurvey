@@ -87,6 +87,8 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
 
 
 def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
+    progress = system_kwargs['progress']
+
     try:
         ret = ray.get(ret)
     except Exception as e:
@@ -95,12 +97,10 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
               'an unknown number of results lost\n'.format(e), file=sys.stderr)
         traceback.print_exc()
         sys.stderr.flush()
-        progress = system_kwargs['progress']
         progress['failures'] += 1
         utils.report_progress(system_kwargs)
         return
 
-    progress = system_kwargs['progress']
     progress['retired'] += len(ret)
 
     for user_ret, system_ret in ret:
