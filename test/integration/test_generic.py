@@ -62,7 +62,6 @@ def test_args(capsys, paramsurvey_init):
     out_func_called = False
     test_user_kwargs = {'test': 1, 'expected_cwd': chdir}
     outfile = 'foo'
-    name = 'foobiebletch'
 
     def out_func(user_ret, system_kwargs, user_kwargs):
         nonlocal out_func_called
@@ -74,6 +73,7 @@ def test_args(capsys, paramsurvey_init):
 
     psets = [{'duration': 0.1}] * 2
 
+    name = 'test_args dt=0'
     ret = paramsurvey.map(do_test_args, psets,
                           out_func=out_func, user_kwargs=test_user_kwargs,
                           chdir=chdir, outfile=outfile, out_subdirs=10,
@@ -91,6 +91,7 @@ def test_args(capsys, paramsurvey_init):
     assert len(has_name) >= len(psets)
 
     # same as previous but verbose=2 instead of progress_dt=0
+    name = 'test_args verbose=2'
     ret = paramsurvey.map(do_test_args, psets,
                           out_func=out_func, user_kwargs=test_user_kwargs,
                           chdir=chdir, outfile=outfile, out_subdirs=10,
@@ -107,7 +108,7 @@ def test_args(capsys, paramsurvey_init):
     has_name = [line for line in captured.err.splitlines() if 'progress' in line and name in line]
     assert len(has_name) >= len(psets)
 
-    ret = paramsurvey.map(do_test_args, [])
+    ret = paramsurvey.map(do_test_args, [], name='no psets')
     assert ret is None
 
 
@@ -120,7 +121,7 @@ def do_raise(pset, system_kwargs, user_kwargs, raw_stats):
 def test_worker_exception(capsys, paramsurvey_init):
     psets = [{}, {}, {}, {'raise': True}, {}, {}, {}]
 
-    ret = paramsurvey.map(do_raise, psets)
+    ret = paramsurvey.map(do_raise, psets, name='test_worker_exception')
     assert len(ret) == 7
     assert sum('exception' in r for r in ret if r is not None) == 1
     assert sum('pset' in r for r in ret) == 7
