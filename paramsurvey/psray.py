@@ -9,7 +9,7 @@ import pyarrow
 
 from . import utils
 from . import stats
-from .utils import ResultsObject
+from .utils import MapResults
 
 
 def read_ray_config():
@@ -203,4 +203,4 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
 
     system_stats.print_histograms(name)
 
-    return ResultsObject(system_kwargs['results'], list(system_kwargs['pset_ids'].values()), system_kwargs['progress'], system_stats)
+    return MapResults(system_kwargs['results'], list(system_kwargs['pset_ids'].values()), system_kwargs['progress'], system_stats)

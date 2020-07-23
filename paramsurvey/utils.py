@@ -6,7 +6,7 @@ import uuid
 from . import stats
 
 
-class ProgressObject(object):
+class MapProgress(object):
     def __init__(self, progress):
         self._progress = progress
 
@@ -31,7 +31,7 @@ class ProgressObject(object):
         return self._progress['exceptions']
 
 
-class ResultsObject(object):
+class MapResults(object):
     '''
     A container object for the outcome of paramsurvey.map()
     '''
@@ -51,11 +51,11 @@ class ResultsObject(object):
 
     @property
     def progress(self):
-        return ProgressObject(self._progress)
+        return MapProgress(self._progress)
 
     @property
     def stats(self):
-        # stats.StatsObject
+        # stats.PerfStats
         return self._stats
 
 
@@ -114,7 +114,7 @@ def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs):
     psets, pset_ids = make_pset_ids(psets)
     system_kwargs['pset_ids'] = pset_ids
 
-    system_stats = stats.StatsObject()
+    system_stats = stats.PerfStats()
     progress = defaultdict(int)
     progress['total'] = len(psets)
     system_kwargs['progress'] = progress

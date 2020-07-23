@@ -4,7 +4,7 @@ from paramsurvey import stats
 
 
 def test_stats():
-    s = stats.StatsObject()
+    s = stats.PerfStats()
     raw_stats = {
         'foo': [0.1, 0.3],
         'bar': [3.0, 4.0, 5.0],

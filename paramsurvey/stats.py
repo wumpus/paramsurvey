@@ -6,7 +6,7 @@ import sys
 from hdrh.histogram import HdrHistogram
 
 
-class StatsObject(object):
+class PerfStats(object):
     def __init__(self):
         self.d = dict()
 
@@ -51,6 +51,7 @@ class StatsObject(object):
             print('counter {}, counts {}'.format(name, hist.get_total_count()), file=file)
             for pct in (50, 90, 95, 99):
                 print('counter {}, {}%tile: {:.1f}s'.format(name, pct, hist.get_value_at_percentile(pct)/1000.), file=file)
+
 
 @contextmanager
 def record_wallclock(name, raw_stats):
