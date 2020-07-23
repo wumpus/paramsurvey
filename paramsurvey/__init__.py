@@ -64,6 +64,7 @@ def init(backend=None, ncores=None, verbose=None, **kwargs):
     if verbose or int(os.environ.get('PARAMSURVEY_VERBOSE', '0')) > 0:
         global our_verbose
         our_verbose = verbose or int(os.environ.get('PARAMSURVEY_VERBOSE', '0'))
+        kwargs['verbose'] = verbose or our_verbose
         print('initializing paramsurvey {} backend'.format(backend), file=sys.stderr)
 
     global our_backend
