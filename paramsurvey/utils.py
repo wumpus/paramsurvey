@@ -185,6 +185,7 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
             system_kwargs['pset_ids'][pset_id]['exception'] = user_ret['exception']
         else:
             del system_kwargs['pset_ids'][pset_id]
+            user_ret['pset'].pop('_pset_id', None)
             system_kwargs['results'].append(user_ret)
             progress.finished += len(ret)
         if out_func:

@@ -28,25 +28,30 @@ def test_basics(paramsurvey_init):
 
     start = time.time()
     results = paramsurvey.map(sleep_worker, psets, name='simple')
-    assert [r['result']['slept'] == duration for r in results.results], 'everyone slept '+str(duration)
-    assert len(results.results) == len(psets), 'one return for each pset'
-    assert len(results.results_flattened) == len(psets), 'one return for each pset'
     elapsed = time.time() - start
     assert elapsed > duration, 'must take at least {} time'.format(duration)
+
+    assert [r['result']['slept'] == duration for r in results.results], 'everyone slept '+str(duration)
+    assert len(results.results) == len(psets), 'one return for each pset'
+    assert '_pset_id' not in results.results[0]['pset']
+    assert len(results.results_flattened) == len(psets), 'one return for each pset'
 
     psets = psets[:ncores]
     start = time.time()
     results = paramsurvey.map(sleep_worker, psets, name='group_size 5', group_size=5)
-    assert [r['result']['slept'] == duration for r in results.results], 'everyone slept '+str(duration)
-    assert len(results.results) == len(psets), 'one return for each pset'
     elapsed = time.time() - start
     assert elapsed > duration*3, 'must take at least {} time'.format(duration)
 
-    results = paramsurvey.map(burn_worker, psets, name='burn group_size 5', group_size=4)
-    assert [r['result']['burned'] == duration for r in results.results], 'everyone burned '+str(duration)
+    assert [r['result']['slept'] == duration for r in results.results], 'everyone slept '+str(duration)
     assert len(results.results) == len(psets), 'one return for each pset'
+
+    start = time.time()
+    results = paramsurvey.map(burn_worker, psets, name='burn group_size 4', group_size=4)
     elapsed = time.time() - start
     assert elapsed > duration*3, 'must take at least {} time'.format(duration)
+
+    assert [r['result']['burned'] == duration for r in results.results], 'everyone burned '+str(duration)
+    assert len(results.results) == len(psets), 'one return for each pset'
 
 
 def do_test_args(pset, system_kwargs, user_kwargs, raw_stats):
