@@ -9,6 +9,7 @@ import pyarrow
 
 from . import utils
 from . import stats
+from .utils import ResultsObject
 
 
 def read_ray_config():
@@ -101,12 +102,12 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
         utils.report_progress(system_kwargs)
         return
 
-    progress['retired'] += len(ret)
-
     for user_ret, system_ret in ret:
         if 'result' in user_ret and not isinstance(user_ret['result'], dict) and user_ret['result'] is not None:
-            raise ValueError('user function did not return a dict')
-        out_func(user_ret, system_kwargs, user_kwargs)
+            # fake an exception, make this case look like other failures
+            user_ret['exception'] = "ValueError('user function did not return a dict: {}')".format(
+                repr(user_ret['result']))
+            user_ret['result'] = {}
         if 'raw_stats' in system_ret:
             system_stats.combine_stats(system_ret['raw_stats'])
         pset_id = user_ret['pset']['_pset_id']
@@ -116,6 +117,10 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
             system_kwargs['pset_ids'][pset_id]['exception'] = user_ret['exception']
         else:
             del system_kwargs['pset_ids'][pset_id]
+            system_kwargs['results'].append(user_ret)
+            progress['finished'] += len(ret)
+        if out_func:
+            out_func(user_ret, system_kwargs, user_kwargs)
 
     utils.report_progress(system_kwargs)
 
@@ -152,7 +157,7 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
     return futures, cores, group_size
 
 
-def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
+def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
         progress_dt=60., group_size=None, name='default', verbose=None, **kwargs):
     if not psets:
         return
@@ -198,6 +203,4 @@ def map(func, psets, out_func=utils.accumulate_return, user_kwargs=None, chdir=N
 
     system_stats.print_histograms(name)
 
-    if 'user_ret' in system_kwargs:
-        return system_kwargs['user_ret']
-    # XXX return and object including user_ret and pset_ids
+    return ResultsObject(system_kwargs['results'], list(system_kwargs['pset_ids'].values()), system_kwargs['progress'], system_stats)

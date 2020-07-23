@@ -6,12 +6,57 @@ import uuid
 from . import stats
 
 
-def accumulate_return(user_ret, system_kwargs, user_kwargs):
-    if 'exception' in user_ret:
-        return
-    if 'user_ret' not in system_kwargs:
-        system_kwargs['user_ret'] = []
-    system_kwargs['user_ret'].append(user_ret)
+class ProgressObject(object):
+    def __init__(self, progress):
+        self._progress = progress
+
+    @property
+    def total(self):
+        return self._progress['total']
+
+    @property
+    def total(self):
+        return self._progress['started']
+
+    @property
+    def finished(self):
+        return self._progress['finished']
+
+    @property
+    def failures(self):
+        return self._progress['failures']
+
+    @property
+    def exceptions(self):
+        return self._progress['exceptions']
+
+
+class ResultsObject(object):
+    '''
+    A container object for the outcome of paramsurvey.map()
+    '''
+    def __init__(self, results, missing, progress, stats):
+        self._results = results
+        self._missing = missing
+        self._progress = progress
+        self._stats = stats
+
+    @property
+    def results(self):
+        return self._results
+
+    @property
+    def missing(self):
+        return self._missing
+
+    @property
+    def progress(self):
+        return ProgressObject(self._progress)
+
+    @property
+    def stats(self):
+        # stats.StatsObject
+        return self._stats
 
 
 def report_progress(system_kwargs, final=False):
@@ -51,7 +96,7 @@ def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs):
     print('starting work on', name, file=sys.stderr)
     sys.stderr.flush()
 
-    system_kwargs = {}
+    system_kwargs = {'results': []}
     if chdir:
         system_kwargs['chdir'] = chdir
     if outfile:
@@ -79,7 +124,7 @@ def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs):
     return psets, system_stats, system_kwargs
 
 
-def flatten_result(result, raise_if_exceptions=False):
+def flatten_results(result, raise_if_exceptions=False):
     seen_pset_keys = set()
     seen_result_keys = set()
     ret = []
@@ -120,14 +165,16 @@ def make_pset_ids(psets):
 
 
 def finalize_progress(system_kwargs):
-    failures = system_kwargs['progress'].get('failures', 0)
+    progress = system_kwargs['progress']
+    failures = progress.get('failures', 0)
     actual_failures = len(system_kwargs['pset_ids'])
 
     verbose = system_kwargs.get('verbose', 0)
 
+    # needed to fixup wrapper failures
     if actual_failures > failures:
         print('correcting failure count from {} to {}'.format(failures, actual_failures), file=sys.stderr)
-        system_kwargs['progress']['failures'] = actual_failures
+        progress['failures'] = actual_failures
     elif actual_failures < failures:
         print('can\'t happen! missing pset_ids {} less than failures {}'.format(actual_failures, failures), file=sys.stderr)
     else:

@@ -3,7 +3,7 @@ import sys
 from pkg_resources import get_distribution, DistributionNotFound
 
 from . import psmultiprocessing
-from .utils import flatten_result
+from .utils import flatten_results
 
 
 try:
