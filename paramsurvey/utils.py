@@ -58,7 +58,7 @@ def report_progress(system_kwargs, final=False):
               file=sys.stderr)
 
         if final and system_kwargs['pset_ids']:
-            print('left-over psets:', file=sys.stderr)
+            print('missing psets:', file=sys.stderr)
             for pset_id, pset in system_kwargs['pset_ids'].items():
                 print(' ', pset, file=sys.stderr)
 
