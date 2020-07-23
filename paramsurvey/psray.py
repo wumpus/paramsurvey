@@ -98,7 +98,7 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
               'an unknown number of results lost\n'.format(e), file=sys.stderr)
         traceback.print_exc()
         sys.stderr.flush()
-        progress['failures'] += 1
+        progress.failures += 1
         utils.report_progress(system_kwargs)
         return
 
@@ -112,13 +112,13 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
             system_stats.combine_stats(system_ret['raw_stats'])
         pset_id = user_ret['pset']['_pset_id']
         if 'exception' in user_ret:
-            progress['failures'] += 1
-            progress['exceptions'] += 1
+            progress.failures += 1
+            progress.exceptions += 1
             system_kwargs['pset_ids'][pset_id]['exception'] = user_ret['exception']
         else:
             del system_kwargs['pset_ids'][pset_id]
             system_kwargs['results'].append(user_ret)
-            progress['finished'] += len(ret)
+            progress.finished += len(ret)
         if out_func:
             out_func(user_ret, system_kwargs, user_kwargs)
 
@@ -183,7 +183,7 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
     while psets:
         pset_group = utils.get_pset_group(psets, group_size)
         futures.append(do_work_wrapper.remote(func, system_kwargs, user_kwargs, pset_group))
-        progress['started'] += len(pset_group)
+        progress.started += len(pset_group)
 
         # cores and group_size can change within this function
         futures, cores, group_size = progress_until_fewer(futures, cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size)

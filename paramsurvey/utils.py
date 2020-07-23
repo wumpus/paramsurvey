@@ -7,28 +7,17 @@ from . import stats
 
 
 class MapProgress(object):
-    def __init__(self, progress):
-        self._progress = progress
+    '''Class to track progress of a map()'''
+    # would be perfect as a dataclass, once python 3.7 is our minimum
+    def __init__(self, d={}):
+        self.total = d.get('total', 0)
+        self.started = d.get('started', 0)
+        self.finished = d.get('finished', 0)
+        self.failures = d.get('failures', 0)
+        self.exceptions = d.get('exceptions', 0)
 
-    @property
-    def total(self):
-        return self._progress['total']
-
-    @property
-    def total(self):
-        return self._progress['started']
-
-    @property
-    def finished(self):
-        return self._progress['finished']
-
-    @property
-    def failures(self):
-        return self._progress['failures']
-
-    @property
-    def exceptions(self):
-        return self._progress['exceptions']
+    def __str__(self):
+        return ', '.join([k+': '+str(v) for k, v in vars(self).items()])
 
 
 class MapResults(object):
@@ -51,7 +40,7 @@ class MapResults(object):
 
     @property
     def progress(self):
-        return MapProgress(self._progress)
+        return self._progress
 
     @property
     def stats(self):
@@ -65,8 +54,7 @@ def report_progress(system_kwargs, final=False):
 
     if force or t - system_kwargs['progress_last'] > system_kwargs['progress_dt']:
         system_kwargs['progress_last'] = t
-        print(system_kwargs['name'], 'progress:',
-              ', '.join([k+': '+str(v) for k, v in system_kwargs['progress'].items()]),
+        print(system_kwargs['name'], 'progress:', str(system_kwargs['progress']),
               file=sys.stderr)
 
         if final and system_kwargs['pset_ids']:
@@ -79,7 +67,7 @@ def report_progress(system_kwargs, final=False):
 
 def remaining(system_kwargs):
     progress = system_kwargs['progress']
-    return progress['started'] - progress.get('retired', 0)
+    return progress.started - progress.finished
 
 
 def get_pset_group(psets, group_size):
@@ -96,7 +84,7 @@ def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs):
     print('starting work on', name, file=sys.stderr)
     sys.stderr.flush()
 
-    system_kwargs = {'results': []}
+    system_kwargs = {'progress': MapProgress({'total': len(psets)}), 'results': []}
     if chdir:
         system_kwargs['chdir'] = chdir
     if outfile:
@@ -115,9 +103,6 @@ def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs):
     system_kwargs['pset_ids'] = pset_ids
 
     system_stats = stats.PerfStats()
-    progress = defaultdict(int)
-    progress['total'] = len(psets)
-    system_kwargs['progress'] = progress
     system_kwargs['progress_last'] = 0.
     system_kwargs['progress_dt'] = 0.
 
@@ -166,7 +151,7 @@ def make_pset_ids(psets):
 
 def finalize_progress(system_kwargs):
     progress = system_kwargs['progress']
-    failures = progress.get('failures', 0)
+    failures = progress.failures
     actual_failures = len(system_kwargs['pset_ids'])
 
     verbose = system_kwargs.get('verbose', 0)
@@ -174,7 +159,7 @@ def finalize_progress(system_kwargs):
     # needed to fixup wrapper failures
     if actual_failures > failures:
         print('correcting failure count from {} to {}'.format(failures, actual_failures), file=sys.stderr)
-        progress['failures'] = actual_failures
+        progress.failures = actual_failures
     elif actual_failures < failures:
         print('can\'t happen! missing pset_ids {} less than failures {}'.format(actual_failures, failures), file=sys.stderr)
     else:

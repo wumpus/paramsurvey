@@ -107,13 +107,13 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
             system_stats.combine_stats(system_ret['raw_stats'])
         pset_id = user_ret['pset']['_pset_id']
         if 'exception' in user_ret:
-            progress['failures'] += 1
-            progress['exceptions'] += 1
+            progress.failures += 1
+            progress.exceptions += 1
             system_kwargs['pset_ids'][pset_id]['exception'] = user_ret['exception']
         else:
             del system_kwargs['pset_ids'][pset_id]
             system_kwargs['results'].append(user_ret)
-            progress['finished'] += 1
+            progress.finished += 1
         if out_func is not None:
             out_func(user_ret, system_kwargs, user_kwargs)
 
@@ -146,7 +146,7 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
         ), file=sys.stderr)
         sys.stderr.flush()
 
-    system_kwargs['progress']['started'] = len(psets)
+    system_kwargs['progress'].started = len(psets)
 
     for ret in pool.imap_unordered(do_partial, grouped_psets, chunksize):
         if ret is not None:
