@@ -21,7 +21,7 @@ def read_ray_config():
     return address, password
 
 
-def init(**kwargs):
+def init(verbose=False, **kwargs):
     ray_kwargs = {}
 
     if 'ncores' in kwargs:
