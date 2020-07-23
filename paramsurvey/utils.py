@@ -163,3 +163,28 @@ def finalize_progress(system_kwargs):
     else:
         if system_kwargs['verbose'] > 1 and failures > 0:
             print('failures equal to actual failures, hurrah', file=sys.stderr)
+
+
+def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs):
+    progress = system_kwargs['progress']
+    for user_ret, system_ret in ret:
+        if 'result' in user_ret and not isinstance(user_ret['result'], dict) and user_ret['result'] is not None:
+            # fake an exception, make this case look like other failures
+            user_ret['exception'] = "ValueError('user function did not return a dict: {}')".format(
+                repr(user_ret['result']))
+            user_ret['result'] = {}
+        if 'raw_stats' in system_ret:
+            system_stats.combine_stats(system_ret['raw_stats'])
+        pset_id = user_ret['pset']['_pset_id']
+        if 'exception' in user_ret:
+            progress.failures += 1
+            progress.exceptions += 1
+            system_kwargs['pset_ids'][pset_id]['exception'] = user_ret['exception']
+        else:
+            del system_kwargs['pset_ids'][pset_id]
+            system_kwargs['results'].append(user_ret)
+            progress.finished += len(ret)
+        if out_func:
+            out_func(user_ret, system_kwargs, user_kwargs)
+
+    report_progress(system_kwargs)
