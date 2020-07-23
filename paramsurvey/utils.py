@@ -142,10 +142,11 @@ def make_pset_ids(psets):
     ret = []
     for pset in psets:
         pset = pset.copy()  # essentially a 2-level copy of the user's list
-        pset_id = str(uuid.uuid4())  # flatten object because of serialization problems downstream
-        pset_ids[pset_id] = pset
         if '_pset_id' in pset:
             print('pset already has a _pset_id:', pset)
+        pset_sans_id = pset.copy()
+        pset_id = str(uuid.uuid4())  # flatten object because of serialization problems downstream
+        pset_ids[pset_id] = pset_sans_id
         pset['_pset_id'] = pset_id
         ret.append(pset)
     return ret, pset_ids
