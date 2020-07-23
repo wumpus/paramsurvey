@@ -56,14 +56,16 @@ class MapResults(object):
 
 def report_progress(system_kwargs, final=False):
     t = time.time()
-    force = bool(final or system_kwargs['verbose'] > 1)
+    verbose = system_kwargs['verbose']
+
+    force = bool(final or verbose > 1)
 
     if force or t - system_kwargs['progress_last'] > system_kwargs['progress_dt']:
         system_kwargs['progress_last'] = t
         print(system_kwargs['name'], 'progress:', str(system_kwargs['progress']),
               file=sys.stderr)
 
-        if final and system_kwargs['pset_ids']:
+        if final and verbose and system_kwargs['pset_ids']:
             print('missing psets:', file=sys.stderr)
             for pset_id, pset in system_kwargs['pset_ids'].items():
                 print(' ', pset, file=sys.stderr)
