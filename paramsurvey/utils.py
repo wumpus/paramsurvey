@@ -1,6 +1,5 @@
 import time
 import sys
-from collections import defaultdict
 import uuid
 
 from . import stats
@@ -26,6 +25,7 @@ class MapResults(object):
     '''
     def __init__(self, results, missing, progress, stats):
         self._results = results
+        self._results_flattened = None
         self._missing = missing
         self._progress = progress
         self._stats = stats
@@ -33,6 +33,12 @@ class MapResults(object):
     @property
     def results(self):
         return self._results
+
+    @property
+    def results_flattened(self):
+        if self._results_flattened is None:
+            self._results_flattened = flatten_results(self._results)
+        return self._results_flattened
 
     @property
     def missing(self):
@@ -50,7 +56,7 @@ class MapResults(object):
 
 def report_progress(system_kwargs, final=False):
     t = time.time()
-    force = bool(final or system_kwargs.get('verbose', 0) > 1)
+    force = bool(final or system_kwargs['verbose'] > 1)
 
     if force or t - system_kwargs['progress_last'] > system_kwargs['progress_dt']:
         system_kwargs['progress_last'] = t
@@ -93,8 +99,7 @@ def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs):
         system_kwargs['out_subdirs'] = out_subdirs
     if name:
         system_kwargs['name'] = name
-    if verbose:
-        system_kwargs['verbose'] = verbose
+    system_kwargs['verbose'] = verbose or 0
 
     if 'raise_in_wrapper' in kwargs:
         system_kwargs['raise_in_wrapper'] = kwargs['raise_in_wrapper']
@@ -109,17 +114,12 @@ def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs):
     return psets, system_stats, system_kwargs
 
 
-def flatten_results(result, raise_if_exceptions=False):
+def flatten_results(results):
     seen_pset_keys = set()
     seen_result_keys = set()
     ret = []
 
-    for r in result:
-        if 'exception' in r:
-            if raise_if_exceptions:
-                raise ValueError('Exception seen: '+r['exception'])
-            else:
-                continue
+    for r in results:
         if 'pset' in r:
             [seen_pset_keys.add(k) for k in r['pset'].keys()]
         if 'result' in r:
@@ -154,8 +154,6 @@ def finalize_progress(system_kwargs):
     failures = progress.failures
     actual_failures = len(system_kwargs['pset_ids'])
 
-    verbose = system_kwargs.get('verbose', 0)
-
     # needed to fixup wrapper failures
     if actual_failures > failures:
         print('correcting failure count from {} to {}'.format(failures, actual_failures), file=sys.stderr)
@@ -163,5 +161,5 @@ def finalize_progress(system_kwargs):
     elif actual_failures < failures:
         print('can\'t happen! missing pset_ids {} less than failures {}'.format(actual_failures, failures), file=sys.stderr)
     else:
-        if verbose > 1 and failures > 0:
+        if system_kwargs['verbose'] > 1 and failures > 0:
             print('failures equal to actual failures, hurrah', file=sys.stderr)

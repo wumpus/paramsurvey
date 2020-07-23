@@ -30,6 +30,7 @@ def test_basics(paramsurvey_init):
     results = paramsurvey.map(sleep_worker, psets, name='simple')
     assert [r['result']['slept'] == duration for r in results.results], 'everyone slept '+str(duration)
     assert len(results.results) == len(psets), 'one return for each pset'
+    assert len(results.results_flattened) == len(psets), 'one return for each pset'
     elapsed = time.time() - start
     assert elapsed > duration, 'must take at least {} time'.format(duration)
 

@@ -14,19 +14,6 @@ def test_flatten_results():
         {'a': 2, 'b': 2},
     ]
 
-    normal[1]['exception'] = 'blah'
-    flat = paramsurvey.flatten_results(normal)
-    assert flat == [
-        {'a': 1, 'b': 1},
-    ]
-
-    with pytest.raises(ValueError):
-        flat = paramsurvey.flatten_results(normal, raise_if_exceptions=True)
-    del normal[1]['exception']
-
-    flat = paramsurvey.flatten_results(normal)  # make sure it's valid again
     normal[1]['result']['a'] = 1
     with pytest.raises(ValueError):
         flat = paramsurvey.flatten_results(normal)
-    with pytest.raises(ValueError):
-        flat = paramsurvey.flatten_results(normal, raise_if_exceptions=True)
