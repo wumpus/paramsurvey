@@ -10,8 +10,14 @@ are python's multiprocessing module, and computing cluster software `ray`. An `m
 ## Example
 
 ```
+import time
 import paramsurvey
-from paramsurvey.examples import sleep_worker
+
+
+def sleep_worker(pset, system_kwargs, user_kwargs, raw_stats):
+    time.sleep(pset['duration'])
+    return {'slept': pset['duration']}
+
 
 paramsurvey.init(backend='multiprocessing')  # or 'ray', if you installed it
 
@@ -19,8 +25,8 @@ psets = [{'duration': 0.3}] * 5
 
 results = paramsurvey.map(sleep_worker, psets, verbose=2)
 
-for r in results:
-    print(repr(r))
+for r in results.results:
+    print(r['pset'], r['result'])
 ```
 
 prints, in addition to some debugging output, a result from each of the 5 sleep_worker calls.
