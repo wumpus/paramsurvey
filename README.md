@@ -43,6 +43,8 @@ The `pararamsurvey.map()` function executes the worker function once for each ps
 It returns a `MapResults` object, containing the results, performance
 statistics, and information about any failures.
 
+Multiple calls to `paramsurvey.map()` can be made, with different lists of psets.
+
 ## Worker function limitations
 
 The worker function runs in a different address space and possibly on a different server.
@@ -60,7 +62,7 @@ The MapResults object has several properties:
 
 * results is a list of dictionaries; 'return' is the return value of the worker function, and 'pset' is the pset.
 * failed is a list of failed psets, plus an extra '_exception' key if an exception was raised in the worker
-* progress is a MapProgress object containing the details of pset execution: total, started, finished, failures, exceptions
+* progress is a MapProgress object with properties containing the details of pset execution: total, started, finished, failures, exceptions
 * stats is a PerfStats object containing performance statistics
 
 ## Installing
