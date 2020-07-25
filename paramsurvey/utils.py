@@ -1,6 +1,8 @@
 import time
 import sys
 import uuid
+import math
+import random
 
 from . import stats
 
@@ -201,3 +203,13 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
             out_func(user_ret, system_kwargs, user_kwargs)
 
     report_progress(system_kwargs)
+
+
+def make_subdir_name(count, prefix='ps'):
+    try:
+        digits = math.ceil(math.log10(count))
+    except Exception:
+        print('count argument must be a number greater than 0', file=sys.stderr)
+        raise
+
+    return prefix + str(random.randint(0, count-1)).zfill(digits)

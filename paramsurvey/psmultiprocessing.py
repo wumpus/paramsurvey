@@ -1,6 +1,5 @@
 import os
 import sys
-import random
 import traceback
 import json
 import functools
@@ -58,7 +57,7 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
 
         if 'out_subdirs' in system_kwargs:
             # the entire pset group gets the same out_subdir
-            system_kwargs['out_subdir'] = 'ray'+str(random.randint(0, system_kwargs['out_subdirs'])).zfill(5)
+            system_kwargs['out_subdir'] = utils.make_subdir_name(system_kwargs['out_subdirs'])
 
         # multiprocesing workers start with parent's PWD so this probably won't get used
         if 'chdir' in system_kwargs:

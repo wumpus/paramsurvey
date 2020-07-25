@@ -1,6 +1,5 @@
 import os
 import sys
-import random
 import traceback
 import json
 
@@ -60,7 +59,7 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
 
     if 'out_subdirs' in system_kwargs:
         # the entire pset group gets the same out_subdir
-        system_kwargs['out_subdir'] = 'ray'+str(random.randint(0, system_kwargs['out_subdirs'])).zfill(5)
+        system_kwargs['out_subdir'] = utils.make_subdir_name(system_kwargs['out_subdirs'])
 
     # ray workers start at "cd ~"
     if 'chdir' in system_kwargs:
@@ -144,6 +143,9 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
         return
 
     psets, system_stats, system_kwargs = utils.map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs)
+    if 'chdir' not in system_kwargs:
+        # ray workers default to ~
+        system_kwargs['chdir'] = os.getcwd()
 
     progress = system_kwargs['progress']
     cores = current_core_count()
