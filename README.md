@@ -33,8 +33,35 @@ prints, in addition to some debugging output, a result from each of the 5 sleep_
 
 ## Philosophy
 
+A parameter survey runs begins by initializing the software,
+specifying which backend ('multiprocessing' or 'ray').
 
+A list of parameter sets (psets) is constructed.
 
+The `pararamsurvey.map()` function executes the worker function once for each pset.
+
+It returns a `MapResults` object, containing the results, performance
+statistics, and information about any failures.
+
+## Worker function limitations
+
+The worker function runs in a different address space and possibly on a different server.
+It shouldn't access any global variables.
+
+For hard-to-explain Python issues, be sure to define the worker
+function before calling `paramsurvey.init()`. The worker function should
+not be nested inside another function. On Windows, the main program file
+should have a [`if __name == '__main__'` guard similar to the examples
+at the top of the Python multprocessing documentation.](https://docs.python.org/3/library/multiprocessing.html)
+
+## The MapResults object
+
+The MapResults object has several properties:
+
+* results is a list of dictionaries; 'return' is the return value of the worker function, and 'pset' is the pset.
+* failed is a list of failed psets, plus an extra '_exception' key if an exception was raised in the worker
+* progress is a MapProgress object containing the details of pset execution: total, started, finished, failures, exceptions
+* stats is a PerfStats object containing performance statistics
 
 ## Installing
 

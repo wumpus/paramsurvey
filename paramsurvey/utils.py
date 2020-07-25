@@ -141,6 +141,8 @@ def make_pset_ids(psets):
     pset_ids = {}
     ret = []
     for pset in psets:
+        if '_exception' in pset:
+            print('warning: key _exception seen in a pset, this key is used by the paramsurvey system', file=sys.stderr)
         pset = pset.copy()  # essentially a 2-level copy of the user's list
         if '_pset_id' in pset:
             print('pset already has a _pset_id:', pset)
@@ -185,7 +187,7 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
         if 'exception' in user_ret:
             progress.failures += 1
             progress.exceptions += 1
-            system_kwargs['pset_ids'][pset_id]['exception'] = user_ret['exception']
+            system_kwargs['pset_ids'][pset_id]['_exception'] = user_ret['exception']
             if verbose > 1:
                 print('saw exception', user_ret['exception'], file=sys.stderr)
         else:

@@ -135,7 +135,7 @@ def test_worker_exception(capsys, paramsurvey_init):
     results = paramsurvey.map(do_raise, psets, name='test_worker_exception')
     assert len(results.results) == 6
     assert len(results.missing) == 1
-    assert 'exception' in results.missing[0]
+    assert '_exception' in results.missing[0]
     assert results.progress.total == 7
     assert results.progress.finished == 6
     assert results.progress.failures == 1
@@ -172,7 +172,7 @@ def test_wrapper_exception(capsys, paramsurvey_init):
     assert results.progress.failures == 2
 
     # ray and multiprocessing behave differently for 'exception'
-    #assert 'exception' in results.missing[0]
+    #assert '_exception' in results.missing[0]
     #assert results.progress.exceptions == 1
 
     assert sum('result' in r for r in results.results) == 3
