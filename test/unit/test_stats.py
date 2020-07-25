@@ -1,4 +1,5 @@
 import math
+import time
 
 from paramsurvey import stats
 
@@ -19,3 +20,29 @@ def test_stats():
         count, avg, hist = s.read_stats(name)
         assert count == len(raw_stats[name])
         assert math.isclose(avg, sum(raw_stats[name])/count)
+
+
+def test_record_wallclock():
+    raw_stats = {}
+    duration = 0.3
+    start = time.time()
+    with stats.record_wallclock('foo', raw_stats):
+        while time.time() < start + duration:
+            pass
+    assert 'foo' in raw_stats
+    assert len(raw_stats['foo']) == 1
+    assert raw_stats['foo'][0] > duration * 0.9
+
+
+def testS_record_iotime():
+    raw_stats = {}
+    duration = 0.1
+    start = time.time()
+    with stats.record_wallclock('wall', raw_stats):
+        with stats.record_iowait('io', raw_stats):
+            while time.time() < start + duration:
+                pass
+            time.sleep(duration*2)
+    assert 'io' in raw_stats
+    assert len(raw_stats['io']) == 1
+    assert raw_stats['io'][0] >= duration*2

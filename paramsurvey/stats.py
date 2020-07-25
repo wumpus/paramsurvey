@@ -62,3 +62,17 @@ def record_wallclock(name, raw_stats):
         if name not in raw_stats:
             raw_stats[name] = []
         raw_stats[name].append(time.time() - start)
+
+
+@contextmanager
+def record_iowait(name, raw_stats):
+    try:
+        start_t = time.time()
+        start_c = time.process_time()
+        yield
+    finally:
+        if name not in raw_stats:
+            raw_stats[name] = []
+        duration = time.time() - start_t
+        cpu = time.process_time() - start_c
+        raw_stats[name].append(duration - cpu)
