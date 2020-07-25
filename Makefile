@@ -1,6 +1,7 @@
 .PHONY: test clean_coverage test_coverage distclean dist_check dist
 
 test:
+	# hint: PYTEST_STDERR_VISIBLE=-v
 	PYTHONPATH=. pytest test/unit
 	PYTHONPATH=. test/integration/test-multiprocessing.sh test/integration
 	PYTHONPATH=.:test/integration test/integration/test-ray.sh test/integration
