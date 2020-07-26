@@ -34,6 +34,16 @@ def test_record_wallclock():
     assert len(raw_stats['foo']) == 1
     assert raw_stats['foo'][0] > duration * 0.9
 
+    s = stats.PerfStats()
+    with stats.record_wallclock('foo', obj=s):
+        while time.time() < start + duration:
+            pass
+    assert len(s.all_stat_names()) == 1
+    for name in s.all_stat_names():
+        count, avg, hist = s.read_stats(name)
+        assert count == 1.0
+        # no good way to test the value
+
 
 def test_record_iotime():
     raw_stats = {}
@@ -47,6 +57,19 @@ def test_record_iotime():
     assert 'io' in raw_stats
     assert len(raw_stats['io']) == 1
     assert raw_stats['io'][0] >= duration*2
+
+    duration = 0.1
+    s = stats.PerfStats()
+    with stats.record_wallclock('wall', obj=s):
+        with stats.record_iowait('io', obj=s):
+            while time.time() < start + duration:
+                pass
+            time.sleep(duration*2)
+    assert len(s.all_stat_names()) == 2
+    for name in s.all_stat_names():
+        count, avg, hist = s.read_stats(name)
+        assert count == 1.0, name
+        # no good way to test the value
 
 
 def test_percentiles():

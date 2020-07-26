@@ -91,7 +91,8 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
     progress = system_kwargs['progress']
 
     try:
-        ret = ray.get(ret)
+        with stats.record_wallclock('ray.get', obj=system_stats):
+            ret = ray.get(ret)
     except Exception as e:
         # RayTaskError has been seen here
         print('\nSurprised by exception {} getting a result,\n'
@@ -122,10 +123,22 @@ def check_serialized_size(args, factor=1.2):
 
 
 def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size):
+    verbose = system_kwargs['verbose']
+
     while len(futures) > cores*factor:
-        done, pending = ray.wait(futures, num_returns=len(futures), timeout=1)
+        with stats.record_wallclock('ray.wait', obj=system_stats):
+            done, pending = ray.wait(futures, num_returns=len(futures), timeout=1)
+
+        if verbose > 1:
+            print('until_fewer: futures {}, cores*factor {}, done {}, pending {}'.format(len(futures), cores*factor, len(done), len(pending)), file=sys.stderr)
+            sys.stderr.flush()
+
         futures = pending
+
         if len(done):
+            if verbose and len(done) > 100:
+                print('surprised to see {} psets done at once'.format(len(done)), file=sys.stderr)
+                sys.stderr.flush()
             for ret in done:
                 handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
 
@@ -170,8 +183,8 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
         group_size = 1
 
     if verbose:
-        print('starting map, {} psets {} cores {} group_size'.format(
-            len(psets), cores, group_size
+        print('starting map: psets {}, cores {}, group_size {}, verbose {}'.format(
+            len(psets), cores, group_size, system_kwargs['verbose']
         ), file=sys.stderr)
         sys.stderr.flush()
 
@@ -180,8 +193,10 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
     while psets:
         while len(futures) < cores * factor:
             pset_group = utils.get_pset_group(psets, group_size)
-            futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
+            with stats.record_wallclock('ray.remote', obj=system_stats):
+                futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
             progress.started += len(pset_group)
+            utils.report_progress(system_kwargs)
 
         # cores and group_size can change within this function
         futures, cores, group_size = progress_until_fewer(futures, cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size)

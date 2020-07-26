@@ -14,7 +14,6 @@ class PerfStats(object):
         if raw_stats:
             self.combine_stats(raw_stats)
 
-
     def combine_stats(self, raw_stats):
         for name, elapsed in raw_stats.items():
             g = self.d.get(name, defaultdict(float))
@@ -26,6 +25,8 @@ class PerfStats(object):
                 g['time'] += e
                 g['hist'].record_value(int(e * 1000))
             self.d[name] = g
+        #for k in list(raw_stats.keys()):
+        #    del raw_stats[k]
 
     def read_stats(self, name):
         if name in self.d:
@@ -72,25 +73,32 @@ class PerfStats(object):
 
 
 @contextmanager
-def record_wallclock(name, raw_stats):
+def record_wallclock(name, raw_stats=None, obj=None):
     try:
         start = time.time()
         yield
     finally:
-        if name not in raw_stats:
-            raw_stats[name] = []
-        raw_stats[name].append(time.time() - start)
+        value = time.time() - start
+        if raw_stats is not None:
+            if name not in raw_stats:
+                raw_stats[name] = []
+            raw_stats[name].append(value)
+        if obj:
+            obj.combine_stats({name: [value]})
 
 
 @contextmanager
-def record_iowait(name, raw_stats):
+def record_iowait(name, raw_stats=None, obj=None):
     try:
         start_t = time.time()
         start_c = time.process_time()
         yield
     finally:
-        if name not in raw_stats:
-            raw_stats[name] = []
         duration = time.time() - start_t
         cpu = time.process_time() - start_c
-        raw_stats[name].append(duration - cpu)
+        if raw_stats is not None:
+            if name not in raw_stats:
+                raw_stats[name] = []
+            raw_stats[name].append(duration - cpu)
+        if obj:
+            obj.combine_stats({name: [duration - cpu]})
