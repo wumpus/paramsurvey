@@ -105,7 +105,13 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
 
     psets, system_stats, system_kwargs = utils.map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs)
 
-    do_partial = functools.partial(do_work_wrapper, func, system_kwargs, user_kwargs)
+    # make a cut-down copy to minimize size of args
+    worker_system_kwargs = {}
+    for key in ('raise_in_wrapper', 'out_subdirs', 'chdir', 'name'):
+        if key in system_kwargs:
+            worker_system_kwargs[key] = system_kwargs[key]
+
+    do_partial = functools.partial(do_work_wrapper, func, worker_system_kwargs, user_kwargs)
 
     # because of the ray implementation, our work is done in groups
     # use the chunksize feature in multiprocessing instead

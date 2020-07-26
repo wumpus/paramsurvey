@@ -108,6 +108,8 @@ def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs):
     if 'raise_in_wrapper' in kwargs:
         system_kwargs['raise_in_wrapper'] = kwargs['raise_in_wrapper']
 
+    if verbose:
+        print('making pset ids', file=sys.stderr)
     psets, pset_ids = make_pset_ids(psets)
     system_kwargs['pset_ids'] = pset_ids
 

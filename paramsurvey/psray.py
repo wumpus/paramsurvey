@@ -108,6 +108,9 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
 def check_serialized_size(args, factor=1.2):
     big_data = 10 * 1024 * 1024 * 1024  # TODO: make this dynamic with cluster resources
     cores = current_core_count()
+
+    # this is apprently not the current method used in ray, because ray can
+    # successfully pass ValueError() but pyarrow can't serialize it
     serialized_size = len(pyarrow.serialize(args).to_buffer())
 
     if serialized_size*cores*factor > big_data:
@@ -149,7 +152,18 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
 
     progress = system_kwargs['progress']
     cores = current_core_count()
-    factor = check_serialized_size((psets[0], user_kwargs), factor=1.2)
+
+    # make a cut-down copy to minimize size of args
+    worker_system_kwargs = {}
+    for key in ('out_subdirs', 'chdir', 'name'):
+        if key in system_kwargs:
+            worker_system_kwargs[key] = system_kwargs[key]
+
+    factor = check_serialized_size((func, worker_system_kwargs, user_kwargs, psets[0]), factor=1.2)
+
+    # temporary: this works in ray map calls, but check serialize raises on it
+    if 'raise_in_wrapper' in system_kwargs:
+        worker_system_kwargs['raise_in_wrapper'] = system_kwargs['raise_in_wrapper']
 
     if group_size is None:
         # make this dynamic someday
@@ -165,7 +179,7 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
 
     while psets:
         pset_group = utils.get_pset_group(psets, group_size)
-        futures.append(do_work_wrapper.remote(func, system_kwargs, user_kwargs, pset_group))
+        futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
         progress.started += len(pset_group)
 
         # cores and group_size can change within this function
