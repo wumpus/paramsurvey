@@ -178,9 +178,10 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
     futures = []
 
     while psets:
-        pset_group = utils.get_pset_group(psets, group_size)
-        futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
-        progress.started += len(pset_group)
+        while len(futures) < cores * factor:
+            pset_group = utils.get_pset_group(psets, group_size)
+            futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
+            progress.started += len(pset_group)
 
         # cores and group_size can change within this function
         futures, cores, group_size = progress_until_fewer(futures, cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size)
