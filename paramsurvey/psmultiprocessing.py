@@ -137,6 +137,6 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
     utils.finalize_progress(system_kwargs)
     utils.report_progress(system_kwargs, final=True)
 
-    system_stats.print_histograms(name)
+    system_stats.print_percentiles(name)
 
     return MapResults(system_kwargs['results'], list(system_kwargs['pset_ids'].values()), system_kwargs['progress'], system_stats)

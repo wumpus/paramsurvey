@@ -1,14 +1,19 @@
 import time
+import sys
+import math
 from contextlib import contextmanager
 from collections import defaultdict
-import sys
 
 from hdrh.histogram import HdrHistogram
+from hdrh.iterators import LinearIterator
 
 
 class PerfStats(object):
-    def __init__(self):
+    def __init__(self, raw_stats=None):
         self.d = dict()
+        if raw_stats:
+            self.combine_stats(raw_stats)
+
 
     def combine_stats(self, raw_stats):
         for name, elapsed in raw_stats.items():
@@ -30,27 +35,40 @@ class PerfStats(object):
     def all_stat_names(self):
         return self.d.keys()
 
+    def print_percentiles(self, name='default', file=sys.stdout):
+        self.print_percentile(name, file=file)
+        for n in sorted(self.all_stat_names()):
+            if n != name:
+                self.print_percentile(n, file=file)
+
+    def print_percentile(self, name, file=sys.stdout):
+        if name in self.d:
+            hist = self.d[name]['hist']
+            print('counter {}, counts {}'.format(name, hist.get_total_count()), file=file)
+            for pct in (50, 90, 95, 99):
+                print('counter {}, {}%tile: {:.1f}s'.format(name, pct, hist.get_value_at_percentile(pct)/1000.), file=file)
+
     def print_histograms(self, name='default', file=sys.stdout):
         self.print_histogram(name, file=file)
         for n in sorted(self.all_stat_names()):
             if n != name:
                 self.print_histogram(n, file=file)
 
-    def print_histogram(self, name, file=sys.stdout):
-        '''
-        if name in self.d:
-            for item in self.d[name]['hist'].get_recorded_iterator():
-                print('value={} count={} percentile={}'.format(
-                    item.value_iterated_to,
-                    item.count_added_in_this_iter_step,
-                    item.percentile
-                ), file=file)
-        '''
+    def print_histogram(self, name, value_units_per_bucket=3, file=sys.stdout):
         if name in self.d:
             hist = self.d[name]['hist']
-            print('counter {}, counts {}'.format(name, hist.get_total_count()), file=file)
-            for pct in (50, 90, 95, 99):
-                print('counter {}, {}%tile: {:.1f}s'.format(name, pct, hist.get_value_at_percentile(pct)/1000.), file=file)
+            ivalues = [x for x in LinearIterator(hist, value_units_per_bucket)]
+            valuemax = max([x.count_at_value_iterated_to for x in ivalues])
+            if not valuemax:
+                valuemax = 1.
+            for ivalue in ivalues:
+                print('counter {}, {} {}'.format(name,
+                                                 ivalue.value_iterated_to/1000.,
+                                                 ivalue.count_at_value_iterated_to))
+#            for ivalue in ivalues:
+#                print('counter {}, {} {}'.format(name,
+#                                                 ivalue.value_iterated_to/1000.,
+#                                                 ''.join(['*'] * math.ceil(ivalue.count_at_value_iterated_to/valuemax))))
 
 
 @contextmanager
