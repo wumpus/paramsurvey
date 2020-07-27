@@ -141,8 +141,9 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
                 sys.stderr.flush()
             for ret in done:
                 handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
-                if verbose > 1:
-                    system_stats.bingo()
+
+        if verbose > 1:
+            system_stats.bingo()
 
         new_cores = current_core_count()
         if new_cores != cores:
@@ -159,6 +160,8 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
         progress_dt=60., group_size=None, name='default', verbose=None, **kwargs):
     if not psets:
         return
+
+    verbose = verbose or 0
 
     psets, system_stats, system_kwargs = utils.map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs)
     if 'chdir' not in system_kwargs:
@@ -194,7 +197,8 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
 
     while psets:
         while len(futures) < cores * factor:
-            pset_group = utils.get_pset_group(psets, group_size)
+            with stats.record_wallclock('get_pset_group', obj=system_stats):
+                pset_group = utils.get_pset_group(psets, group_size)
             with stats.record_wallclock('ray.remote', obj=system_stats):
                 futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
             if verbose > 1:
