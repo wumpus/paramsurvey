@@ -80,14 +80,13 @@ def remaining(system_kwargs):
     return progress.started - progress.finished
 
 
-def get_pset_group(psets, group_size):
+def get_pset_group(psets, pset_index, group_size):
     group = []
     for _ in range(group_size):
-        try:
-            group.append(psets.pop(0))
-        except IndexError:
-            pass
-    return group
+        if pset_index < len(psets):
+            group.append(psets[pset_index])
+            pset_index += 1
+    return group, pset_index
 
 
 def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs):
@@ -108,10 +107,7 @@ def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs):
     if 'raise_in_wrapper' in kwargs:
         system_kwargs['raise_in_wrapper'] = kwargs['raise_in_wrapper']
 
-    if verbose:
-        print('making pset ids', file=sys.stderr)
-    psets, pset_ids = make_pset_ids(psets)
-    system_kwargs['pset_ids'] = pset_ids
+    system_kwargs['pset_ids'] = {}
 
     system_stats = stats.PerfStats()
     system_kwargs['progress_last'] = 0.

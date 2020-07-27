@@ -29,3 +29,21 @@ def test_make_subdir_name():
 
     with pytest.raises(Exception):
         ret = utils.make_subdir_name(0)
+
+
+def test_get_pset_group():
+    psets = [{'a': 1}, {'a': 2}, {'a': 3}, {'a': 4}, {'a': 5}]
+    pset_index = 0
+
+    pset_group, pset_index = utils.get_pset_group(psets, pset_index, 3)
+    assert len(pset_group) == 3
+    assert pset_group[0]['a'] == 1
+    assert pset_group[-1]['a'] == 3
+
+    pset_group, pset_index = utils.get_pset_group(psets, pset_index, 3)
+    assert len(pset_group) == 2
+    assert pset_group[0]['a'] == 4
+    assert pset_group[-1]['a'] == 5
+
+    pset_group, pset_index = utils.get_pset_group(psets, pset_index, 3)
+    assert len(pset_group) == 0

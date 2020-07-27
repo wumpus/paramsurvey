@@ -194,17 +194,27 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
         sys.stderr.flush()
 
     futures = []
+    pset_index = 0
 
-    while psets:
+    while True:
         while len(futures) < cores * factor:
             with stats.record_wallclock('get_pset_group', obj=system_stats):
-                pset_group = utils.get_pset_group(psets, group_size)
+                pset_group, pset_index = utils.get_pset_group(psets, pset_index, group_size)
+            if len(pset_group) == 0:
+                break
+
+            pset_group, pset_ids = utils.make_pset_ids(pset_group)
+            system_kwargs['pset_ids'].update(pset_ids)
+
             with stats.record_wallclock('ray.remote', obj=system_stats):
                 futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
             if verbose > 1:
                 system_stats.bingo()
             progress.started += len(pset_group)
             utils.report_progress(system_kwargs)
+
+        if pset_index >= len(psets) - 1:
+            break
 
         # cores and group_size can change within this function
         futures, cores, group_size = progress_until_fewer(futures, cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size)

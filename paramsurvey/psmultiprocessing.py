@@ -121,6 +121,9 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
         # for an hour-long run on a 4 core laptop, factor=100 divides the work into 36 second chunks
         chunksize = pick_chunksize(len(psets), factor=100)
 
+    psets, pset_ids = utils.make_pset_ids(psets)
+    system_kwargs['pset_ids'].update(pset_ids)
+
     # form our work into groups of length 1, to disable our groups feature
     grouped_psets = [[x] for x in psets]
 
