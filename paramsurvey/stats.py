@@ -1,6 +1,7 @@
 import time
 import sys
 import math
+import random
 from contextlib import contextmanager
 from collections import defaultdict
 
@@ -35,6 +36,11 @@ class PerfStats(object):
 
     def all_stat_names(self):
         return self.d.keys()
+
+    def bingo(self):
+        # print percentiles 1/100 of the time
+        if random.randint(0, 99) == 0:
+            self.print_percentiles()
 
     def print_percentiles(self, name='default', file=sys.stdout):
         self.print_percentile(name, file=file)
