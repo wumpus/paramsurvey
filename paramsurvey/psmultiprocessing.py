@@ -40,9 +40,8 @@ def current_core_count():
 
 
 def pick_chunksize(length, factor=4):
-    # default chunksize computation similar to what Python does for a multiprocessing.Pool
-    # except the fudge factor can be changed. bigger == smaller chunks.
-    # for an hour-long run on a 4 core laptop, factor=100 divides the work into 36 second chunks
+    # chunksize computation similar to what Python does for a multiprocessing.Pool
+    # except the fudge factor can be changed. bigger factor == smaller chunks.
     cores = multiprocessing.cpu_count()
     chunksize, extra = divmod(length, cores * factor)
     if extra:
@@ -113,18 +112,18 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
 
     do_partial = functools.partial(do_work_wrapper, func, worker_system_kwargs, user_kwargs)
 
-    # because of the ray implementation, our work is done in groups
+    # paramsurvey has a groups feature that's similar to what multprocessing calls chunksize
     # use the chunksize feature in multiprocessing instead
     if group_size is not None:
         chunksize = group_size
     else:
-        # for an hour-long run on a 4 core laptop, factor=100 divides the work into 36 second chunks
+        # for an hour-long run on a 4 core laptop, factor=100 divides the psets into 36 second chunks
         chunksize = pick_chunksize(len(psets), factor=100)
 
     psets, pset_ids = utils.make_pset_ids(psets)
     system_kwargs['pset_ids'].update(pset_ids)
 
-    # form our work into groups of length 1, to disable our groups feature
+    # form our psets into groups of length 1
     grouped_psets = [[x] for x in psets]
 
     if verbose:
