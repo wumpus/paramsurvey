@@ -55,11 +55,12 @@ backends = {
 
 our_backend = None
 our_verbose = None
+default_backend = 'multiprocessing'
 
 
 def init(backend=None, ncores=None, verbose=None, **kwargs):
     if backend is None:
-        backend = os.environ.get('PARAMSURVEY_BACKEND', 'multiprocessing')
+        backend = os.environ.get('PARAMSURVEY_BACKEND', default_backend)
 
     if verbose or int(os.environ.get('PARAMSURVEY_VERBOSE', '0')) > 0:
         global our_verbose
@@ -70,11 +71,16 @@ def init(backend=None, ncores=None, verbose=None, **kwargs):
     global our_backend
     if backend in backends:
         our_backend = backends[backend]
+        our_backend['name'] = backend
         if 'lazy' in our_backend:
             our_backend.update(our_backend['lazy']())
         our_backend['init'](ncores=ncores, **kwargs)
     else:  # pragma: no cover
         raise ValueError('unknown backend '+backend+', valid backends: '+', '.join(backends.keys()))
+
+
+def backend():
+    return our_backend['name']
 
 
 def finalize(*args, **kwargs):

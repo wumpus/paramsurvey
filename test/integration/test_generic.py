@@ -185,5 +185,9 @@ def test_wrapper_exception(capsys, paramsurvey_init):
     assert 'failures: 2' in captured.out or 'failures: 2' in captured.err
 
 
+def test_toplevel(paramsurvey_init):
+    assert paramsurvey.backend() == os.environ.get('PARAMSURVEY_BACKEND', paramsurvey.default_backend)
+
+
 def test_overlarge_pset():
     pass
