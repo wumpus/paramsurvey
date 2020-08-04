@@ -34,7 +34,7 @@ prints, in addition to some debugging output, a result from each of the 5 sleep_
 Here are a few more examples:
 
 * [The above example, with a few notes](scripts/paramsurvey-readme-example.py)
-* [An example of a multi-stage computation](scripts/pramsurvey-multistage-example.py), running several `map()` functions in a row
+* [An example of a multi-stage computation](scripts/paramsurvey-multistage-example.py), running several `map()` functions in a row
 * [An example of greedy optimization](scripts/paramsurvey-greedy-example.py), selecting the best alternative from each `map()` result
 
 ## Philosophy
