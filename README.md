@@ -40,16 +40,19 @@ Here are a few more examples:
 ## Philosophy
 
 A parameter survey runs begins by initializing the software,
-specifying which backend ('multiprocessing' or 'ray').
+specifying a backend ('multiprocessing' or 'ray').
 
-A list of parameter sets (psets) is constructed.
+The user supplies a worker function, which takes a dict of parameters
+(pset) and returns a dict of results.
 
-The `pararamsurvey.map()` function executes the worker function once for each pset.
+The user also supplies a list of parameter sets, perhaps constructed
+using the helper function `paramsurvey.params.product()`.
 
-It returns a `MapResults` object, containing the results, performance
-statistics, and information about any failures.
+Calling `pararamsurvey.map()` executes the worker function once for
+each pset. It returns a `MapResults` object, containing the results,
+performance statistics, and information about any failures.
 
-Multiple calls to `paramsurvey.map()` can be made, with different lists of psets.
+You can call `paramsurvey.map()` more than once.
 
 ## Worker function limitations
 
