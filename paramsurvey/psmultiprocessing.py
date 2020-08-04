@@ -101,15 +101,13 @@ def callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
 def error_callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
     system_kwargs['outstanding'] -= 1
     # XXX do something with this similar to a psray wrapper exception
-    print('error callback, outstanding', system_kwargs['outstanding'])
-    print('exception instance is', repr(ret))
+    print('error_callback, exception instance is', repr(ret))
 
 
 def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size):
     verbose = system_kwargs['verbose']
 
     while system_kwargs['outstanding'] > cores*factor:
-        print('about to sleep, outstanding:', system_kwargs['outstanding'])
         time.sleep(0.1)
         if verbose > 1:
             system_stats.bingo()
@@ -165,7 +163,6 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
             if verbose > 1:
                 system_stats.bingo()
             system_kwargs['outstanding'] += 1
-            print('just created one, outstanding', system_kwargs['outstanding'])
             progress.started += len(pset_group)
             utils.report_progress(system_kwargs)
 
