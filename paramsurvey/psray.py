@@ -32,7 +32,8 @@ def init(verbose=False, **kwargs):
     kwargs['address'] = address
     kwargs['redis_password'] = password
 
-    kwargs['ignore_reinit_error'] = True  # XXX needed for our test infra
+    if 'ignore_reinit_error' not in kwargs:
+        kwargs['ignore_reinit_error'] = True  # XXX needed for our test infra
 
     if os.environ.get('RAY_LOCAL_MODE', False):
         kwargs['local_mode'] = True
