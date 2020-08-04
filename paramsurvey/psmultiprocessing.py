@@ -100,8 +100,8 @@ def callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
 
 def error_callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
     system_kwargs['outstanding'] -= 1
-    # XXX do something with this similar to a psray wrapper exception
-    print('error_callback, exception instance is', repr(ret))
+    system_kwargs['progress'].failures += 1
+    print('error_callback, exception is', repr(ret), file=sys.stderr)
 
 
 def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size):
