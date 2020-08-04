@@ -1,4 +1,5 @@
-import pytest
+from collections import OrderedDict
+import sys
 
 import pandas as pd
 import numpy as np
@@ -30,7 +31,11 @@ def test_product():
     col3 = df['col3']
     assert col3.equals(col3a), 'verify that the last argument to product() varies the fastest'
 
-    df_dicts = paramsurvey.params.product({'col1': [1, 2], 'col2': [3, 4], 'col3': [5, 6]})
+    vi = sys.version_info
+    if vi.major == 3 and vi.minor < 6:
+        df_dicts = paramsurvey.params.product(OrderedDict((('col1', [1, 2]), ('col2',  [3, 4]), ('col3', [5, 6]))))
+    else:
+        df_dicts = paramsurvey.params.product({'col1': [1, 2], 'col2': [3, 4], 'col3': [5, 6]})
     assert df.equals(df_dicts)
 
     col3 = df['col3']
