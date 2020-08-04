@@ -27,3 +27,10 @@ def product_step(a, df):
     dfa['asdfasdf'] = 0
     df = df.merge(dfa, how='outer')
     return df
+
+
+def add_column(df, name, func):
+    values = []
+    for pset in df.itertuples(index=False):
+        values.append(func(pset._asdict()))
+    df[name] = pd.Series(values, index=df.index)

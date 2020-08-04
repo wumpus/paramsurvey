@@ -57,3 +57,13 @@ def test_product():
     df_longer = paramsurvey.params.product(df_dicts, {'col4': [7, 8]})
     assert len(df_longer) == 16
     assert not df.equals(df_longer)
+
+
+def test_add_column():
+    df = paramsurvey.params.product({'col1': [1, 2]}, {'col2': [3, 4]}, {'col3': [5, 6]})
+    assert len(df) == 8
+
+    paramsurvey.params.add_column(df, 'col4', lambda row: row['col1'] + row['col2'])
+
+    assert len(df) == 8
+    assert df['col4'].sum() == (1+2)*4 + (3+4)*4
