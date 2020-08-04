@@ -8,11 +8,12 @@ packages = [
     'paramsurvey',
 ]
 
-test_requirements = ['pytest>=4.6', 'coverage', 'pytest-cov', 'pytest-sugar', 'coveralls']
+test_requirements = ['pytest>=4.6', 'coverage', 'pytest-cov', 'pytest-sugar', 'coveralls', 'numpy']
 # pytest-cov requires pytest >= 4.6, dunno why this doesn't just work
 
 requires = [
     'hdrhistogram',
+    'pandas'
 ]
 
 extras_require = {
