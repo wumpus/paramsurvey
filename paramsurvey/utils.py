@@ -56,8 +56,8 @@ class MapResults(object):
         if not self._results_as_dict:
             size = self.df.memory_usage().sum()
             if self._verbose > 1 or self._verbose > 0 and size > 1000000:
-                print('converting Pandas DataFrame to listdict, size was {} bytes'.format(size))
-            self._results_as_dict = self.pd.to_dict(orient='records')
+                print('converting Pandas DataFrame to listdict, pandas size was {} bytes'.format(size))
+            self._results_as_dict = self._results.to_dict(orient='records')
         return self._results_as_dict
 
     @property

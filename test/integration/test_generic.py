@@ -35,7 +35,12 @@ def test_basics(paramsurvey_init):
     assert len(results) == len(psets), 'one return for each pset'
     assert len(results.missing) == 0
     assert isinstance(results.verbose, int)
-    # XXX check stats
+
+    df_as_listdict = results.to_listdict()
+    assert len(df_as_listdict) == len(results)
+    assert [d['slept'] == duration for d in df_as_listdict]
+
+    results.stats.print_histograms()
 
     psets = psets[:ncores]
     start = time.time()
@@ -181,6 +186,26 @@ def test_wrapper_exception(capsys, paramsurvey_init):
     sys.stdout.write(captured.out)
     sys.stderr.write(captured.err)
     assert 'failures: 2' in captured.out or 'failures: 2' in captured.err
+
+
+def bad_user_function(pset, system_kwargs, user_kwargs, raw_stats):
+    return 3
+
+
+def test_bad_user_function(paramsurvey_init):
+    psets = [{'a': 1}, {'a': 2}]
+
+    results = paramsurvey.map(bad_user_function, psets, name='bad_user_function')
+
+    print(results.df)
+    print(results.missing)
+    print(results.stats)
+
+    assert len(results.missing) == 2
+    assert results.progress.total == 2
+    assert results.progress.finished == 0
+    assert results.progress.failures == 2
+    assert results.progress.exceptions == 2
 
 
 def test_toplevel(paramsurvey_init):
