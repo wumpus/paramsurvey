@@ -74,6 +74,7 @@ class MapResults(object):
         return self._stats
 
 
+'''
 class PDFWrapper(object):
     def __init__(self, df, verbose=0):
         self.df = df
@@ -95,6 +96,7 @@ class PDFWrapper(object):
                 print('converting Pandas DataFrame to listdict, size was {} bytes'.format(size))
             self._as_dict = self.pd.to_dict(orient='records')
         return self._as_dict
+'''
 
 
 def report_progress(system_kwargs, final=False):
