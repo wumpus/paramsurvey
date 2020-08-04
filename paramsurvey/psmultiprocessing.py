@@ -134,11 +134,13 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
         if key in system_kwargs:
             worker_system_kwargs[key] = system_kwargs[key]
 
-    factor = 1.2  # XXX
+    factor = 2.4  # XXX should be set based on args size
 
     if group_size is None:
         # make this dynamic someday
         group_size = pick_chunksize(len(psets), cores, factor=100)
+        if verbose > 1:
+            print('initial group_size is', group_size, file=sys.stderr)
 
     callback_partial = functools.partial(callback, out_func, system_stats, system_kwargs, user_kwargs)
     error_callback_partial = functools.partial(error_callback, out_func, system_stats, system_kwargs, user_kwargs)

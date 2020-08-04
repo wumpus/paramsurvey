@@ -75,3 +75,10 @@ def test_psets_empty():
     assert utils.psets_empty(df)
     df = pd.DataFrame({'a': [1, 2]})
     assert not utils.psets_empty(df)
+
+
+def test_vmem():
+    vmem0 = utils.vmem()
+    big = bytearray(10000000)  # 10 megs
+    vmem1 = utils.vmem()
+    assert vmem1 > vmem0 + 0.005

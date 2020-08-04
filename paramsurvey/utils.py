@@ -4,6 +4,7 @@ import uuid
 import math
 import random
 import keyword
+import resource
 
 import pandas as pd
 
@@ -281,3 +282,8 @@ def psets_empty(psets):
         return psets.empty
     if not psets:
         return True
+
+
+def vmem():
+    ru = resource.getrusage(resource.RUSAGE_SELF)
+    return ru[2]/1000000.  # gigabytes
