@@ -95,14 +95,12 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
 
 def callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
     system_kwargs['outstanding'] -= 1
-    print('callback, outstanding', system_kwargs['outstanding'])
-    print('GREG this ret is', ret)
     utils.handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs)
-    print('GREG saw the other side')
 
 
 def error_callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
     system_kwargs['outstanding'] -= 1
+    # XXX do something with this similar to a psray wrapper exception
     print('error callback, outstanding', system_kwargs['outstanding'])
     print('exception instance is', repr(ret))
 

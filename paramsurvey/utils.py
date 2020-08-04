@@ -238,13 +238,7 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
         if 'raw_stats' in system_ret:
             system_stats.combine_stats(system_ret['raw_stats'])
 
-        try:
-            pset_id = user_ret['pset']['_pset_id']
-        except Exception as e:
-            print('GREG wonky,', repr(e))
-            print('GREG wonky, here is all of user_ret:', repr(user_ret))
-            print('GREG wonky, here is all of system_ret', repr(system_ret))
-            raise
+        pset_id = user_ret['pset']['_pset_id']
 
         if 'exception' in user_ret:
             progress.failures += 1
