@@ -9,7 +9,7 @@ import paramsurvey.stats
 from paramsurvey.examples import sleep_worker, burn_worker
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def paramsurvey_init(request):
     paramsurvey.init()
 
@@ -17,7 +17,7 @@ def paramsurvey_init(request):
         # needed to get pytest multiprocessing coverage
         paramsurvey.finalize()
 
-    request.addfinalizer(finalize)
+    request.session.addfinalizer(finalize)
 
 
 def test_basics(paramsurvey_init):
