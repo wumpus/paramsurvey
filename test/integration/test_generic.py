@@ -31,10 +31,11 @@ def test_basics(paramsurvey_init):
     elapsed = time.time() - start
     assert elapsed > duration, 'must take at least {} time'.format(duration)
 
-    assert [r['result']['slept'] == duration for r in results.results], 'everyone slept '+str(duration)
-    assert len(results.results) == len(psets), 'one return for each pset'
-    assert '_pset_id' not in results.results[0]['pset']
-    assert len(results.results_flattened) == len(psets), 'one return for each pset'
+    assert [r.slept == duration for r in results], 'everyone slept '+str(duration)
+    assert len(results) == len(psets), 'one return for each pset'
+    assert len(results.missing) == 0
+    assert isinstance(results.verbose, int)
+    # XXX check stats
 
     psets = psets[:ncores]
     start = time.time()
@@ -42,16 +43,16 @@ def test_basics(paramsurvey_init):
     elapsed = time.time() - start
     assert elapsed > duration*3, 'must take at least {} time'.format(duration)
 
-    assert [r['result']['slept'] == duration for r in results.results], 'everyone slept '+str(duration)
-    assert len(results.results) == len(psets), 'one return for each pset'
+    assert [r.slept == duration for r in results], 'everyone slept '+str(duration)
+    assert len(results) == len(psets), 'one return for each pset'
 
     start = time.time()
     results = paramsurvey.map(burn_worker, psets, name='burn group_size 4', group_size=4)
     elapsed = time.time() - start
     assert elapsed > duration*3, 'must take at least {} time'.format(duration)
 
-    assert [r['result']['burned'] == duration for r in results.results], 'everyone burned '+str(duration)
-    assert len(results.results) == len(psets), 'one return for each pset'
+    assert [r.burned == duration for r in results], 'everyone burned '+str(duration)
+    assert len(results) == len(psets), 'one return for each pset'
 
 
 def do_test_args(pset, system_kwargs, user_kwargs, raw_stats):
@@ -88,7 +89,7 @@ def test_args(capsys, paramsurvey_init):
 
     assert out_func_called
     assert test_user_kwargs.get('out_func_called')
-    assert len(results.results) == 2
+    assert len(results) == 2
 
     captured = capsys.readouterr()
     sys.stdout.write(captured.out)
@@ -108,7 +109,7 @@ def test_args(capsys, paramsurvey_init):
 
     assert out_func_called
     assert test_user_kwargs.get('out_func_called')
-    assert len(results.results) == 2
+    assert len(results) == 2
 
     captured = capsys.readouterr()
     sys.stdout.write(captured.out)
@@ -124,25 +125,22 @@ def test_args(capsys, paramsurvey_init):
 
 
 def do_raise(pset, system_kwargs, user_kwargs, raw_stats):
-    if 'raise' in pset and pset['raise']:
+    if 'raises' in pset and pset['raises']:
         raise ValueError('foo')
     return {'foo': 'bar'}
 
 
 def test_worker_exception(capsys, paramsurvey_init):
-    psets = [{}, {}, {}, {'raise': True}, {}, {}, {}]
+    psets = [{'raises': False}, {'raises': False}, {'raises': False}, {'raises': True}, {'raises': False}, {'raises': False}, {'raises': False}]
 
     results = paramsurvey.map(do_raise, psets, name='test_worker_exception')
-    assert len(results.results) == 6
+    assert len(results) == 6
     assert len(results.missing) == 1
     assert '_exception' in results.missing[0]
     assert results.progress.total == 7
     assert results.progress.finished == 6
     assert results.progress.failures == 1
     assert results.progress.exceptions == 1
-
-    assert sum('pset' in r for r in results.results) == 6
-    assert sum('result' in r for r in results.results) == 6
 
     captured = capsys.readouterr()
     sys.stdout.write(captured.out)
@@ -161,21 +159,21 @@ def do_nothing(pset, system_kwargs, user_kwargs, raw_stats):
 
 
 def test_wrapper_exception(capsys, paramsurvey_init):
-    psets = [{}, {'actually_raise': True}, {}, {'actually_raise': True}, {}]
+    psets = [{'actually_raise': False}, {'actually_raise': True}, {'actually_raise': False}, {'actually_raise': True}, {'actually_raise': False}]
 
     results = paramsurvey.map(do_nothing, psets, raise_in_wrapper=ValueError('test_wrapper_exception'))
 
-    assert len(results.results) == 3
+    assert len(results) == 3
     assert len(results.missing) == 2
     assert results.progress.total == 5
     assert results.progress.finished == 3
     assert results.progress.failures == 2
 
-    # ray and multiprocessing behave differently for 'exception'
+    # ray and multiprocessing behave differently for wrapper 'exception'
     #assert '_exception' in results.missing[0]
     #assert results.progress.exceptions == 1
 
-    assert sum('result' in r for r in results.results) == 3
+    assert len(results) == 3
 
     # XXX ray prints traceback in the worker, multiprocessing and ray local_mode prints in the parent
 

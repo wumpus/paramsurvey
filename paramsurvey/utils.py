@@ -3,6 +3,9 @@ import sys
 import uuid
 import math
 import random
+import keyword
+
+import pandas as pd
 
 from . import stats
 
@@ -25,22 +28,36 @@ class MapResults(object):
     '''
     A container object for the outcome of paramsurvey.map()
     '''
-    def __init__(self, results, missing, progress, stats):
+    def __init__(self, results, missing, progress, stats, verbose=0):
         self._results = results
-        self._results_flattened = None
+        self._results_as_dict = None
         self._missing = missing
         self._progress = progress
         self._stats = stats
+        self._verbose = verbose
 
     @property
-    def results(self):
+    def df(self):
         return self._results
 
     @property
-    def results_flattened(self):
-        if self._results_flattened is None:
-            self._results_flattened = flatten_results(self._results)
-        return self._results_flattened
+    def verbose(self):
+        return self._verbose
+
+    def __iter__(self):
+        return self._results.itertuples(index=False)
+
+    def __len__(self):
+        return self._results.shape[0]  # rows
+
+    def to_listdict(self):
+        # memory inefficient
+        if not self._results_as_dict:
+            size = self.df.memory_usage().sum()
+            if self._verbose > 1 or self._verbose > 0 and size > 1000000:
+                print('converting Pandas DataFrame to listdict, size was {} bytes'.format(size))
+            self._results_as_dict = self.pd.to_dict(orient='records')
+        return self._results_as_dict
 
     @property
     def missing(self):
@@ -54,6 +71,29 @@ class MapResults(object):
     def stats(self):
         # stats.PerfStats
         return self._stats
+
+
+class PDFWrapper(object):
+    def __init__(self, df, verbose=0):
+        self.df = df
+        self._as_dict = None
+        self._verbose = verbose
+
+    def __iter__(self):
+        return self.df.itertuples(index=False)
+
+    def __len__(self):
+        #return self.df.shape[0]  # rows
+        return len(self.df)
+
+    def to_listdict(self):
+        # memory inefficient
+        if not self._as_dict:
+            size = self.df.memory_usage().sum()
+            if self._verbose > 1 or self._verbose > 0 and size > 1000000:
+                print('converting Pandas DataFrame to listdict, size was {} bytes'.format(size))
+            self._as_dict = self.pd.to_dict(orient='records')
+        return self._as_dict
 
 
 def report_progress(system_kwargs, final=False):
@@ -81,19 +121,36 @@ def remaining(system_kwargs):
 
 
 def get_pset_group(psets, pset_index, group_size):
-    group = []
-    for _ in range(group_size):
-        if pset_index < len(psets):
-            group.append(psets[pset_index])
-            pset_index += 1
+    group = psets.iloc[pset_index:pset_index+group_size]
+    pset_index += group_size
+
     return group, pset_index
+
+
+def psets_prep(psets):
+    if not isinstance(psets, pd.DataFrame):
+        psets = pd.DataFrame(psets)
+
+    for bad in ('_pset_id', '_exception'):
+        if bad in psets.columns:
+            raise ValueError('disallowed column name {} appears in pset'.format(bad))
+    for c in psets.columns.values:
+        if not c.isidentifier():
+            raise ValueError('pset key "{}" is not a valid Python identifier; this cases problems with pandas'.format(c))
+        if keyword.iskeyword(c):
+            raise ValueError('pset key "{}" is a Python keyword; this cases problems with pandas'.format(c))
+        if c.startswith('_'):
+            raise ValueError('pset key "{}" starts with an underscore; this cases problems with pandas'.format(c))
+    return psets
 
 
 def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs):
     print('starting work on', name, file=sys.stderr)
     sys.stderr.flush()
 
-    system_kwargs = {'progress': MapProgress({'total': len(psets)}), 'results': []}
+    psets = psets_prep(psets)
+
+    system_kwargs = {'progress': MapProgress({'total': len(psets)}), 'results': pd.DataFrame()}
     if chdir:
         system_kwargs['chdir'] = chdir
     if outfile:
@@ -140,17 +197,14 @@ def flatten_results(results):
 def make_pset_ids(psets):
     pset_ids = {}
     ret = []
-    for pset in psets:
-        if '_exception' in pset:
-            print('warning: key _exception seen in a pset, this key is used by the paramsurvey system', file=sys.stderr)
-        pset = pset.copy()  # essentially a 2-level copy of the user's list
-        if '_pset_id' in pset:
-            print('pset already has a _pset_id:', pset)
-        pset_sans_id = pset.copy()
+    for pset in psets.itertuples(index=False):
+        pset_sans_id = pset
         pset_id = str(uuid.uuid4())  # flatten object because of serialization problems downstream
-        pset_ids[pset_id] = pset_sans_id
-        pset['_pset_id'] = pset_id
-        ret.append(pset)
+        pset_ids[pset_id] = pset_sans_id._asdict().copy()
+        new_pset = pset._asdict().copy()
+        new_pset.update({'_pset_id': pset_id})
+        ret.append(new_pset)
+
     return ret, pset_ids
 
 
@@ -183,7 +237,15 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
             user_ret['result'] = {}
         if 'raw_stats' in system_ret:
             system_stats.combine_stats(system_ret['raw_stats'])
-        pset_id = user_ret['pset']['_pset_id']
+
+        try:
+            pset_id = user_ret['pset']['_pset_id']
+        except Exception as e:
+            print('GREG wonky,', repr(e))
+            print('GREG wonky, here is all of user_ret:', repr(user_ret))
+            print('GREG wonky, here is all of system_ret', repr(system_ret))
+            raise
+
         if 'exception' in user_ret:
             progress.failures += 1
             progress.exceptions += 1
@@ -193,7 +255,14 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
         else:
             del system_kwargs['pset_ids'][pset_id]
             user_ret['pset'].pop('_pset_id', None)
-            system_kwargs['results'].append(user_ret)
+
+            new_row = user_ret['pset'].copy()
+            if user_ret['result']:  # allowed to be None
+                new_row.update(user_ret['result'])
+
+            # XXX inefficient to append rows one at a time?
+            system_kwargs['results'] = system_kwargs['results'].append(new_row, ignore_index=True)
+
             progress.finished += len(ret)
             if verbose > 1:
                 print('finished: pset {} result {}'.format(repr(user_ret['pset']), repr(user_ret['result'])), file=sys.stderr)
@@ -211,3 +280,10 @@ def make_subdir_name(count, prefix='ps'):
         raise
 
     return prefix + str(random.randint(0, count-1)).zfill(digits)
+
+
+def psets_empty(psets):
+    if isinstance(psets, pd.DataFrame):
+        return psets.empty
+    if not psets:
+        return True

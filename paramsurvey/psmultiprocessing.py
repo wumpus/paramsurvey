@@ -3,6 +3,7 @@ import sys
 import traceback
 import json
 import functools
+import time
 import multiprocessing
 
 from . import utils
@@ -34,15 +35,14 @@ def finalize():
 
 
 def current_core_count():
-    # XXX should be the pool size, if confered by init(ncores=)
+    # XXX should be the pool size, if configured by init(ncores=)
     # XXX also affected by os.sched_getaffinity
     return multiprocessing.cpu_count()
 
 
-def pick_chunksize(length, factor=4):
+def pick_chunksize(length, cores, factor=4):
     # chunksize computation similar to what Python does for a multiprocessing.Pool
     # except the fudge factor can be changed. bigger factor == smaller chunks.
-    cores = multiprocessing.cpu_count()
     chunksize, extra = divmod(length, cores * factor)
     if extra:
         chunksize += 1
@@ -51,7 +51,7 @@ def pick_chunksize(length, factor=4):
 
 def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
     try:
-        if 'raise_in_wrapper' in system_kwargs and 'actually_raise' in psets[0]:
+        if 'raise_in_wrapper' in system_kwargs and any(pset.get('actually_raise', False) for pset in psets):
             raise system_kwargs['raise_in_wrapper']  # for testing
 
         if 'out_subdirs' in system_kwargs:
@@ -93,16 +93,44 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
         return [[user_ret, {}]]
 
 
-def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
+def callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
+    system_kwargs['outstanding'] -= 1
+    print('callback, outstanding', system_kwargs['outstanding'])
+    print('GREG this ret is', ret)
     utils.handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs)
+    print('GREG saw the other side')
+
+
+def error_callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
+    system_kwargs['outstanding'] -= 1
+    print('error callback, outstanding', system_kwargs['outstanding'])
+    print('exception instance is', repr(ret))
+
+
+def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size):
+    verbose = system_kwargs['verbose']
+
+    while system_kwargs['outstanding'] > cores*factor:
+        print('about to sleep, outstanding:', system_kwargs['outstanding'])
+        time.sleep(0.1)
+        if verbose > 1:
+            system_stats.bingo()
+
+    return group_size
 
 
 def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
         progress_dt=60., group_size=None, name='default', verbose=None, **kwargs):
-    if not psets:
+
+    if utils.psets_empty(psets):
         return
 
+    verbose = verbose or 0
+
     psets, system_stats, system_kwargs = utils.map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs)
+
+    progress = system_kwargs['progress']
+    cores = current_core_count()
 
     # make a cut-down copy to minimize size of args
     worker_system_kwargs = {}
@@ -110,41 +138,59 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
         if key in system_kwargs:
             worker_system_kwargs[key] = system_kwargs[key]
 
-    do_partial = functools.partial(do_work_wrapper, func, worker_system_kwargs, user_kwargs)
+    factor = 1.2  # XXX
 
-    # paramsurvey has a groups feature that's similar to what multprocessing calls chunksize
-    # use the chunksize feature in multiprocessing instead
-    if group_size is not None:
-        chunksize = group_size
-    else:
-        # for an hour-long run on a 4 core laptop, factor=100 divides the psets into 36 second chunks
-        chunksize = pick_chunksize(len(psets), factor=100)
+    if group_size is None:
+        # make this dynamic someday
+        group_size = pick_chunksize(len(psets), cores, factor=100)
 
-    psets, pset_ids = utils.make_pset_ids(psets)
-    system_kwargs['pset_ids'].update(pset_ids)
+    callback_partial = functools.partial(callback, out_func, system_stats, system_kwargs, user_kwargs)
+    error_callback_partial = functools.partial(error_callback, out_func, system_stats, system_kwargs, user_kwargs)
 
-    # form our psets into groups of length 1
-    grouped_psets = [[x] for x in psets]
+    system_kwargs['outstanding'] = 0
+    pset_index = 0
+
+    while True:
+        while system_kwargs['outstanding'] < cores * factor:
+            with stats.record_wallclock('get_pset_group', obj=system_stats):
+                pset_group, pset_index = utils.get_pset_group(psets, pset_index, group_size)
+            if len(pset_group) == 0:
+                break
+
+            pset_group, pset_ids = utils.make_pset_ids(pset_group)
+            system_kwargs['pset_ids'].update(pset_ids)
+
+            with stats.record_wallclock('multiprocessing.apply_async', obj=system_stats):
+                pool.apply_async(do_work_wrapper,
+                                 (func, worker_system_kwargs, user_kwargs, pset_group),
+                                 {}, callback_partial, error_callback_partial)
+            if verbose > 1:
+                system_stats.bingo()
+            system_kwargs['outstanding'] += 1
+            print('just created one, outstanding', system_kwargs['outstanding'])
+            progress.started += len(pset_group)
+            utils.report_progress(system_kwargs)
+
+        if pset_index >= len(psets):
+            break
+
+        # group_size can change within this function
+        group_size = progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 
     if verbose:
-        print('starting map, {} psets {} cores {} chunksize'.format(
-            len(psets), our_ncores, chunksize
-        ), file=sys.stderr)
+        print('getting the residue, length', utils.remaining(system_kwargs), file=sys.stderr)
         sys.stderr.flush()
 
-    system_kwargs['progress'].started = len(psets)
-
-    for ret in pool.imap_unordered(do_partial, grouped_psets, chunksize):
-        if ret is not None:
-            handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
+    progress_until_fewer(cores, 0, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 
     if verbose:
-        print('finished getting results for', name, file=sys.stderr)
+        print('finished getting results', file=sys.stderr)
         sys.stderr.flush()
 
     utils.finalize_progress(system_kwargs)
     utils.report_progress(system_kwargs, final=True)
 
     system_stats.print_percentiles(name)
+    missing = list(system_kwargs['pset_ids'].values())
 
-    return MapResults(system_kwargs['results'], list(system_kwargs['pset_ids'].values()), system_kwargs['progress'], system_stats)
+    return MapResults(system_kwargs['results'], missing, system_kwargs['progress'], system_stats)

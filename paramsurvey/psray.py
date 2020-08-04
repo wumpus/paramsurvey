@@ -54,7 +54,7 @@ def current_core_count():
 
 @ray.remote
 def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
-    if 'raise_in_wrapper' in system_kwargs and any('actually_raise' in pset for pset in psets):
+    if 'raise_in_wrapper' in system_kwargs and any(pset.get('actually_raise', False) for pset in psets):
         raise system_kwargs['raise_in_wrapper']  # for testing
 
     if 'out_subdirs' in system_kwargs:
@@ -158,7 +158,8 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
 
 def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
         progress_dt=60., group_size=None, name='default', verbose=None, **kwargs):
-    if not psets:
+
+    if utils.psets_empty(psets):
         return
 
     verbose = verbose or 0
@@ -177,7 +178,9 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
         if key in system_kwargs:
             worker_system_kwargs[key] = system_kwargs[key]
 
-    factor = check_serialized_size((func, worker_system_kwargs, user_kwargs, psets[0]), factor=1.2)
+    # XXX temporarily diabled for Pandas
+    #factor = check_serialized_size((func, worker_system_kwargs, user_kwargs, psets[0]), factor=1.2)
+    factor = 1.2
 
     # temporary: this works in ray map calls, but check serialize raises on it
     if 'raise_in_wrapper' in system_kwargs:
@@ -213,7 +216,7 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
             progress.started += len(pset_group)
             utils.report_progress(system_kwargs)
 
-        if pset_index >= len(psets) - 1:
+        if pset_index >= len(psets):
             break
 
         # cores and group_size can change within this function
@@ -233,5 +236,6 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
     utils.report_progress(system_kwargs, final=True)
 
     system_stats.print_percentiles(name)
+    missing = list(system_kwargs['pset_ids'].values())
 
-    return MapResults(system_kwargs['results'], list(system_kwargs['pset_ids'].values()), system_kwargs['progress'], system_stats)
+    return MapResults(system_kwargs['results'], missing, system_kwargs['progress'], system_stats)

@@ -25,8 +25,8 @@ psets = [{'duration': 0.3}] * 5
 
 results = paramsurvey.map(sleep_worker, psets, verbose=2)
 
-for r in results.results:
-    print(r['pset'], r['result'])
+for r in results:
+    print(r.duration, r.slept)
 ```
 
 prints, in addition to some debugging output, a result from each of the 5 sleep_worker calls.
