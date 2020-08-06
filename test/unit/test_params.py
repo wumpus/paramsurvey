@@ -101,3 +101,9 @@ def test_param_stress():
     print('change in vmem', vmem1-vmem0)
     # index is an int64, so usage is at least (int64 + 4*int8) = 8 bytes * 100mm = 0.8gbyte
     assert vmem1 - vmem0 < 3.4, 'tight limit that requires int8 to pass'
+
+
+def test_param_quirks():
+    # unhashable type 'list' will be inefficient but shouldn't crash
+    psets = paramsurvey.params.product({'a': [[1], [2], [3]]})
+    assert len(psets) == 3

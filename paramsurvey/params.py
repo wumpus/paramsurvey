@@ -22,12 +22,20 @@ def product(*args):
     return df
 
 
+def _coerce_to_category(a):
+    try:
+        return pd.Series(a, dtype='category')
+    except TypeError:  # e.g. unhashable type like 'list'
+        return a
+
+
 def product_step(a, df):
     # coerce a into a dtype='category' to save memory
     if isinstance(a, dict):
         assert len(a) == 1
         for k, v in a.items():
-            a = pd.Series(v, name=k, dtype='category')
+            a = pd.Series(v, name=k)
+            a = _coerce_to_category(a)
     elif isinstance(a, pd.Series):
         is_category = False
         try:
@@ -38,7 +46,7 @@ def product_step(a, df):
             is_category = False
 
         if not is_category:
-            a = pd.Series(a, dtype='category')
+            a = _coerce_to_category(a)
     elif isinstance(a, pd.DataFrame):
         # this can be a dataframe with 1+ columns
         # we don't always want to coerce these to dtype='category'
@@ -56,7 +64,7 @@ def product_step(a, df):
                 is_category = False
 
             if not is_category:
-                a = pd.Series(series, dtype='category')
+                a = _coerce_to_category(series)
 
     dfa = pd.DataFrame(a)
     dfa['asdfasdf'] = 0
