@@ -260,7 +260,7 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
             # XXX inefficient to append rows one at a time?
             system_kwargs['results'] = system_kwargs['results'].append(new_row, ignore_index=True)
 
-            progress.finished += len(ret)
+            progress.finished += 1
             if verbose > 1:
                 print('finished: pset {} result {}'.format(repr(user_ret['pset']), repr(user_ret['result'])), file=sys.stderr)
         if out_func:

@@ -34,6 +34,10 @@ def test_basics(paramsurvey_init):
     assert [r.slept == duration for r in results], 'everyone slept '+str(duration)
     assert len(results) == len(psets), 'one return for each pset'
     assert len(results.missing) == 0
+    assert results.progress.total == len(psets)
+    assert results.progress.finished == len(psets)
+    assert results.progress.failures == 0
+    assert results.progress.exceptions == 0
     assert isinstance(results.verbose, int)
 
     df_as_listdict = results.to_listdict()
@@ -47,6 +51,11 @@ def test_basics(paramsurvey_init):
     results = paramsurvey.map(sleep_worker, psets, name='group_size 5', group_size=5)
     elapsed = time.time() - start
     assert elapsed > duration*3, 'must take at least {} time'.format(duration)
+    assert len(results) == len(psets)
+    assert results.progress.total == len(psets)
+    assert results.progress.finished == len(psets)
+    assert results.progress.failures == 0
+    assert results.progress.exceptions == 0
 
     assert [r.slept == duration for r in results], 'everyone slept '+str(duration)
     assert len(results) == len(psets), 'one return for each pset'
