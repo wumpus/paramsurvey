@@ -81,4 +81,5 @@ def test_vmem():
     vmem0 = utils.vmem()
     big = bytearray(10000000)  # 10 megs
     vmem1 = utils.vmem()
-    assert vmem1 > vmem0 + 0.005
+    # vmem might not go up at all, if there is free memory
+    assert vmem1 <= vmem0 + 0.011, 'vmem does not go up more than expected'

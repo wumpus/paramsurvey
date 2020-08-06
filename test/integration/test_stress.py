@@ -35,14 +35,6 @@ def sums(n):
     assert results.df['c'].sum() == n * n * (n-1)
 
 
-def params(n):
-    a = range(n)
-    b = range(n)
-
-    psets = paramsurvey.params.product({'a': a, 'b': b})
-    return psets
-
-
 def test_stress_10(paramsurvey_init):
     vmem0 = paramsurvey.utils.vmem()
     sums(10)  # 100
@@ -55,15 +47,3 @@ def test_stress_100(paramsurvey_init):
     sums(50)  # 2,500 ... 6 seconds on 4 cores
     vmem1 = paramsurvey.utils.vmem()
     assert vmem1 - vmem0 < 0.01  # gigabytes
-
-
-def test_param_stress():
-    vmem0 = paramsurvey.utils.vmem()
-    psets = params(1000)  # 1 million
-    vmem1 = paramsurvey.utils.vmem()
-    assert vmem1 - vmem0 < 0.1  # gigabytes
-
-    vmem0 = paramsurvey.utils.vmem()
-    psets = params(5000)  # 25 million
-    vmem1 = paramsurvey.utils.vmem()
-    assert vmem1 - vmem0 < 2.0

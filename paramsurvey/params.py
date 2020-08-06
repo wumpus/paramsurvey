@@ -23,6 +23,41 @@ def product(*args):
 
 
 def product_step(a, df):
+    # coerce a into a dtype='category' to save memory
+    if isinstance(a, dict):
+        assert len(a) == 1
+        for k, v in a.items():
+            a = pd.Series(v, name=k, dtype='category')
+    elif isinstance(a, pd.Series):
+        is_category = False
+        try:
+            if a.dtype == 'category':
+                is_category = True
+        except TypeError:
+            # why does this raise? well, it does.
+            is_category = False
+
+        if not is_category:
+            a = pd.Series(a, dtype='category')
+    elif isinstance(a, pd.DataFrame):
+        # this can be a dataframe with 1+ columns
+        # we don't always want to coerce these to dtype='category'
+        if len(a.columns) == 1:
+            # extract the series
+            name = a.columns.values[0]
+            series = a[name]
+            # if it is not dtype='category', make it so
+            is_category = False
+            try:
+                if series.dtype == 'category':
+                    is_category = True
+            except TypeError:
+                # why does this raise? well, it does.
+                is_category = False
+
+            if not is_category:
+                a = pd.Series(series, dtype='category')
+
     dfa = pd.DataFrame(a)
     dfa['asdfasdf'] = 0
     df = df.merge(dfa, how='outer')
