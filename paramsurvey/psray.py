@@ -217,7 +217,7 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
     pset_index = 0
 
     while True:
-        while len(futures) < cores * factor:
+        while len(futures) <= cores * factor:
             with stats.record_wallclock('get_pset_group', obj=system_stats):
                 pset_group, pset_index = utils.get_pset_group(psets, pset_index, group_size)
             if len(pset_group) == 0:
