@@ -2,6 +2,7 @@ import os
 import sys
 import traceback
 import json
+import time
 
 import ray
 import pyarrow
@@ -130,10 +131,23 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
 
     while len(futures) > cores*factor:
         with stats.record_wallclock('ray.wait', obj=system_stats):
+            t0 = time.time()
             done, pending = ray.wait(futures, num_returns=len(futures), timeout=1)
+            elapsed = time.time() - t0
 
-        if verbose > 1:
-            print('until_fewer: futures {}, cores*factor {}, done {}, pending {}'.format(len(futures), cores*factor, len(done), len(pending)), file=sys.stderr)
+        print_nums = False
+        if elapsed < 0.8:
+            print('something bad happened in ray.wait, normally it takes 2.0 seconds, but it took', elapsed, file=sys.stderr)
+            print_nums = True
+
+        if len(futures) != len(done) + len(pending):
+            print('something bad happened in ray.wait, counts do not add up:')
+            print_nums = True
+
+        if verbose > 1 or print_nums:
+            print('futures {}, cores*factor {}, done {}, pending {}'.format(
+                len(futures), cores*factor, len(done), len(pending)),
+                  file=sys.stderr)
             sys.stderr.flush()
 
         futures = pending
