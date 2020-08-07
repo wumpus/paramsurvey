@@ -67,7 +67,7 @@ def test_add_column():
     paramsurvey.params.add_column(df, 'col4', lambda row: row['col1'] + row['col2'])
 
     assert len(df) == 8
-    assert df['col4'].sum() == (1+2)*4 + (3+4)*4
+    assert df['col4'].to_numpy().sum() == (1+2)*4 + (3+4)*4
 
 
 def params(m, n):

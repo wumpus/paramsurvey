@@ -76,4 +76,5 @@ def add_column(df, name, func):
     values = []
     for pset in df.itertuples(index=False):
         values.append(func(pset._asdict()))
+    values = _coerce_to_category(values)
     df[name] = pd.Series(values, index=df.index)
