@@ -68,6 +68,9 @@ def test_basics(paramsurvey_init):
     assert [r.burned == duration for r in results], 'everyone burned '+str(duration)
     assert len(results) == len(psets), 'one return for each pset'
 
+    results = paramsurvey.map(sleep_worker, psets, name='sleep_no_results', keep_results=False)
+    assert len(results) == 0
+
 
 def do_test_args(pset, system_kwargs, user_kwargs, raw_stats):
     # this function cannot be nested inside test_args() because nested funcs can't be pickled

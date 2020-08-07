@@ -30,7 +30,10 @@ class MapResults(object):
     A container object for the outcome of paramsurvey.map()
     '''
     def __init__(self, results, missing, progress, stats, verbose=0):
-        self._results = results
+        if results is not None:
+            self._results = results
+        else:
+            self._results = pd.DataFrame(None)
         self._results_as_dict = None
         self._missing = missing
         self._progress = progress
@@ -147,13 +150,16 @@ def psets_prep(psets):
     return psets
 
 
-def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs):
+def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, keep_results=True, **kwargs):
     print('starting work on', name, file=sys.stderr)
     sys.stderr.flush()
 
     psets = psets_prep(psets)
 
-    system_kwargs = {'progress': MapProgress({'total': len(psets)}), 'results': pd.DataFrame()}
+    system_kwargs = {'progress': MapProgress({'total': len(psets)})}
+    if keep_results:
+        system_kwargs['results'] = pd.DataFrame()
+
     if chdir:
         system_kwargs['chdir'] = chdir
     if outfile:
@@ -258,7 +264,8 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
                 new_row.update(user_ret['result'])
 
             # XXX inefficient to append rows one at a time?
-            system_kwargs['results'] = system_kwargs['results'].append(new_row, ignore_index=True)
+            if 'results' in system_kwargs:
+                system_kwargs['results'] = system_kwargs['results'].append(new_row, ignore_index=True)
 
             progress.finished += 1
             if verbose > 1:
