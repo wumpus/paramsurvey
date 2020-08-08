@@ -136,11 +136,11 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
             elapsed = time.time() - t0
 
         print_nums = False
-        if elapsed < 0.8:
+        if elapsed < 0.8:  # pragma: no cover
             print('something bad happened in ray.wait, normally it takes 2.0 seconds, but it took', elapsed, file=sys.stderr)
             print_nums = True
 
-        if len(futures) != len(done) + len(pending):
+        if len(futures) != len(done) + len(pending):  # pragma: no cover
             print('something bad happened in ray.wait, counts do not add up:')
             print_nums = True
 
@@ -153,7 +153,7 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
         futures = pending
 
         if len(done):
-            if verbose and len(done) > 100:
+            if verbose and len(done) > 100:  # pragma: no cover
                 print('surprised to see {} psets done at once'.format(len(done)), file=sys.stderr)
                 sys.stderr.flush()
             for ret in done:
