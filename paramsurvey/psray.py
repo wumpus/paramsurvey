@@ -197,7 +197,7 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
 
     # XXX temporarily diabled for Pandas
     #factor = check_serialized_size((func, worker_system_kwargs, user_kwargs, psets[0]), factor=1.2)
-    factor = 1.2
+    factor = 2.4
 
     # temporary: this works in ray map calls, but check serialize raises on it
     if 'raise_in_wrapper' in system_kwargs:
