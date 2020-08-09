@@ -7,6 +7,7 @@ import keyword
 import resource
 
 import pandas as pd
+from pandas_appender import PDF_Appender
 
 from . import stats
 
@@ -158,7 +159,7 @@ def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, keep_results=Tru
 
     system_kwargs = {'progress': MapProgress({'total': len(psets)})}
     if keep_results:
-        system_kwargs['results'] = pd.DataFrame()
+        system_kwargs['results'] = PDF_Appender(ignore_index=True)
 
     if chdir:
         system_kwargs['chdir'] = chdir
@@ -263,9 +264,8 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
             if user_ret['result']:  # allowed to be None
                 new_row.update(user_ret['result'])
 
-            # XXX inefficient to append rows one at a time?
             if 'results' in system_kwargs:
-                system_kwargs['results'] = system_kwargs['results'].append(new_row, ignore_index=True)
+                system_kwargs['results'].append(new_row)
 
             progress.finished += 1
             if verbose > 1:

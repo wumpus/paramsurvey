@@ -9,11 +9,12 @@ packages = [
 ]
 
 test_requirements = ['pytest>=4.6', 'coverage', 'pytest-cov', 'pytest-sugar', 'coveralls', 'numpy']
-# pytest-cov requires pytest >= 4.6, dunno why this doesn't just work
+# pytest-cov requires pytest >= 4.6, dunno why this doesn't just work in travis-ci
 
 requires = [
     'hdrhistogram',
-    'pandas'
+    'pandas',
+    'pandas-appender',
 ]
 
 extras_require = {

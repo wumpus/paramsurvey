@@ -255,4 +255,9 @@ def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, 
     system_stats.print_percentiles(name)
     missing = list(system_kwargs['pset_ids'].values())
 
-    return MapResults(system_kwargs.get('results', None), missing, system_kwargs['progress'], system_stats)
+    if 'results' in system_kwargs:
+        results = system_kwargs['results'].finalize()
+    else:
+        results = None
+
+    return MapResults(results, missing, system_kwargs['progress'], system_stats)
