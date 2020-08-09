@@ -27,15 +27,20 @@ matrix:
       - pip install .[test]
   - python: 3.8
     env: PARAMSURVEY_VERBOSE=2 PYTEST_STDERR_VISIBLE=-s
-  - python: 3.8
-    arch: arm64
-    env: ONLY_BUILTINS=1
-    install:
-      - pip install .
-      - pip install .[test]
-      # no ray on arm64
 #  - python: 3.8
-#    arch: s390x
+#    arch: arm64  # works but takes 35 minutes
+#    env: ONLY_BUILTINS=1
+#    install:
+#      - pip install .
+#      - pip install .[test]
+#      # no ray on arm64
+  - python: 3.8
+    arch: s390x
+#    env: ONLY_BUILTINS=1
+#    install:
+#      - pip install .
+#      - pip install .[test]
+#      # no ray on s390
 
 git:
   depth: 99999
