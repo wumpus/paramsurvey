@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import sys
+import pytest
 
 import pandas as pd
 import numpy as np
@@ -14,6 +15,7 @@ def test_product():
 
     df = paramsurvey.params.product(df1, df2, df3)
     assert len(df) == 8
+    assert df['col1'].dtype == 'category'
 
     nuniques = df.nunique('rows')
     assert np.array_equal(nuniques.values, np.array([2, 2, 2])), 'each column has 2 unique values'
@@ -107,3 +109,6 @@ def test_param_quirks():
     # unhashable type 'list' will be inefficient but shouldn't crash
     psets = paramsurvey.params.product({'a': [[1], [2], [3]]})
     assert len(psets) == 3
+    with pytest.raises(TypeError):
+        # why does this assert a type error?
+        assert psets['a'].dtype != 'category'
