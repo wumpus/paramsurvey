@@ -21,25 +21,24 @@ def read_ray_config():
     return address, password
 
 
-def init(verbose=False, **kwargs):
+def init(system_kwargs, ncores=None, **kwargs):
     ray_kwargs = {}
 
-    if 'ncores' in kwargs:
-        # what does num_cpus actually do if the the cluster pre-exists?
-        ray_kwargs['num_cpus'] = kwargs['ncores']
-        kwargs.pop('ncores')
+    if ncores:
+        ray_kwargs['num_cpus'] = ncores
 
+    # should allow these to be kwargs
     address, password = read_ray_config()
     kwargs['address'] = address
     kwargs['redis_password'] = password
 
     if 'ignore_reinit_error' not in kwargs:
-        kwargs['ignore_reinit_error'] = True  # XXX needed for our test infra
+        kwargs['ignore_reinit_error'] = True  # needed for testing
 
     if os.environ.get('RAY_LOCAL_MODE', False):
         kwargs['local_mode'] = True
 
-    # XXX if the cluster does not pre-exist, should we create it?
+    # should we create a ray head if there is no cluster?
     ray.init(**kwargs)
 
 
@@ -173,15 +172,15 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
     return futures, cores, group_size
 
 
-def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
-        progress_dt=60., group_size=None, name='default', verbose=None, **kwargs):
+def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
+        progress_dt=60., group_size=None, name='default', **kwargs):
+
+    verbose = system_kwargs['verbose']
 
     if utils.psets_empty(psets):
         return
 
-    verbose = verbose or 0
-
-    psets, system_stats, system_kwargs = utils.map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs)
+    psets, system_stats, system_kwargs = utils.map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, **kwargs)
     if 'chdir' not in system_kwargs:
         # ray workers default to ~
         system_kwargs['chdir'] = os.getcwd()

@@ -1,5 +1,6 @@
 import pytest
-import collections
+from unittest.mock import patch
+import os
 
 import pandas as pd
 
@@ -63,6 +64,50 @@ def test_get_pset_group():
 
     pset_group, pset_index = utils.get_pset_group(psets, pset_index, 3)
     assert len(pset_group) == 0
+
+
+def copy2(orig):
+    ret = orig.copy()  # shallow copy
+    for k in ret:
+        ret[k] = ret[k].copy()  # now deep copy
+    return ret
+
+
+def test_init_resolve_kwargs():
+    gkwargs = copy2(paramsurvey.global_kwargs)
+    with patch.dict(os.environ, {'PARAMSURVEY_VERBOSE': '3'}, clear=True):
+        utils.initialize_kwargs(gkwargs, {'verbose': 1})
+        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {'verbose': 2, 'unrecognized': 'asdf'})
+        assert system_kwargs['verbose'] == 3, 'env variables trump all'
+        assert other_kwargs['unrecognized'] == 'asdf', 'unrecognized args pass through'
+
+    gkwargs = copy2(paramsurvey.global_kwargs)
+    with patch.dict(os.environ, {}, clear=True):
+        utils.initialize_kwargs(gkwargs, {'verbose': 1})
+        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {'verbose': 2})
+        assert system_kwargs['verbose'] == 2, 'closest wins'  # XXX getting 1
+        assert other_kwargs == {}
+
+    gkwargs = copy2(paramsurvey.global_kwargs)
+    with patch.dict(os.environ, {}, clear=True):
+        utils.initialize_kwargs(gkwargs, {'verbose': 1})
+        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {})
+        assert system_kwargs['verbose'] == 1, 'init kwarg comes last'
+        assert other_kwargs == {}
+
+    gkwargs = copy2(paramsurvey.global_kwargs)
+    with patch.dict(os.environ, {}, clear=True):
+        utils.initialize_kwargs(gkwargs, {})
+        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {})
+        assert system_kwargs['verbose'] == 0, 'default'
+        assert other_kwargs == {}
+
+    gkwargs = copy2(paramsurvey.global_kwargs)
+    with patch.dict(os.environ, {'PARAMSURVEY_BACKEND': 'FOO'}, clear=True):
+        utils.initialize_kwargs(gkwargs, {})
+        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {})
+        assert system_kwargs['backend'] == 'FOO', 'type works'
+        assert other_kwargs == {}
 
 
 def test_psets_empty():

@@ -45,8 +45,8 @@ specifying a backend ('multiprocessing' or 'ray').
 The user supplies a worker function, which takes a dict of parameters
 (pset) and returns a dict of results.
 
-The user also supplies a list of parameter sets, perhaps constructed
-using the helper function `paramsurvey.params.product()`.
+The user also supplies a list of parameter sets (psets), perhaps
+constructed using the helper function `paramsurvey.params.product()`.
 
 Calling `pararamsurvey.map()` executes the worker function once for
 each pset. It returns a `MapResults` object, containing the results,
@@ -54,25 +54,47 @@ performance statistics, and information about any failures.
 
 You can call `paramsurvey.map()` more than once.
 
-## Worker function limitations
+## Controlling verbosity
 
-The worker function runs in a different address space and possibly on a different server.
-It shouldn't access any global variables.
+The `paramsurvey` code has a set of keyword arguments (and corresponding environment
+variables) to aid debugging and testing. They are:
 
-For hard-to-explain Python issues, be sure to define the worker
-function before calling `paramsurvey.init()`. The worker function should
-not be nested inside another function. On Windows, the main program file
-should have a [`if __name == '__main__'` guard similar to the examples
-at the top of the Python multprocessing documentation.](https://docs.python.org/3/library/multiprocessing.html)
+* `backend="multiprocessing"` -- which backend to use, currently "multiprocessing" (default) or "ray"
+* `verbose=1` -- print information about the progress of the computation:
+* * 0 = print nothing
+* * 1 = print something every 30 seconds (default)
+* * 2 = print something ever second
+* * 3 = print something for every action
+* `vstats=1` -- controls the verbosity of the performance statistics system, with similar values as `verbose`
+* `limit=-1` -- limits the number of psets actually computed to this number (-1 meaning "all")
+
+Each of these has a corresponding environment variable,
+e.g. `PARAMSURVEY_BACKEND`, `PARAMSURVEY_VERBOSE`.  If the environment
+variable is set, it overrides the values set in the source code. If a
+kwarg is set for a `map()` call, that value overrides any value
+specified for the `init()` call.
 
 ## The MapResults object
 
 The MapResults object has several properties:
 
-* results is a list of dictionaries; 'return' is the return value of the worker function, and 'pset' is the pset.
-* failed is a list of failed psets, plus an extra '_exception' key if an exception was raised in the worker
-* progress is a MapProgress object with properties containing the details of pset execution: total, started, finished, failures, exceptions
-* stats is a PerfStats object containing performance statistics
+* `results` is a Pandas DataFrame containing the values of the pset and the keys returned by the worker function. If you prefer to deal with dictionaries
+and are not worried about memory usage, `results.to_listdict` returns a list of dictionaries.
+* `failed` is a list of failed psets dictionaries, plus an extra '_exception' key if an exception was raised in the worker function
+* `progress` is a MapProgress object with properties containing the details of pset execution: total, started, finished, failures, exceptions
+* `stats` is a PerfStats object containing performance statistics
+
+## Worker function limitations
+
+The worker function runs in a different address space and possibly on a different server.
+It shouldn't access any global variables.
+
+For hard-to-explain Python reasons, define the worker function before
+calling `paramsurvey.init()`. The worker function should not be nested
+inside another function. On Windows, the main program file should have
+a [`if __name == '__main__'` guard similar to the examples at the top
+of the Python multprocessing
+documentation.](https://docs.python.org/3/library/multiprocessing.html)
 
 ## Installing
 

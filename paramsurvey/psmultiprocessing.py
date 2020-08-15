@@ -14,7 +14,7 @@ pool = None
 our_ncores = None
 
 
-def init(ncores=None, verbose=None):
+def init(system_kwargs, ncores=None, **kwargs):
     global pool
     global our_ncores
     if pool:  # yes we can be called multiple times  # pragma: no cover
@@ -22,7 +22,7 @@ def init(ncores=None, verbose=None):
 
     if ncores is None:
         ncores = multiprocessing.cpu_count()
-    if verbose:
+    if system_kwargs['verbose']:
         print('initializing multiprocessing pool with {} processes'.format(ncores), file=sys.stderr)
     pool = multiprocessing.Pool(processes=ncores)
     our_ncores = ncores
@@ -115,15 +115,15 @@ def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, u
     return group_size
 
 
-def map(func, psets, out_func=None, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
-        progress_dt=60., group_size=None, name='default', verbose=None, **kwargs):
+def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
+        progress_dt=30., group_size=None, name='default', **kwargs):
+
+    verbose = system_kwargs['verbose']
 
     if utils.psets_empty(psets):
         return
 
-    verbose = verbose or 0
-
-    psets, system_stats, system_kwargs = utils.map_prep(psets, name, chdir, outfile, out_subdirs, verbose, **kwargs)
+    psets, system_stats, system_kwargs = utils.map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, **kwargs)
 
     progress = system_kwargs['progress']
     cores = current_core_count()

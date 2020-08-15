@@ -1,9 +1,8 @@
-import os
 import sys
 from pkg_resources import get_distribution, DistributionNotFound
 
 from . import psmultiprocessing
-from .utils import flatten_results
+from .utils import flatten_results, initialize_kwargs, resolve_kwargs
 
 
 try:
@@ -53,28 +52,34 @@ backends = {
     },
 }
 
-our_backend = None
-our_verbose = None
+global_kwargs = {}
 default_backend = 'multiprocessing'
 
 
-def init(backend=None, ncores=None, verbose=None, **kwargs):
-    if backend is None:
-        backend = os.environ.get('PARAMSURVEY_BACKEND', default_backend)
+global_kwargs = {
+    'verbose': {'env': 'PARAMSURVEY_VERBOSE', 'default': 0},
+    'backend': {'env': 'PARAMSURVEY_BACKEND', 'default': default_backend, 'type': str},
+    'limit': {'env': 'PARAMSURVEY_LIMIT', 'default': -1},
+    'ncores': {'env': 'PARAMSURVEY_NCORES', 'default': -1},
+    'vstats': {'env': 'PARAMSURVEY_VSTATS', 'default': 0},
+}
 
-    if verbose or int(os.environ.get('PARAMSURVEY_VERBOSE', '0')) > 0:
-        global our_verbose
-        our_verbose = verbose or int(os.environ.get('PARAMSURVEY_VERBOSE', '0'))
-        kwargs['verbose'] = verbose or our_verbose
-        print('initializing paramsurvey {} backend'.format(backend), file=sys.stderr)
+
+def init(**kwargs):
+    initialize_kwargs(global_kwargs, kwargs)
+    verbose = global_kwargs['verbose']['value']
+    backend = global_kwargs['backend']['value']
 
     global our_backend
     if backend in backends:
+        if verbose:
+            print('initializing paramsurvey {} backend'.format(backend), file=sys.stderr)
         our_backend = backends[backend]
         our_backend['name'] = backend
         if 'lazy' in our_backend:
             our_backend.update(our_backend['lazy']())
-        our_backend['init'](ncores=ncores, **kwargs)
+        system_kwargs, other_kwargs = resolve_kwargs(global_kwargs, kwargs)
+        our_backend['init'](system_kwargs, **other_kwargs)
     else:  # pragma: no cover
         raise ValueError('unknown backend '+backend+', valid backends: '+', '.join(backends.keys()))
 
@@ -84,8 +89,6 @@ def backend():
 
 
 def finalize(*args, **kwargs):
-    if our_verbose:
-        print('finalizing paramsurvey', file=sys.stderr)
     return our_backend['finalize'](*args, **kwargs)
 
 
@@ -94,8 +97,5 @@ def current_core_count(*args, **kwargs):
 
 
 def map(*args, **kwargs):
-    if our_verbose and 'verbose' not in kwargs:
-        if our_verbose > 1:
-            print('adding verbose= to map kwargs', file=sys.stderr)
-        kwargs['verbose'] = our_verbose
-    return our_backend['map'](*args, **kwargs)
+    system_kwargs, other_kwargs = resolve_kwargs(global_kwargs, kwargs)
+    return our_backend['map'](*args, system_kwargs=system_kwargs, **other_kwargs)

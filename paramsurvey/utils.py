@@ -5,6 +5,7 @@ import math
 import random
 import keyword
 import resource
+import os
 
 import pandas as pd
 from pandas_appender import DF_Appender
@@ -151,16 +152,17 @@ def psets_prep(psets):
     return psets
 
 
-def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, keep_results=True, **kwargs):
-    print('starting work on', name, file=sys.stderr)
-    sys.stderr.flush()
+def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_results=True, **kwargs):
+    if system_kwargs['verbose'] > 0:
+        print('starting work on', name, file=sys.stderr)
+        sys.stderr.flush()
 
     psets = psets_prep(psets)
 
-    system_kwargs = {'progress': MapProgress({'total': len(psets)})}
+    system_kwargs['progress'] = MapProgress({'total': len(psets)})
+
     if keep_results:
         system_kwargs['results'] = DF_Appender(ignore_index=True)
-
     if chdir:
         system_kwargs['chdir'] = chdir
     if outfile:
@@ -169,8 +171,6 @@ def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, keep_results=Tru
         system_kwargs['out_subdirs'] = out_subdirs
     if name:
         system_kwargs['name'] = name
-    system_kwargs['verbose'] = verbose or 0
-
     if 'raise_in_wrapper' in kwargs:
         system_kwargs['raise_in_wrapper'] = kwargs['raise_in_wrapper']
 
@@ -274,6 +274,48 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
             out_func(user_ret, system_kwargs, user_kwargs)
 
     report_progress(system_kwargs)
+
+
+def initialize_kwargs(global_kwargs, kwargs):
+    for k, v in global_kwargs.items():
+        value = None
+        if v['env'] in os.environ:
+            value = os.environ[v['env']]
+            v['strong'] = True
+        elif kwargs.get(k) is not None:
+            value = kwargs.get(k)
+        else:
+            value = v.get('default')
+        type = v.get('type', int)
+        v['value'] = type(value)
+
+
+def resolve_kwargs(global_kwargs, kwargs):
+    # not quite perfect hack, so we can be verbose here
+    verbose = kwargs.get('verbose', 0) or global_kwargs['verbose']
+
+    system_kwargs = {}
+    other_kwargs = {}
+
+    for k in kwargs:
+        if k in global_kwargs:
+            gkw = global_kwargs[k]
+            if gkw.get('strong'):
+                if verbose:
+                    print('environment variable overrides passed in value for', k, file=sys.stderr)
+                print('GREG from env', k)
+                system_kwargs[k] = gkw['value']
+            else:
+                print('GREG from local', k)
+                system_kwargs[k] = kwargs[k]
+        else:
+            other_kwargs[k] = kwargs[k]
+    for k in global_kwargs:
+        if k not in system_kwargs:
+            print('GREG from global', k)
+            system_kwargs[k] = global_kwargs[k]['value']
+
+    return system_kwargs, other_kwargs
 
 
 def make_subdir_name(count, prefix='ps'):
