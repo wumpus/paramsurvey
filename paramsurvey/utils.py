@@ -158,6 +158,8 @@ def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_resul
         sys.stderr.flush()
 
     psets = psets_prep(psets)
+    if system_kwargs['limit'] >= 0:
+        psets = psets.iloc[:system_kwargs['limit']]
 
     system_kwargs['progress'] = MapProgress({'total': len(psets)})
 

@@ -224,5 +224,12 @@ def test_toplevel(paramsurvey_init):
     assert paramsurvey.backend() == os.environ.get('PARAMSURVEY_BACKEND', paramsurvey.default_backend)
 
 
+def test_kwargs(paramsurvey_init):
+    duration = 0.1
+    psets = [{'duration': duration}] * 10
+    results = paramsurvey.map(sleep_worker, psets, limit=3, name='sleep with limit')
+    assert len(results) == 3
+
+
 def test_overlarge_pset():
     pass
