@@ -1,5 +1,3 @@
-import itertools
-
 import paramsurvey
 import paramsurvey.params
 

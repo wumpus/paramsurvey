@@ -29,6 +29,22 @@ def _coerce_to_category(a):
         return a
 
 
+def _infer_category(a):
+    try:
+        c = pd.Series(a, dtype='category')
+    except TypeError as e:
+        # e.g. unhashable type                                                                                                                             
+        print('GREG raised '+str(e))
+        return a
+
+    asize = a.memory_usage(index=False, deep=True)
+    csize = c.memory_usage(index=False, deep=True)
+    print('GREG', asize, csize)
+    if csize < asize:
+        return c
+    return a
+
+
 def product_step(a, df):
     # coerce a into a dtype='category' to save memory
     if isinstance(a, dict):
@@ -72,9 +88,16 @@ def product_step(a, df):
     return df
 
 
-def add_column(df, name, func):
+def add_column(df, name, func, infer_category=True):
     values = []
     for pset in df.itertuples(index=False):
         values.append(func(pset._asdict()))
-    values = _coerce_to_category(values)
-    df[name] = pd.Series(values, index=df.index)
+    s = pd.Series(values, index=df.index)
+
+    if infer_category:
+        print('GREG inferring category')
+        s = _infer_category(s)
+
+    ret = df.copy()
+    ret[name] = s
+    return ret

@@ -8,6 +8,29 @@ import numpy as np
 import paramsurvey.params
 
 
+def test__coerce_to_category():
+    # always fires, unless the types don't work out
+    # does not crash with weird datatypes
+    # returns the same thing if doesn't fire
+
+    s1 = pd.Series(range(10))
+    s2 = paramsurvey.params._coerce_to_category(s1)
+    assert s2.dtype == 'category'
+
+
+def test__infer_category():
+    s1 = pd.Series(range(10))
+    s2 = paramsurvey.params._infer_category(s1)
+    try:
+        assert s2.dtype != 'category'
+    except TypeError:  # oh, pandas
+        assert True
+
+    s1 = pd.Series(range(1000))
+    s2 = paramsurvey.params._coerce_to_category(s1)
+    assert s2.dtype == 'category'
+
+
 def test_product():
     df1 = pd.DataFrame({'col1': [1, 2]})
     df2 = pd.DataFrame({'col2': [3, 4]})
@@ -66,10 +89,24 @@ def test_add_column():
     df = paramsurvey.params.product({'col1': [1, 2]}, {'col2': [3, 4]}, {'col3': [5, 6]})
     assert len(df) == 8
 
-    paramsurvey.params.add_column(df, 'col4', lambda row: row['col1'] + row['col2'])
+    df2 = paramsurvey.params.add_column(df, 'col4', lambda row: row['col1'] + row['col2'])
 
-    assert len(df) == 8
-    assert df['col4'].to_numpy().sum() == (1+2)*4 + (3+4)*4
+    assert len(df2) == 8
+    assert df2['col4'].to_numpy().sum() == (1+2)*4 + (3+4)*4
+
+    df3 = paramsurvey.params.add_column(df, 'col4', lambda row: row['col1'] + row['col2'], infer_category=False)
+    assert df3.equals(df2)  # infer not called
+
+    df = pd.DataFrame([{'a': 0}] * 1000)
+    df4 = paramsurvey.params.add_column(df, 'col4', lambda row: 0)
+    assert df4['col4'].dtype == 'category'
+
+    df4 = paramsurvey.params.add_column(df, 'col4', lambda row: 0, infer_category=False)
+    try:
+        assert df4['col4'].dtype != 'category'
+    except TypeError:  # oh, pandas
+        pass
+
 
 
 def params(m, n):
