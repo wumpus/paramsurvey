@@ -7,7 +7,7 @@ import keyword
 import resource
 
 import pandas as pd
-from pandas_appender import PDF_Appender
+from pandas_appender import DF_Appender
 
 from . import stats
 
@@ -159,7 +159,7 @@ def map_prep(psets, name, chdir, outfile, out_subdirs, verbose, keep_results=Tru
 
     system_kwargs = {'progress': MapProgress({'total': len(psets)})}
     if keep_results:
-        system_kwargs['results'] = PDF_Appender(ignore_index=True)
+        system_kwargs['results'] = DF_Appender(ignore_index=True)
 
     if chdir:
         system_kwargs['chdir'] = chdir

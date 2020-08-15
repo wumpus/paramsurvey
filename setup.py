@@ -14,7 +14,7 @@ test_requirements = ['pytest>=4.6', 'coverage', 'pytest-cov', 'pytest-sugar', 'c
 requires = [
     'hdrhistogram',
     'pandas',
-    'pandas-appender',
+    'pandas-appender>=0.9.1',
 ]
 
 extras_require = {
