@@ -150,18 +150,16 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
 
     while True:
         while system_kwargs['outstanding'] <= cores * factor:
-            with stats.record_wallclock('get_pset_group', obj=system_stats):
-                pset_group, pset_index = utils.get_pset_group(psets, pset_index, group_size)
+            pset_group, pset_index = utils.get_pset_group(psets, pset_index, group_size)
             if len(pset_group) == 0:
                 break
 
             pset_group, pset_ids = utils.make_pset_ids(pset_group)
             system_kwargs['pset_ids'].update(pset_ids)
 
-            with stats.record_wallclock('multiprocessing.apply_async', obj=system_stats):
-                pool.apply_async(do_work_wrapper,
-                                 (func, worker_system_kwargs, user_kwargs, pset_group),
-                                 {}, callback_partial, error_callback_partial)
+            pool.apply_async(do_work_wrapper,
+                             (func, worker_system_kwargs, user_kwargs, pset_group),
+                             {}, callback_partial, error_callback_partial)
             if verbose > 1:
                 system_stats.bingo()
             system_kwargs['outstanding'] += 1

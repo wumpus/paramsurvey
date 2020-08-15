@@ -129,15 +129,15 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
     verbose = system_kwargs['verbose']
 
     while len(futures) > cores*factor:
-        with stats.record_wallclock('ray.wait', obj=system_stats):
-            t0 = time.time()
-            done, pending = ray.wait(futures, num_returns=len(futures), timeout=1)
-            elapsed = time.time() - t0
+        t0 = time.time()
+        done, pending = ray.wait(futures, num_returns=len(futures), timeout=1)
+        elapsed = time.time() - t0
 
         print_nums = False
         if elapsed < 0.8:  # pragma: no cover
-            print('something bad happened in ray.wait, normally it takes 2.0 seconds, but it took', elapsed, file=sys.stderr)
-            print_nums = True
+            if len(pending):
+                print('something bad happened in ray.wait, normally it takes 2.0 seconds, but it took', elapsed, file=sys.stderr)
+                print_nums = True
 
         if len(futures) != len(done) + len(pending):  # pragma: no cover
             print('something bad happened in ray.wait, counts do not add up:')
@@ -217,16 +217,14 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
 
     while True:
         while len(futures) <= cores * factor:
-            with stats.record_wallclock('get_pset_group', obj=system_stats):
-                pset_group, pset_index = utils.get_pset_group(psets, pset_index, group_size)
+            pset_group, pset_index = utils.get_pset_group(psets, pset_index, group_size)
             if len(pset_group) == 0:
                 break
 
             pset_group, pset_ids = utils.make_pset_ids(pset_group)
             system_kwargs['pset_ids'].update(pset_ids)
 
-            with stats.record_wallclock('ray.remote', obj=system_stats):
-                futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
+            futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
             if verbose > 1:
                 system_stats.bingo()
             progress.started += len(pset_group)
