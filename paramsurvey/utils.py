@@ -105,7 +105,7 @@ class PDFWrapper(object):
 '''
 
 
-def report_progress(system_kwargs, final=False):
+def report_progress(system_kwargs, final=False, other_fd=None):
     t = time.time()
     verbose = system_kwargs['verbose']
 
@@ -113,15 +113,23 @@ def report_progress(system_kwargs, final=False):
 
     if force or t - system_kwargs['progress_last'] > system_kwargs['progress_dt']:
         system_kwargs['progress_last'] = t
-        print(system_kwargs['name'], 'progress:', str(system_kwargs['progress']),
-              file=sys.stderr)
+        print(system_kwargs['name'], 'progress:', str(system_kwargs['progress']), file=sys.stderr)
+        if other_fd:
+            print(system_kwargs['name'], 'progress:', str(system_kwargs['progress']), file=other_fd)
 
-        if final and verbose and system_kwargs['pset_ids']:
+        if final and system_kwargs['pset_ids']:
             if verbose > 1:
                 print('missing psets:', file=sys.stderr)
-                for pset_id, pset in system_kwargs['pset_ids'].items():
+            if other_fd:
+                print('missing psets:', file=other_fd)
+            for pset_id, pset in system_kwargs['pset_ids'].items():
+                if verbose > 1:
                     print(' ', pset, file=sys.stderr)
+                if other_fd:
+                    print(' ', pset, file=other_fd)
 
+        if other_fd:
+            other_fd.flush()
         sys.stderr.flush()
 
 
@@ -186,7 +194,7 @@ def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_resul
     system_kwargs['progress_last'] = 0.
     system_kwargs['progress_dt'] = 0.
 
-    pslogger.log('paramsurvey.map pset count {} pset columns {}'.format(len(psets), list(psets.columns.values)))
+    pslogger.log('paramsurvey.map pset count {}, pset columns {}'.format(len(psets), list(psets.columns.values)))
 
     return psets, system_stats, system_kwargs
 
@@ -200,14 +208,19 @@ def map_finalize(name, system_kwargs, system_stats):
 
     finalize_progress(system_kwargs)
     report_progress(system_kwargs, final=True)
+    report_progress(system_kwargs, final=True, other_fd=pslogger.logfd)
 
     system_stats.print_percentiles(name)
+    if pslogger.logfd:
+        system_stats.print_percentiles(name, file=pslogger.logfd)
     missing = list(system_kwargs['pset_ids'].values())
 
     if 'results' in system_kwargs:
         results = system_kwargs['results'].finalize()
     else:
         results = None
+
+    pslogger.log('paramsurvey.map returning results')
 
     return MapResults(results, missing, system_kwargs['progress'], system_stats)
 

@@ -26,8 +26,9 @@ def paramsurvey_init(request):
 
 def readouterr_and_dump(capsys):
     captured = capsys.readouterr()
-    sys.stdout.write(captured.out)
-    sys.stderr.write(captured.err)
+    # this dumping is useful when there are failures to debug
+    sys.stdout.write('Dumped stdout:\n' + captured.out)
+    sys.stderr.write('Dumped stderr:\n' + captured.err)
     return captured
 
 

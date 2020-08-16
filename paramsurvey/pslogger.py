@@ -3,11 +3,13 @@ Log information about all of the failures for a given run:
 
 foreach map call:
 DONE * start time, name, pset count, pset column names
+* middle progress
+* middle performance stats
 DONE * worker exceptions with tracebacks and which pset caused them
-* final .progress
-* final .missing
-* middle and final performance stats
-* end
+DONE * final .progress
+DONE * final .missing
+DONE * final performance
+DONE * end
 
 Another file to support checkpoint/restart
 
