@@ -99,7 +99,7 @@ def test_init_resolve_kwargs():
     with patch.dict(os.environ, {}, clear=True):
         utils.initialize_kwargs(gkwargs, {})
         system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {})
-        assert system_kwargs['verbose'] == 0, 'default'
+        assert system_kwargs['verbose'] == 1, 'default'
         assert other_kwargs == {}
 
     gkwargs = copy2(paramsurvey.global_kwargs)

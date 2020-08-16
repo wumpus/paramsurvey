@@ -57,11 +57,11 @@ default_backend = 'multiprocessing'
 
 
 global_kwargs = {
-    'verbose': {'env': 'PARAMSURVEY_VERBOSE', 'default': 0},
+    'verbose': {'env': 'PARAMSURVEY_VERBOSE', 'default': 1},
     'backend': {'env': 'PARAMSURVEY_BACKEND', 'default': default_backend, 'type': str},
     'limit': {'env': 'PARAMSURVEY_LIMIT', 'default': -1},
     'ncores': {'env': 'PARAMSURVEY_NCORES', 'default': -1},
-    'vstats': {'env': 'PARAMSURVEY_VSTATS', 'default': 0},
+    'vstats': {'env': 'PARAMSURVEY_VSTATS', 'default': 1},
 }
 
 
