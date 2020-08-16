@@ -307,16 +307,13 @@ def resolve_kwargs(global_kwargs, kwargs):
             if gkw.get('strong'):
                 if verbose:
                     print('environment variable overrides passed in value for', k, file=sys.stderr)
-                print('GREG from env', k)
                 system_kwargs[k] = gkw['value']
             else:
-                print('GREG from local', k)
                 system_kwargs[k] = kwargs[k]
         else:
             other_kwargs[k] = kwargs[k]
     for k in global_kwargs:
         if k not in system_kwargs:
-            print('GREG from global', k)
             system_kwargs[k] = global_kwargs[k]['value']
 
     return system_kwargs, other_kwargs
