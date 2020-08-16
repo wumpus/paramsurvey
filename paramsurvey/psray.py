@@ -109,6 +109,7 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
     utils.handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs)
 
 
+'''
 def check_serialized_size(args, factor=1.2):
     big_data = 10 * 1024 * 1024 * 1024  # TODO: make this dynamic with cluster resources
     cores = current_core_count()
@@ -123,6 +124,7 @@ def check_serialized_size(args, factor=1.2):
         print('due to small in-flight data size, goosing factor by 2x', file=sys.stderr)
         factor *= 2
     return factor
+'''
 
 
 def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size):
