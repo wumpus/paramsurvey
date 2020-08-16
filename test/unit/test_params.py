@@ -132,7 +132,7 @@ def test_param_stress():
     # index is an int64, so usage is at least (int64 + 2*int16) = 8 bytes * 25mm = 0.4gbyte
     assert vmem1 - vmem0 < 1.04, 'tight limit that requires int16 type to pass'
 
-    if 'TRAVIS_CPU_ARCH' in os.environ and os.environ['TRAVIS_CPU_ARCH'] == 's390':
+    if 'TRAVIS_CPU_ARCH' in os.environ and os.environ['TRAVIS_CPU_ARCH'] == 's390x':
         return
 
     vmem0 = paramsurvey.utils.vmem()
