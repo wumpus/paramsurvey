@@ -3,15 +3,19 @@ import os
 import tempfile
 import pytest
 import sys
+from io import StringIO
 
 import paramsurvey
 import paramsurvey.stats
 from paramsurvey.examples import sleep_worker, burn_worker
 
 
+pslogger_fd = StringIO()
+
+
 @pytest.fixture(scope="session")
 def paramsurvey_init(request):
-    paramsurvey.init()
+    paramsurvey.init(pslogger_fd=pslogger_fd)
 
     def finalize():
         # needed to get pytest multiprocessing coverage
@@ -150,6 +154,7 @@ def do_raise(pset, system_kwargs, user_kwargs, raw_stats):
 def test_worker_exception(capsys, paramsurvey_init):
     psets = [{'raises': False}, {'raises': False}, {'raises': False}, {'raises': True}, {'raises': False}, {'raises': False}, {'raises': False}]
 
+    pslogger_fd.seek(0)
     results = paramsurvey.map(do_raise, psets, name='test_worker_exception')
     assert len(results) == 6
     assert len(results.missing) == 1
@@ -171,6 +176,11 @@ def test_worker_exception(capsys, paramsurvey_init):
     # the standard progress function prints this
     assert 'failures: 1' in captured.out or 'failures: 1' in captured.err
 
+    log = pslogger_fd.getvalue()
+    assert 'Traceback' in log, 'python traceback seen'
+    assert 'ValueError' in log, 'python exception seen'
+    assert 'pset:' in log, 'our pset logline seen'
+
 
 def do_nothing(pset, system_kwargs, user_kwargs, raw_stats):
     return {'foo': True}
@@ -188,6 +198,8 @@ def test_wrapper_exception(capsys, paramsurvey_init):
     assert results.progress.failures == 2
 
     # ray and multiprocessing behave differently for wrapper 'exception'
+    # multiprocessing has exception and traceback, both in results.missing and pslogger
+    # our ray wrapper doesn't even try to catch it? does it print 'Surprised'?
     #assert '_exception' in results.missing[0]
     #assert results.progress.exceptions == 1
 

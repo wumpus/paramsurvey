@@ -11,6 +11,7 @@ import pandas as pd
 from pandas_appender import DF_Appender
 
 from . import stats
+from . import pslogger
 
 
 class MapProgress(object):
@@ -155,8 +156,10 @@ def psets_prep(psets):
 
 def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_results=True, **kwargs):
     if system_kwargs['verbose'] > 0:
-        print('starting work on', name, file=sys.stderr)
+        print('paramsurvey.map starting work on', name, file=sys.stderr)
         sys.stderr.flush()
+    pslogger.log('paramsurvey.map starting work on '+name)
+    pslogger.log('paramsurvey.map system_kwargs '+repr(system_kwargs))
 
     psets = psets_prep(psets)
     if system_kwargs['limit'] >= 0:
@@ -183,7 +186,30 @@ def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_resul
     system_kwargs['progress_last'] = 0.
     system_kwargs['progress_dt'] = 0.
 
+    pslogger.log('paramsurvey.map pset count {} pset columns {}'.format(len(psets), list(psets.columns.values)))
+
     return psets, system_stats, system_kwargs
+
+
+def map_finish(name, system_kwargs, system_stats):
+    verbose = system_kwargs['verbose']
+
+    if verbose:
+        print('finished getting results', file=sys.stderr)
+        sys.stderr.flush()
+
+    finalize_progress(system_kwargs)
+    report_progress(system_kwargs, final=True)
+
+    system_stats.print_percentiles(name)
+    missing = list(system_kwargs['pset_ids'].values())
+
+    if 'results' in system_kwargs:
+        results = system_kwargs['results'].finalize()
+    else:
+        results = None
+
+    return MapResults(results, missing, system_kwargs['progress'], system_stats)
 
 
 def flatten_results(results):
@@ -257,13 +283,17 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
         if 'exception' in user_ret:
             progress.failures += 1
             progress.exceptions += 1
-            system_kwargs['pset_ids'][pset_id]['_exception'] = user_ret['exception']
+            pslog = 'saw exception in worker: ' + user_ret['exception']
             if verbose > 0:
-                print('saw exception in worker', user_ret['exception'], file=sys.stderr)
+                print(pslog, file=sys.stderr)
+            pslog += '\n  pset: '+repr(system_kwargs['pset_ids'][pset_id])
+            system_kwargs['pset_ids'][pset_id]['_exception'] = user_ret['exception']
             if 'traceback' in user_ret:
                 system_kwargs['pset_ids'][pset_id]['_traceback'] = user_ret['traceback']
+                pslog += '\n  traceback:\n' + user_ret['traceback']
                 if verbose > 1:
                     print('saw traceback', user_ret['traceback'], file=sys.stderr)
+            pslogger.log(pslog)
         else:
             del system_kwargs['pset_ids'][pset_id]
             user_ret['pset'].pop('_pset_id', None)

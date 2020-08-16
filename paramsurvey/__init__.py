@@ -3,6 +3,7 @@ from pkg_resources import get_distribution, DistributionNotFound
 
 from . import psmultiprocessing
 from .utils import flatten_results, initialize_kwargs, resolve_kwargs
+from . import pslogger
 
 
 try:
@@ -69,6 +70,7 @@ def init(**kwargs):
     initialize_kwargs(global_kwargs, kwargs)
     verbose = global_kwargs['verbose']['value']
     backend = global_kwargs['backend']['value']
+    pslogger_fd = kwargs.pop('pslogger_fd', None)
 
     global our_backend
     if backend in backends:
@@ -82,6 +84,8 @@ def init(**kwargs):
         our_backend['init'](system_kwargs, **other_kwargs)
     else:  # pragma: no cover
         raise ValueError('unknown backend '+backend+', valid backends: '+', '.join(backends.keys()))
+
+    pslogger.init(global_kwargs, pslogger_fd=pslogger_fd, **other_kwargs)
 
 
 def backend():

@@ -186,19 +186,4 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
 
     progress_until_fewer(cores, 0, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 
-    if verbose:
-        print('finished getting results', file=sys.stderr)
-        sys.stderr.flush()
-
-    utils.finalize_progress(system_kwargs)
-    utils.report_progress(system_kwargs, final=True)
-
-    system_stats.print_percentiles(name)
-    missing = list(system_kwargs['pset_ids'].values())
-
-    if 'results' in system_kwargs:
-        results = system_kwargs['results'].finalize()
-    else:
-        results = None
-
-    return MapResults(results, missing, system_kwargs['progress'], system_stats)
+    return utils.map_finish(name, system_kwargs, system_stats)
