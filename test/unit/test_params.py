@@ -26,8 +26,8 @@ def test__infer_category():
     except TypeError:  # oh, pandas
         assert True
 
-    s1 = pd.Series(range(1000))
-    s2 = paramsurvey.params._coerce_to_category(s1)
+    s1 = pd.Series([0] * 1000)
+    s2 = paramsurvey.params._infer_category(s1)
     assert s2.dtype == 'category'
 
 

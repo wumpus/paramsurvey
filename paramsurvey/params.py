@@ -38,7 +38,6 @@ def _infer_category(a):
 
     asize = a.memory_usage(index=False, deep=True)
     csize = c.memory_usage(index=False, deep=True)
-    print('GREG', csize, asize)
     if csize < asize:
         return c
     return a
