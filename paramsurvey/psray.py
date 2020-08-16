@@ -86,6 +86,7 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
             print('saw an exception in the worker function', file=sys.stderr)
             print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
             traceback.print_exc()
+            user_ret['traceback'] = traceback.format_exc()
         ret.append([user_ret, system_ret])
     return ret
 

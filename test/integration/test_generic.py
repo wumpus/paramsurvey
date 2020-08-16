@@ -154,6 +154,7 @@ def test_worker_exception(capsys, paramsurvey_init):
     assert len(results) == 6
     assert len(results.missing) == 1
     assert '_exception' in results.missing[0]
+    assert '_traceback' in results.missing[0]
     assert results.progress.total == 7
     assert results.progress.finished == 6
     assert results.progress.failures == 1

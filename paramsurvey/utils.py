@@ -258,8 +258,12 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
             progress.failures += 1
             progress.exceptions += 1
             system_kwargs['pset_ids'][pset_id]['_exception'] = user_ret['exception']
-            if verbose > 1:
-                print('saw exception', user_ret['exception'], file=sys.stderr)
+            if verbose > 0:
+                print('saw exception in worker', user_ret['exception'], file=sys.stderr)
+            if 'traceback' in user_ret:
+                system_kwargs['pset_ids'][pset_id]['_traceback'] = user_ret['traceback']
+                if verbose > 1:
+                    print('saw traceback', user_ret['traceback'], file=sys.stderr)
         else:
             del system_kwargs['pset_ids'][pset_id]
             user_ret['pset'].pop('_pset_id', None)

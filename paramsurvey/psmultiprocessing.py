@@ -80,6 +80,7 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
                 print('saw an exception in the worker function', file=sys.stderr)
                 print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
                 traceback.print_exc()
+                user_ret['traceback'] = traceback.format_exc()
             ret.append([user_ret, system_ret])
         return ret
     except Exception as e:
@@ -90,6 +91,7 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
         # cannot increment progress[failures] here because we are in the child & it is not returned
         # fake up a single return value
         user_ret = {'pset': psets[0], 'exception': repr(e)}
+        user_ret['traceback'] = traceback.format_exc()
         return [[user_ret, {}]]
 
 
