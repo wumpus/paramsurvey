@@ -34,12 +34,10 @@ def _infer_category(a):
         c = pd.Series(a, dtype='category')
     except TypeError as e:
         # e.g. unhashable type                                                                                                                             
-        print('GREG raised '+str(e))
         return a
 
     asize = a.memory_usage(index=False, deep=True)
     csize = c.memory_usage(index=False, deep=True)
-    print('GREG', asize, csize)
     if csize < asize:
         return c
     return a
@@ -95,7 +93,6 @@ def add_column(df, name, func, infer_category=True):
     s = pd.Series(values, index=df.index)
 
     if infer_category:
-        print('GREG inferring category')
         s = _infer_category(s)
 
     ret = df.copy()
