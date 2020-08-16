@@ -191,7 +191,7 @@ def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_resul
     return psets, system_stats, system_kwargs
 
 
-def map_finish(name, system_kwargs, system_stats):
+def map_finalize(name, system_kwargs, system_stats):
     verbose = system_kwargs['verbose']
 
     if verbose:

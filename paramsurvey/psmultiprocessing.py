@@ -186,4 +186,4 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
 
     progress_until_fewer(cores, 0, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 
-    return utils.map_finish(name, system_kwargs, system_stats)
+    return utils.map_finalize(name, system_kwargs, system_stats)
