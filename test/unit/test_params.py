@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import sys
 import pytest
+import os
 
 import pandas as pd
 import numpy as np
@@ -108,7 +109,6 @@ def test_add_column():
         pass
 
 
-
 def params(m, n):
     d = {}
     for a in range(n):
@@ -131,6 +131,9 @@ def test_param_stress():
     print('change in vmem', vmem1-vmem0)
     # index is an int64, so usage is at least (int64 + 2*int16) = 8 bytes * 25mm = 0.4gbyte
     assert vmem1 - vmem0 < 1.04, 'tight limit that requires int16 type to pass'
+
+    if 'TRAVIS_CPU_ARCH' in os.environ and os.environ['TRAVIS_CPU_ARCH'] == 's390':
+        return
 
     vmem0 = paramsurvey.utils.vmem()
     psets = params(100, 4)  # 100 million int8
