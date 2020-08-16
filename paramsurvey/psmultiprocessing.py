@@ -106,11 +106,16 @@ def error_callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
 
 def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size):
     verbose = system_kwargs['verbose']
+    vstats = system_kwargs['vstats']
 
+    count = 0
     while system_kwargs['outstanding'] > cores*factor:
         time.sleep(0.1)
-        if verbose > 1:
-            system_stats.bingo()
+        if vstats > 1:
+            system_stats.bingo(vstats)
+        count += 1
+        if count % 10 == 0 and verbose > 2:
+            print('looping in the progress loop', file=sys.stderr)
 
     return group_size
 
@@ -119,6 +124,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
         progress_dt=30., group_size=None, name='default', **kwargs):
 
     verbose = system_kwargs['verbose']
+    vstats = system_kwargs['vstats']
 
     if utils.psets_empty(psets):
         return
@@ -160,8 +166,8 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
             pool.apply_async(do_work_wrapper,
                              (func, worker_system_kwargs, user_kwargs, pset_group),
                              {}, callback_partial, error_callback_partial)
-            if verbose > 1:
-                system_stats.bingo()
+            if vstats > 1:
+                system_stats.bingo(vstats)
             system_kwargs['outstanding'] += 1
             progress.started += len(pset_group)
             utils.report_progress(system_kwargs)

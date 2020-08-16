@@ -18,8 +18,8 @@ test_coverage: clean_coverage
 	COVERAGE=1 PYTHONPATH=.:test/integration test/integration/test-ray.sh test/integration
 
 test_coverage_verbose:
-	PARAMSURVEY_VERBOSE=2 COVERAGE=1 PYTHONPATH=. test/integration/test-multiprocessing.sh test/integration
-	PARAMSURVEY_VERBOSE=2 COVERAGE=1 PYTHONPATH=.:test/integration test/integration/test-ray.sh test/integration
+	PARAMSURVEY_VERBOSE=3 PARAMSURVEY_VSTATS=3 COVERAGE=1 PYTHONPATH=. test/integration/test-multiprocessing.sh test/integration
+	PARAMSURVEY_VERBOSE=3 PARAMSURVEY_VSTATS=3 COVERAGE=1 PYTHONPATH=.:test/integration test/integration/test-ray.sh test/integration
 
 distclean:
 	rm -rf dist/

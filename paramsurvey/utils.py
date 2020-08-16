@@ -116,9 +116,10 @@ def report_progress(system_kwargs, final=False):
               file=sys.stderr)
 
         if final and verbose and system_kwargs['pset_ids']:
-            print('missing psets:', file=sys.stderr)
-            for pset_id, pset in system_kwargs['pset_ids'].items():
-                print(' ', pset, file=sys.stderr)
+            if verbose > 1:
+                print('missing psets:', file=sys.stderr)
+                for pset_id, pset in system_kwargs['pset_ids'].items():
+                    print(' ', pset, file=sys.stderr)
 
         sys.stderr.flush()
 
@@ -239,6 +240,7 @@ def finalize_progress(system_kwargs):
 def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs):
     progress = system_kwargs['progress']
     verbose = system_kwargs['verbose']
+
     for user_ret, system_ret in ret:
         if 'result' in user_ret and not isinstance(user_ret['result'], dict) and user_ret['result'] is not None:
             # fake an exception, make this case look like other failures

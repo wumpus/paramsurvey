@@ -127,6 +127,7 @@ def check_serialized_size(args, factor=1.2):
 
 def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size):
     verbose = system_kwargs['verbose']
+    vstats = system_kwargs['vstats']
 
     while len(futures) > cores*factor:
         t0 = time.time()
@@ -136,10 +137,12 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
         print_nums = False
         if elapsed < 0.8:  # pragma: no cover
             if len(pending):
+                # only observed at the end, when pending == 0
                 print('something bad happened in ray.wait, normally it takes 2.0 seconds, but it took', elapsed, file=sys.stderr)
                 print_nums = True
 
         if len(futures) != len(done) + len(pending):  # pragma: no cover
+            # never observed
             print('something bad happened in ray.wait, counts do not add up:')
             print_nums = True
 
@@ -158,14 +161,15 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
             for ret in done:
                 handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
 
-        if verbose > 1:
-            system_stats.bingo()
+        if vstats > 1:
+            system_stats.bingo(vstats)
 
         new_cores = current_core_count()
         if new_cores != cores:
-            print('core count changed from {} to {}'.format(cores, new_cores), file=sys.stderr)
+            if verbose:
+                print('core count changed from {} to {}'.format(cores, new_cores), file=sys.stderr)
+                sys.stderr.flush()
             cores = new_cores
-            sys.stderr.flush()
 
         # dynamic group_size adjustment
 
@@ -176,6 +180,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
         progress_dt=60., group_size=None, name='default', **kwargs):
 
     verbose = system_kwargs['verbose']
+    vstats = system_kwargs['vstats']
 
     if utils.psets_empty(psets):
         return
@@ -225,8 +230,8 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
             system_kwargs['pset_ids'].update(pset_ids)
 
             futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
-            if verbose > 1:
-                system_stats.bingo()
+            if vstats > 1:
+                system_stats.bingo(vstats)
             progress.started += len(pset_group)
             utils.report_progress(system_kwargs)
 
