@@ -24,6 +24,13 @@ def paramsurvey_init(request):
     request.session.addfinalizer(finalize)
 
 
+def readouterr_and_dump(capsys):
+    captured = capsys.readouterr()
+    sys.stdout.write(captured.out)
+    sys.stderr.write(captured.err)
+    return captured
+
+
 def test_basics(paramsurvey_init):
     ncores = max(4, paramsurvey.current_core_count())
 
@@ -112,9 +119,7 @@ def test_args(capsys, paramsurvey_init):
     assert test_user_kwargs.get('out_func_called')
     assert len(results) == 2
 
-    captured = capsys.readouterr()
-    sys.stdout.write(captured.out)
-    sys.stderr.write(captured.err)
+    captured = readouterr_and_dump(capsys)
     assert len(captured.err.splitlines()) >= len(psets)
 
     # because of progress_dt being 0., we should have at least len(psets) progress lines
@@ -132,9 +137,7 @@ def test_args(capsys, paramsurvey_init):
     assert test_user_kwargs.get('out_func_called')
     assert len(results) == 2
 
-    captured = capsys.readouterr()
-    sys.stdout.write(captured.out)
-    sys.stderr.write(captured.err)
+    captured = readouterr_and_dump(capsys)
     assert len(captured.err.splitlines()) >= len(psets)
 
     # because of progress_dt being 0., we should have at least len(psets) progress lines
@@ -165,9 +168,7 @@ def test_worker_exception(capsys, paramsurvey_init):
     assert results.progress.failures == 1
     assert results.progress.exceptions == 1
 
-    captured = capsys.readouterr()
-    sys.stdout.write(captured.out)
-    sys.stderr.write(captured.err)
+    captured = readouterr_and_dump(capsys)
 
     # ray redirects stderr to stdout, while multiprocessing prints it in the worker
     # TODO: add stderr/out capture everywhere and use it here
@@ -207,9 +208,7 @@ def test_wrapper_exception(capsys, paramsurvey_init):
 
     # XXX ray prints traceback in the worker, multiprocessing and ray local_mode prints in the parent
 
-    captured = capsys.readouterr()
-    sys.stdout.write(captured.out)
-    sys.stderr.write(captured.err)
+    captured = readouterr_and_dump(capsys)
     assert 'failures: 2' in captured.out or 'failures: 2' in captured.err
 
 
