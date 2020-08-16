@@ -5,10 +5,8 @@ if [ ! -z "$COVERAGE" ]; then
 fi
 
 if [ ! -z "$ONLY_BUILTINS" ]; then
-    PARAMSURVEY_BACKEND=ray pytest $COVERAGE $1
-    # expected to fail
-    # not exercised in "make test", but it is in travis CI
-    test $0 -ne 0 || exit 1
+    PARAMSURVEY_BACKEND=ray pytest ./test-only-builtins.py $COVERAGE $1
+    exit 0
 fi
 
 PORT=6379
