@@ -120,7 +120,7 @@ def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, u
 
 
 def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
-        progress_dt=30., group_size=None, name='default', **kwargs):
+        progress_dt=None, group_size=None, name='default', **kwargs):
 
     verbose = system_kwargs['verbose']
     vstats = system_kwargs['vstats']
@@ -128,7 +128,8 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
     if utils.psets_empty(psets):
         return
 
-    psets, system_stats, system_kwargs = utils.map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, **kwargs)
+    psets, system_stats, system_kwargs = utils.map_prep(psets, name, system_kwargs, chdir, outfile,
+                                                        out_subdirs, progress_dt=progress_dt, **kwargs)
 
     progress = system_kwargs['progress']
     cores = current_core_count()
@@ -167,7 +168,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
                              {}, callback_partial, error_callback_partial)
             system_kwargs['outstanding'] += 1
             progress.started += len(pset_group)
-            utils.report_progress(system_kwargs)
+            progress.report(verbose)
             system_stats.report(vstats, other_fd=pslogger.logfd)
 
         if pset_index >= len(psets):

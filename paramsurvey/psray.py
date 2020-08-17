@@ -92,6 +92,7 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
 
 
 def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
+    verbose = system_kwargs['verbose']
     progress = system_kwargs['progress']
 
     try:
@@ -99,13 +100,13 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
             ret = ray.get(ret)
     except Exception as e:
         # RayTaskError has been seen here
-        print('\nSurprised by exception {} getting a result,\n'
-              'an unknown number of results lost\n'.format(e), file=sys.stderr)
+        err = '\nSurprised by exception {} ray.getting a result, an unknown number of results lost\n'.format(e)
+        print(err, file=sys.stderr)
         traceback.print_exc()
         sys.stderr.flush()
-        # XXX GREG pslogger.log()
-        progress.failures += 1
-        utils.report_progress(system_kwargs)
+        pslogger.log(err)
+        pslogger.log(traceback.format_exc())
+        progress.report(verbose)
         return
 
     utils.handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs)
@@ -178,7 +179,7 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
 
 
 def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=None, outfile=None, out_subdirs=None,
-        progress_dt=60., group_size=None, name='default', **kwargs):
+        progress_dt=None, group_size=None, name='default', **kwargs):
 
     verbose = system_kwargs['verbose']
     vstats = system_kwargs['vstats']
@@ -186,7 +187,8 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
     if utils.psets_empty(psets):
         return
 
-    psets, system_stats, system_kwargs = utils.map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, **kwargs)
+    psets, system_stats, system_kwargs = utils.map_prep(psets, name, system_kwargs, chdir, outfile,
+                                                        out_subdirs, progress_dt=progress_dt, **kwargs)
     if 'chdir' not in system_kwargs:
         # ray workers default to ~
         system_kwargs['chdir'] = os.getcwd()
@@ -232,7 +234,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
 
             futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
             progress.started += len(pset_group)
-            utils.report_progress(system_kwargs)
+            progress.report(verbose)
             system_stats.report(vstats, other_fd=pslogger.logfd)
 
         if pset_index >= len(psets):

@@ -7,24 +7,23 @@ from hdrh.histogram import HdrHistogram
 from hdrh.iterators import LinearIterator
 
 
-def pick_dt(vstats):
-    if vstats > 1:
-        return 1
-    elif vstats == 1:
-        return 30
-    else:
-        return 1000000
-
-
 class PerfStats(object):
     def __init__(self, raw_stats=None, vstats=1):
         self.d = dict()
         self.stats_last = time.time()
-        self.stats_dt = pick_dt(vstats)
+        self.stats_dt = self.pick_dt(vstats)
         self.stats_log_last = time.time()
         self.stats_log_dt = 30  # hardwired
         if raw_stats:
             self.combine_stats(raw_stats)
+
+    def pick_dt(self, vstats):
+        if vstats > 1:
+            return 1
+        elif vstats == 1:
+            return 30
+        else:
+            return 1000000
 
     def combine_stats(self, raw_stats):
         for name, elapsed in raw_stats.items():

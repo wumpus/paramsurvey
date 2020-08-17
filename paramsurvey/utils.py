@@ -17,7 +17,16 @@ from . import pslogger
 class MapProgress(object):
     '''Class to track progress of a map()'''
     # would be perfect as a dataclass, once python 3.7 is our minimum
-    def __init__(self, d={}):
+    def __init__(self, name, d={}, verbose=1, progress_dt=None):
+        self.name = name
+        self.print_last = time.time()
+        if progress_dt is not None:
+            self.print_dt = progress_dt
+        else:
+            self.print_dt = self.pick_dt(verbose)
+        self.print_log_last = time.time()
+        self.print_log_dt = 30  # hardwired
+
         self.total = d.get('total', 0)
         self.started = d.get('started', 0)
         self.finished = d.get('finished', 0)
@@ -25,7 +34,43 @@ class MapProgress(object):
         self.exceptions = d.get('exceptions', 0)
 
     def __str__(self):
-        return ', '.join([k+': '+str(v) for k, v in vars(self).items()])
+        attrs = ('total', 'started', 'finished', 'failures', 'exceptions')
+        return ', '.join([k+': '+str(getattr(self, k)) for k in attrs])
+
+    def pick_dt(self, verbose):
+        if verbose >= 3:
+            return 0
+        elif verbose >= 2:
+            return 1
+        elif verbose == 1:
+            return 30
+        else:
+            return 1000000
+
+    def finalize(self, verbose, missing):
+        failures = self.failures
+        actual_failures = len(missing)
+
+        # fixup wrapper failures
+        if actual_failures > failures:
+            print('correcting failure count from {} to {}'.format(failures, actual_failures), file=sys.stderr)
+            self.failures = actual_failures
+        elif actual_failures < failures:
+            print('can\'t happen! missing pset_ids {} less than failures {}'.format(actual_failures, failures), file=sys.stderr)
+        else:
+            if verbose > 1 and failures > 0:
+                print('failures equal to actual failures, hurrah', file=sys.stderr)
+
+    def report(self, verbose=None, final=None, other_fd=None):
+        t = time.time()
+        if final or t - self.print_last > self.print_dt:
+            self.print_last = t
+            print(self.name, 'progress:', str(self), file=sys.stderr)
+            sys.stderr.flush()
+        if other_fd and (final or t - self.print_log_last > self.print_log_dt):
+            self.print_log_last = t
+            print(self.name, 'progress:', str(self), file=other_fd)
+            other_fd.flush()
 
 
 class MapResults(object):
@@ -105,32 +150,17 @@ class PDFWrapper(object):
 '''
 
 
-def report_progress(system_kwargs, final=False, other_fd=None):
-    t = time.time()
-    verbose = system_kwargs['verbose']
-
-    force = bool(final or verbose > 1)
-
-    if force or t - system_kwargs['progress_last'] > system_kwargs['progress_dt']:
-        system_kwargs['progress_last'] = t
-        print(system_kwargs['name'], 'progress:', str(system_kwargs['progress']), file=sys.stderr)
+def report_missing(missing, verbose, other_fd=None):
+    if missing:
+        if verbose > 1:
+            print('missing psets:', file=sys.stderr)
         if other_fd:
-            print(system_kwargs['name'], 'progress:', str(system_kwargs['progress']), file=other_fd)
-
-        if final and system_kwargs['pset_ids']:
+            print('missing psets:', file=other_fd)
+        for pset in missing:
             if verbose > 1:
-                print('missing psets:', file=sys.stderr)
+                print(' ', pset, file=sys.stderr)
             if other_fd:
-                print('missing psets:', file=other_fd)
-            for pset_id, pset in system_kwargs['pset_ids'].items():
-                if verbose > 1:
-                    print(' ', pset, file=sys.stderr)
-                if other_fd:
-                    print(' ', pset, file=other_fd)
-
-        if other_fd:
-            other_fd.flush()
-        sys.stderr.flush()
+                print(' ', pset, file=other_fd)
 
 
 def remaining(system_kwargs):
@@ -162,7 +192,7 @@ def psets_prep(psets):
     return psets
 
 
-def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_results=True, **kwargs):
+def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_results=True, progress_dt=None, **kwargs):
     verbose = system_kwargs['verbose']
     vstats = system_kwargs['vstats']
 
@@ -176,7 +206,7 @@ def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_resul
     if system_kwargs['limit'] >= 0:
         psets = psets.iloc[:system_kwargs['limit']]
 
-    system_kwargs['progress'] = MapProgress({'total': len(psets)})
+    system_kwargs['progress'] = MapProgress(name, {'total': len(psets)}, verbose=verbose, progress_dt=progress_dt)
 
     if keep_results:
         system_kwargs['results'] = DF_Appender(ignore_index=True)
@@ -194,8 +224,6 @@ def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_resul
     system_kwargs['pset_ids'] = {}
 
     system_stats = stats.PerfStats(vstats=vstats)
-    system_kwargs['progress_last'] = 0.
-    system_kwargs['progress_dt'] = 0.
 
     pslogger.log('paramsurvey.map pset count {}, pset columns {}'.format(len(psets), list(psets.columns.values)))
 
@@ -210,12 +238,13 @@ def map_finalize(name, system_kwargs, system_stats):
         print('finished getting results', file=sys.stderr)
         sys.stderr.flush()
 
-    finalize_progress(system_kwargs)
-    report_progress(system_kwargs, final=True)
-    report_progress(system_kwargs, final=True, other_fd=pslogger.logfd)
+    progress = system_kwargs['progress']
+    progress.finalize(verbose, system_kwargs['pset_ids'])
+    progress.report(final=True, other_fd=pslogger.logfd)
     system_stats.report(vstats, final=True, other_fd=pslogger.logfd)
 
     missing = list(system_kwargs['pset_ids'].values())
+    report_missing(missing, verbose, other_fd=pslogger.logfd)
 
     if 'results' in system_kwargs:
         results = system_kwargs['results'].finalize()
@@ -327,7 +356,7 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
         if out_func:
             out_func(user_ret, system_kwargs, user_kwargs)
 
-    report_progress(system_kwargs)
+    progress.report(verbose)
     system_stats.report(vstats, other_fd=pslogger.logfd)
 
 

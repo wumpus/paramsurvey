@@ -127,12 +127,12 @@ def test_args(capsys, paramsurvey_init):
     has_name = [line for line in captured.err.splitlines() if 'progress' in line and name in line]
     assert len(has_name) >= len(psets)
 
-    # same as previous but verbose=2 instead of progress_dt=0
-    name = 'test_args verbose=2'
+    # same as previous but verbose=3 instead of progress_dt=0
+    name = 'test_args verbose=3'
     results = paramsurvey.map(do_test_args, psets,
                               out_func=out_func, user_kwargs=test_user_kwargs,
                               chdir=chdir, outfile=outfile, out_subdirs=10,
-                              verbose=2, name=name)
+                              verbose=3, name=name)
 
     assert out_func_called
     assert test_user_kwargs.get('out_func_called')

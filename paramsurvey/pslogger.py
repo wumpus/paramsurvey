@@ -54,10 +54,7 @@ def init(global_kwargs, pslogger_prefix='.paramsurvey-', pslogger_fd=None, **kwa
     middle = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
     middleplus = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S.%f')
     middles = (middle, middleplus, middleplus+'a')
-    print('GREG, middles', repr(middles))
-    print('GREG, pslogger_prefix', pslogger_prefix)
     filenames = [pslogger_prefix+m+'.log' for m in middles]
-    print('GREG, filenames', filenames)
 
     global logfd
     if pslogger_fd:
