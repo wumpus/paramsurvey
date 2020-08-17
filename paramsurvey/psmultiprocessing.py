@@ -8,7 +8,7 @@ import multiprocessing
 
 from . import utils
 from . import stats
-from .utils import MapResults
+from . import pslogger
 
 pool = None
 our_ncores = None
@@ -100,21 +100,18 @@ def callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
     utils.handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs)
 
 
-def error_callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
-    system_kwargs['outstanding'] -= 1
-    system_kwargs['progress'].failures += 1
-    print('error_callback, exception is', repr(ret), file=sys.stderr)
+def error_callback(e):
+    # not sure I have ever seen this called
+    print('error_callback, exception is', repr(e), file=sys.stderr)
+    raise ValueError('error_callback, exception is '+repr(e))
 
 
 def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size):
     verbose = system_kwargs['verbose']
-    vstats = system_kwargs['vstats']
 
     count = 0
     while system_kwargs['outstanding'] > cores*factor:
         time.sleep(0.1)
-        if vstats > 1:
-            system_stats.bingo(vstats)
         count += 1
         if count % 10 == 0 and verbose > 2:
             print('looping in the progress loop', file=sys.stderr)
@@ -168,11 +165,10 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
             pool.apply_async(do_work_wrapper,
                              (func, worker_system_kwargs, user_kwargs, pset_group),
                              {}, callback_partial, error_callback_partial)
-            if vstats > 1:
-                system_stats.bingo(vstats)
             system_kwargs['outstanding'] += 1
             progress.started += len(pset_group)
             utils.report_progress(system_kwargs)
+            system_stats.report(vstats, other_fd=pslogger.logfd)
 
         if pset_index >= len(psets):
             break

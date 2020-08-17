@@ -1,6 +1,5 @@
 import time
 import sys
-import math
 import random
 from contextlib import contextmanager
 from collections import defaultdict
@@ -9,9 +8,22 @@ from hdrh.histogram import HdrHistogram
 from hdrh.iterators import LinearIterator
 
 
+def pick_dt(vstats):
+    if vstats > 1:
+        return 1
+    elif vstats == 1:
+        return 30
+    else:
+        return 1000000
+
+
 class PerfStats(object):
-    def __init__(self, raw_stats=None):
+    def __init__(self, raw_stats=None, vstats=1):
         self.d = dict()
+        self.stats_last = time.time()
+        self.stats_dt = pick_dt(vstats)
+        self.stats_log_last = time.time()
+        self.stats_log_dt = 30  # hardwired
         if raw_stats:
             self.combine_stats(raw_stats)
 
@@ -37,10 +49,14 @@ class PerfStats(object):
     def all_stat_names(self):
         return self.d.keys()
 
-    def bingo(self, vstats):
-        # print percentiles 1/100 of the time
-        if vstats > 2 or random.randint(0, 99) == 0:
+    def report(self, vstats, final=False, other_fd=None):
+        t = time.time()
+        if final or t - self.stats_last > self.stats_dt:
+            self.stats_last = t
             self.print_percentiles()
+        if other_fd and (final or t - self.stats_log_last > self.stats_log_dt):
+            self.stats_log_last = t
+            self.print_percentiles(file=other_fd)
 
     def print_percentiles(self, name='default', file=sys.stdout):
         self.print_percentile(name, file=file)

@@ -163,7 +163,10 @@ def psets_prep(psets):
 
 
 def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_results=True, **kwargs):
-    if system_kwargs['verbose'] > 0:
+    verbose = system_kwargs['verbose']
+    vstats = system_kwargs['vstats']
+
+    if verbose > 0:
         print('paramsurvey.map starting work on', name, file=sys.stderr)
         sys.stderr.flush()
     pslogger.log('paramsurvey.map starting work on '+name)
@@ -190,7 +193,7 @@ def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_resul
 
     system_kwargs['pset_ids'] = {}
 
-    system_stats = stats.PerfStats()
+    system_stats = stats.PerfStats(vstats=vstats)
     system_kwargs['progress_last'] = 0.
     system_kwargs['progress_dt'] = 0.
 
@@ -201,6 +204,7 @@ def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_resul
 
 def map_finalize(name, system_kwargs, system_stats):
     verbose = system_kwargs['verbose']
+    vstats = system_kwargs['vstats']
 
     if verbose:
         print('finished getting results', file=sys.stderr)
@@ -209,6 +213,7 @@ def map_finalize(name, system_kwargs, system_stats):
     finalize_progress(system_kwargs)
     report_progress(system_kwargs, final=True)
     report_progress(system_kwargs, final=True, other_fd=pslogger.logfd)
+    system_stats.report(vstats, final=True, other_fd=pslogger.logfd)
 
     system_stats.print_percentiles(name)
     if pslogger.logfd:
@@ -279,6 +284,7 @@ def finalize_progress(system_kwargs):
 def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs):
     progress = system_kwargs['progress']
     verbose = system_kwargs['verbose']
+    vstats = system_kwargs['vstats']
 
     for user_ret, system_ret in ret:
         if 'result' in user_ret and not isinstance(user_ret['result'], dict) and user_ret['result'] is not None:
@@ -325,6 +331,7 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
             out_func(user_ret, system_kwargs, user_kwargs)
 
     report_progress(system_kwargs)
+    system_stats.report(vstats, other_fd=pslogger.logfd)
 
 
 def initialize_kwargs(global_kwargs, kwargs):

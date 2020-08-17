@@ -5,11 +5,11 @@ import json
 import time
 
 import ray
-import pyarrow
+#import pyarrow
 
 from . import utils
 from . import stats
-from .utils import MapResults
+from . import pslogger
 
 
 def read_ray_config():
@@ -165,9 +165,6 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
             for ret in done:
                 handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
 
-        if vstats > 1:
-            system_stats.bingo(vstats)
-
         new_cores = current_core_count()
         if new_cores != cores:
             if verbose:
@@ -234,10 +231,9 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
             system_kwargs['pset_ids'].update(pset_ids)
 
             futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
-            if vstats > 1:
-                system_stats.bingo(vstats)
             progress.started += len(pset_group)
             utils.report_progress(system_kwargs)
+            system_stats.report(vstats, other_fd=pslogger.logfd)
 
         if pset_index >= len(psets):
             break
