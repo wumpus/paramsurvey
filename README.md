@@ -74,6 +74,11 @@ variable is set, it overrides the values set in the source code. If a
 kwarg is set for a `map()` call, that value overrides any value
 specified for the `init()` call.
 
+For retrospective debugging, i.e. your run crashes and you are sad
+that you specified a lower verbosity than you desire post-crash,
+`paramsurvey` creates a hidden logfile in the current directory for
+every run, named `.paramusurvey-DATE-TIME.log`.
+
 ## The MapResults object
 
 The MapResults object has several properties:
