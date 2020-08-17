@@ -291,22 +291,6 @@ def make_pset_ids(psets):
     return ret, pset_ids
 
 
-def finalize_progress(system_kwargs):
-    progress = system_kwargs['progress']
-    failures = progress.failures
-    actual_failures = len(system_kwargs['pset_ids'])
-
-    # needed to fixup wrapper failures
-    if actual_failures > failures:
-        print('correcting failure count from {} to {}'.format(failures, actual_failures), file=sys.stderr)
-        progress.failures = actual_failures
-    elif actual_failures < failures:
-        print('can\'t happen! missing pset_ids {} less than failures {}'.format(actual_failures, failures), file=sys.stderr)
-    else:
-        if system_kwargs['verbose'] > 1 and failures > 0:
-            print('failures equal to actual failures, hurrah', file=sys.stderr)
-
-
 def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs):
     progress = system_kwargs['progress']
     verbose = system_kwargs['verbose']
