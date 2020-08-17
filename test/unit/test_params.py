@@ -26,6 +26,11 @@ def test__infer_category():
         assert s2.dtype != 'category'
     except TypeError:  # oh, pandas
         assert True
+    assert s1.equals(s2)
+
+    s1 = pd.Series([[0]] * 1000)  # unhashable type
+    s2 = paramsurvey.params._infer_category(s1)
+    assert s1.equals(s2)
 
     s1 = pd.Series([0] * 1000)
     s2 = paramsurvey.params._infer_category(s1)

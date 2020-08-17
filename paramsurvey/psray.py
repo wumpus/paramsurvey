@@ -167,7 +167,7 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
                 handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
 
         new_cores = current_core_count()
-        if new_cores != cores:
+        if new_cores != cores:  # not tested
             if verbose:
                 print('core count changed from {} to {}'.format(cores, new_cores), file=sys.stderr)
                 sys.stderr.flush()
