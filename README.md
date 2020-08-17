@@ -63,7 +63,7 @@ variables) to aid debugging and testing. They are:
 * `verbose=1` -- print information about the progress of the computation:
   * 0 = print nothing
   * 1 = print something every 30 seconds (default)
-  * 2 = print something ever second
+  * 2 = print something every second
   * 3 = print something for every action
 * `vstats=1` -- controls the verbosity of the performance statistics system, with similar values as `verbose`
 * `limit=-1` -- limits the number of psets actually computed to this number (-1 meaning "all")
