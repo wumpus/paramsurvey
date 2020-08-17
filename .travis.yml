@@ -26,7 +26,7 @@ matrix:
       - pip install .
       - pip install .[test]
   - python: 3.8
-    env: PARAMSURVEY_VERBOSE=2 PYTEST_STDERR_VISIBLE=-s
+    env: PARAMSURVEY_VERBOSE=3 PYTEST_STDERR_VISIBLE=-s
 #  - python: 3.8
 #    arch: arm64  # works but takes 35 minutes
 #    env: ONLY_BUILTINS=1

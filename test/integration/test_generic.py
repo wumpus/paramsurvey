@@ -141,7 +141,7 @@ def test_args(capsys, paramsurvey_init):
     captured = readouterr_and_dump(capsys)
     assert len(captured.err.splitlines()) >= len(psets)
 
-    # because of verbose=2, we should have at least len(psets) progress lines
+    # because of verbose=3, we should have at least len(psets) progress lines
     has_name = [line for line in captured.err.splitlines() if 'progress' in line and name in line]
     assert len(has_name) >= len(psets)
 
