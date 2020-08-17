@@ -215,9 +215,6 @@ def map_finalize(name, system_kwargs, system_stats):
     report_progress(system_kwargs, final=True, other_fd=pslogger.logfd)
     system_stats.report(vstats, final=True, other_fd=pslogger.logfd)
 
-    system_stats.print_percentiles(name)
-    if pslogger.logfd:
-        system_stats.print_percentiles(name, file=pslogger.logfd)
     missing = list(system_kwargs['pset_ids'].values())
 
     if 'results' in system_kwargs:
