@@ -161,7 +161,7 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
 
         if len(done):
             if verbose and len(done) > 100:  # pragma: no cover
-                print('surprised to see {} psets done at once'.format(len(done)), file=sys.stderr)
+                print('surprised to see {} pset groups done at once'.format(len(done)), file=sys.stderr)
                 sys.stderr.flush()
             for ret in done:
                 handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
