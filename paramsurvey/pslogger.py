@@ -1,22 +1,11 @@
 '''
-Log information about all of the failures for a given run:
-
-foreach map call:
-DONE * start time, name, pset count, pset column names
-* middle progress
-* middle performance stats
-DONE * worker exceptions with tracebacks and which pset caused them
-DONE * final .progress
-DONE * final .missing
-DONE * final performance
-DONE * end
-
-Another file to support checkpoint/restart
+TODO: checkpoint/restart
 
 * for each .map() call:
-* log initial psets
-* record results in chunks as they come in
-* on restart, rerun missing or provide previous results
+  * log initial psets
+  * record results to disk in chunks as they come in
+  * on restart, rerun missing or provide previous results
+  * handle multiple map() calls in a single user program
 
 '''
 import datetime
