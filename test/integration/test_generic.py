@@ -98,22 +98,19 @@ def test_args(capsys, paramsurvey_init):
 
     out_func_called = False
     test_user_kwargs = {'test': 1, 'expected_cwd': chdir}
-    outfile = 'foo'
 
     def out_func(user_ret, system_kwargs, user_kwargs):
         nonlocal out_func_called
         out_func_called = True
         user_kwargs['out_func_called'] = True
         assert user_kwargs == test_user_kwargs
-        assert 'outfile' in system_kwargs
-        assert system_kwargs['outfile'] == outfile
 
     psets = [{'duration': 0.1}] * 2
 
     name = 'test_args dt=0'
     results = paramsurvey.map(do_test_args, psets,
                               out_func=out_func, user_kwargs=test_user_kwargs,
-                              chdir=chdir, outfile=outfile, out_subdirs=10,
+                              chdir=chdir, out_subdirs=10,
                               progress_dt=0., name=name)
 
     assert out_func_called
@@ -131,7 +128,7 @@ def test_args(capsys, paramsurvey_init):
     name = 'test_args verbose=3'
     results = paramsurvey.map(do_test_args, psets,
                               out_func=out_func, user_kwargs=test_user_kwargs,
-                              chdir=chdir, outfile=outfile, out_subdirs=10,
+                              chdir=chdir, out_subdirs=10,
                               verbose=3, name=name)
 
     assert out_func_called

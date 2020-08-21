@@ -192,7 +192,7 @@ def psets_prep(psets):
     return psets
 
 
-def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_results=True, progress_dt=None, **kwargs):
+def map_prep(psets, name, system_kwargs, chdir, out_subdirs, keep_results=True, progress_dt=None, **kwargs):
     verbose = system_kwargs['verbose']
     vstats = system_kwargs['vstats']
 
@@ -212,8 +212,6 @@ def map_prep(psets, name, system_kwargs, chdir, outfile, out_subdirs, keep_resul
         system_kwargs['results'] = DF_Appender(ignore_index=True)
     if chdir:
         system_kwargs['chdir'] = chdir
-    if outfile:
-        system_kwargs['outfile'] = outfile
     if out_subdirs:
         system_kwargs['out_subdirs'] = out_subdirs
     if name:
