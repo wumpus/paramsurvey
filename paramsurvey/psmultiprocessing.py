@@ -100,10 +100,11 @@ def callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
     utils.handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs)
 
 
-def error_callback(e):
-    # not sure I have ever seen this called
+def error_callback(out_func, system_stats, system_kwargs, user_kwargs, e):
+    system_kwargs['outstanding'] -= 1
     print('error_callback, exception is', repr(e), file=sys.stderr)
-    raise ValueError('error_callback, exception is '+repr(e))
+    # do not raise here, it causes a hang
+    # we do not know the pset, so we cannot fake a return value
 
 
 def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size):

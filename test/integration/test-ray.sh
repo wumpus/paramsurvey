@@ -5,7 +5,7 @@ if [ ! -z "$COVERAGE" ]; then
 fi
 
 if [ ! -z "$ONLY_BUILTINS" ]; then
-    PARAMSURVEY_BACKEND=ray pytest ./test-only-builtins.py $COVERAGE $1
+    PARAMSURVEY_BACKEND=ray pytest $COVERAGE $1/test-only-builtins.py
     exit 0
 fi
 
@@ -19,7 +19,7 @@ ray start --head --redis-port=$PORT --redis-password=$REDIS_PASSWORD --memory $G
 
 # in order to find both the uninstalled paramsurvey and our test program,
 # which ray needs to pickle, the PYTHONPATH must be manipulated. See
-# ../Makefile for clues.
+# ../../Makefile for clues.
 
 RAY_HEAD_FILE=~/.ray-test-72363726-details PARAMSURVEY_BACKEND=ray pytest $COVERAGE $1
 RAY_LOCAL_MODE=1 RAY_HEAD_FILE=~/.ray-test-72363726-details PARAMSURVEY_BACKEND=ray pytest $COVERAGE $PYTEST_STDERR_VISIBLE $1
