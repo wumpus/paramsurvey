@@ -22,6 +22,15 @@ def read_ray_config():
 
 
 def init(system_kwargs, ncores=None, **kwargs):
+    if ray.is_initialized():
+        # this happens with our test scripts
+        # also a user might call init() repeatedly, perhaps with inconsistant args
+        pslogger.log('ray.init called repeatedly')
+        pslogger.log('system_kwargs', repr(system_kwargs), stderr=False)
+        pslogger.log('ncores', ncores, stderr=False)
+        pslogger.log('kwargs', repr(kwargs), stderr=False)
+        return
+
     ray_kwargs = {}
 
     if ncores:
@@ -31,9 +40,6 @@ def init(system_kwargs, ncores=None, **kwargs):
     address, password = read_ray_config()
     kwargs['address'] = address
     kwargs['redis_password'] = password
-
-    if 'ignore_reinit_error' not in kwargs:
-        kwargs['ignore_reinit_error'] = True  # needed for testing
 
     if os.environ.get('RAY_LOCAL_MODE', False):
         kwargs['local_mode'] = True
