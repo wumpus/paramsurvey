@@ -70,12 +70,13 @@ def init(**kwargs):
     initialize_kwargs(global_kwargs, kwargs)
     verbose = global_kwargs['verbose']['value']
     backend = global_kwargs['backend']['value']
-    pslogger_fd = kwargs.pop('pslogger_fd', None)
+    pslogger.init(**kwargs)
+    kwargs.pop('pslogger_prefix', None)
+    kwargs.pop('pslogger_fd', None)
 
     global our_backend
     if backend in backends:
-        if verbose:
-            print('initializing paramsurvey {} backend'.format(backend), file=sys.stderr)
+        pslogger.log('initializing paramsurvey {} backend'.format(backend), stderr=verbose)
         our_backend = backends[backend]
         our_backend['name'] = backend
         if 'lazy' in our_backend:
@@ -84,8 +85,6 @@ def init(**kwargs):
         our_backend['init'](system_kwargs, **other_kwargs)
     else:  # pragma: no cover
         raise ValueError('unknown backend '+backend+', valid backends: '+', '.join(backends.keys()))
-
-    pslogger.init(global_kwargs, pslogger_fd=pslogger_fd, **other_kwargs)
 
 
 def backend():

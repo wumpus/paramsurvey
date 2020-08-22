@@ -6,6 +6,8 @@ from collections import defaultdict
 from hdrh.histogram import HdrHistogram
 from hdrh.iterators import LinearIterator
 
+from . import pslogger
+
 
 class PerfStats(object):
     def __init__(self, raw_stats=None, vstats=1):
@@ -47,35 +49,39 @@ class PerfStats(object):
     def all_stat_names(self):
         return self.d.keys()
 
-    def report(self, vstats, final=False, other_fd=None):
+    def report(self, final=False):
         t = time.time()
-        if final or t - self.stats_last > self.stats_dt:
-            self.stats_last = t
-            self.print_percentiles()
-        if other_fd and (final or t - self.stats_log_last > self.stats_log_dt):
-            self.stats_log_last = t
-            self.print_percentiles(file=other_fd)
+        last = t - self.stats_last > self.stats_dt
+        log_last = t - self.stats_log_last > self.stats_log_dt
 
-    def print_percentiles(self, name='default', file=sys.stdout):
-        self.print_percentile(name, file=file)
+        if last:
+            self.stats_last = t
+        if log_last:
+            self.stats_log_last = t
+
+        if final or last or log_last:
+            self.print_percentiles(stderr=final or last)
+
+    def print_percentiles(self, name='default', stderr=False):
+        self.print_percentile(name, stderr=stderr)
         for n in sorted(self.all_stat_names()):
             if n != name:
-                self.print_percentile(n, file=file)
+                self.print_percentile(n, stderr=stderr)
 
-    def print_percentile(self, name, file=sys.stdout):
+    def print_percentile(self, name, stderr=False):
         if name in self.d:
             hist = self.d[name]['hist']
-            print('counter {}, counts {}'.format(name, hist.get_total_count()), file=file)
+            pslogger.log('counter {}, counts {}'.format(name, hist.get_total_count()), stderr=stderr)
             for pct in (50, 90, 95, 99):
-                print('counter {}, {}%tile: {:.1f}s'.format(name, pct, hist.get_value_at_percentile(pct)/1000.), file=file)
+                pslogger.log('counter {}, {}%tile: {:.1f}s'.format(name, pct, hist.get_value_at_percentile(pct)/1000.), stderr=stderr)
 
-    def print_histograms(self, name='default', file=sys.stdout):
-        self.print_histogram(name, file=file)
+    def print_histograms(self, name='default', stderr=False):
+        self.print_histogram(name, stderr=stderr)
         for n in sorted(self.all_stat_names()):
             if n != name:
-                self.print_histogram(n, file=file)
+                self.print_histogram(n, stderr=stderr)
 
-    def print_histogram(self, name, value_units_per_bucket=3, file=sys.stdout):
+    def print_histogram(self, name, value_units_per_bucket=3, stderr=False):
         if name in self.d:
             hist = self.d[name]['hist']
             ivalues = [x for x in LinearIterator(hist, value_units_per_bucket)]
@@ -83,13 +89,10 @@ class PerfStats(object):
             if not valuemax:
                 valuemax = 1.
             for ivalue in ivalues:
-                print('counter {}, {} {}'.format(name,
-                                                 ivalue.value_iterated_to/1000.,
-                                                 ivalue.count_at_value_iterated_to))
-#            for ivalue in ivalues:
-#                print('counter {}, {} {}'.format(name,
-#                                                 ivalue.value_iterated_to/1000.,
-#                                                 ''.join(['*'] * math.ceil(ivalue.count_at_value_iterated_to/valuemax))))
+                pslogger.log('counter {}, {} {}'.format(name,
+                                                        ivalue.value_iterated_to/1000.,
+                                                        ivalue.count_at_value_iterated_to),
+                             stderr=stderr)
 
 
 @contextmanager

@@ -83,9 +83,9 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
             user_ret['result'] = result
         except Exception as e:
             user_ret['exception'] = repr(e)
-            print('saw an exception in the worker function', file=sys.stderr)
-            print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
-            traceback.print_exc()
+            #print('saw an exception in the worker function', file=sys.stderr)
+            #print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
+            #traceback.print_exc()
             user_ret['traceback'] = traceback.format_exc()
         ret.append([user_ret, system_ret])
     return ret
@@ -100,13 +100,9 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
             ret = ray.get(ret)
     except Exception as e:
         # RayTaskError has been seen here
-        err = '\nSurprised by exception {} ray.getting a result, an unknown number of results lost\n'.format(e)
-        print(err, file=sys.stderr)
-        traceback.print_exc()
-        sys.stderr.flush()
+        err = '\nSurprised by exception {} in ray.get, an unknown number of results lost\n'.format(e)
         pslogger.log(err)
         pslogger.log(traceback.format_exc())
-        progress.report(verbose)
         return
 
     utils.handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs)
@@ -143,34 +139,32 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
         if elapsed < 0.8:  # pragma: no cover
             if len(pending):
                 # only observed at the end, when pending == 0
-                print('something bad happened in ray.wait, normally it takes 2.0 seconds, but it took', elapsed, file=sys.stderr)
+                err = 'something bad happened in ray.wait, normally 1.0 seconds, but it took {}'.format(elapsed)
+                pslogger.log(err)
                 print_nums = True
 
         if len(futures) != len(done) + len(pending):  # pragma: no cover
             # never observed
-            print('something bad happened in ray.wait, counts do not add up:')
+            pslogger.log('something bad happened in ray.wait, counts do not add up:')
             print_nums = True
 
         if verbose > 1 or print_nums:
-            print('futures {}, cores*factor {}, done {}, pending {}'.format(
-                len(futures), cores*factor, len(done), len(pending)),
-                  file=sys.stderr)
-            sys.stderr.flush()
+            pslogger.log('futures {}, cores*factor {}, done {}, pending {}'.format(
+                len(futures), cores*factor, len(done), len(pending)))
 
         futures = pending
 
         if len(done):
             if verbose and len(done) > 100:  # pragma: no cover
-                print('surprised to see {} pset groups done at once'.format(len(done)), file=sys.stderr)
-                sys.stderr.flush()
+                # this indicates the driver isn't keeping up
+                pslogger.log('surprised to see {} pset groups done at once'.format(len(done)))
             for ret in done:
                 handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
 
         new_cores = current_core_count()
         if new_cores != cores:  # not tested
             if verbose:
-                print('core count changed from {} to {}'.format(cores, new_cores), file=sys.stderr)
-                sys.stderr.flush()
+                pslogger.log('core count changed from {} to {}'.format(cores, new_cores))
             cores = new_cores
 
         # dynamic group_size adjustment
@@ -214,11 +208,9 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
         # make this dynamic someday
         group_size = 1
 
-    if verbose:
-        print('starting map: psets {}, cores {}, group_size {}, verbose {}'.format(
-            len(psets), cores, group_size, system_kwargs['verbose']
-        ), file=sys.stderr)
-        sys.stderr.flush()
+    pslogger.log('paramsurvey.psray map: psets {}, cores {}, group_size {}, verbose {}'.format(
+        len(psets), cores, group_size, system_kwargs['verbose']
+    ), stderr=verbose > 1)
 
     futures = []
     pset_index = 0
@@ -234,8 +226,8 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
 
             futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
             progress.started += len(pset_group)
-            progress.report(verbose)
-            system_stats.report(vstats, other_fd=pslogger.logfd)
+            progress.report()
+            system_stats.report()
 
         if pset_index >= len(psets):
             break
@@ -243,9 +235,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
         # cores and group_size can change within this function
         futures, cores, group_size = progress_until_fewer(futures, cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 
-    if verbose:
-        print('getting the residue, length', utils.remaining(system_kwargs), file=sys.stderr)
-        sys.stderr.flush()
+    pslogger.log('getting the residue, length', utils.remaining(system_kwargs), stderr=verbose > 0)
 
     progress_until_fewer(futures, cores, 0, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 

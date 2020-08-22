@@ -53,24 +53,26 @@ class MapProgress(object):
 
         # fixup wrapper failures
         if actual_failures > failures:
-            print('correcting failure count from {} to {}'.format(failures, actual_failures), file=sys.stderr)
+            pslogger.log('correcting failure count from {} to {}'.format(failures, actual_failures))
             self.failures = actual_failures
         elif actual_failures < failures:
-            print('can\'t happen! missing pset_ids {} less than failures {}'.format(actual_failures, failures), file=sys.stderr)
+            pslogger.log('can\'t happen! missing pset_ids {} less than failures {}'.format(actual_failures, failures))
         else:
             if verbose > 1 and failures > 0:
                 print('failures equal to actual failures, hurrah', file=sys.stderr)
 
-    def report(self, verbose=None, final=None, other_fd=None):
+    def report(self, final=None):
         t = time.time()
-        if final or t - self.print_last > self.print_dt:
+        last = t - self.print_last > self.print_dt
+        log_last = t - self.print_log_last > self.print_log_dt
+
+        if last:
             self.print_last = t
-            print(self.name, 'progress:', str(self), file=sys.stderr)
-            sys.stderr.flush()
-        if other_fd and (final or t - self.print_log_last > self.print_log_dt):
+        if log_last:
             self.print_log_last = t
-            print(self.name, 'progress:', str(self), file=other_fd)
-            other_fd.flush()
+
+        if final or last or log_last:
+            pslogger.log(self.name, 'progress:', str(self), stderr=final or last)
 
 
 class MapResults(object):
@@ -150,17 +152,11 @@ class PDFWrapper(object):
 '''
 
 
-def report_missing(missing, verbose, other_fd=None):
+def report_missing(missing, verbose):
     if missing:
-        if verbose > 1:
-            print('missing psets:', file=sys.stderr)
-        if other_fd:
-            print('missing psets:', file=other_fd)
+        pslogger.log('missing psets:', stderr=verbose > 1)
         for pset in missing:
-            if verbose > 1:
-                print(' ', pset, file=sys.stderr)
-            if other_fd:
-                print(' ', pset, file=other_fd)
+            pslogger.log(' ', pset, stderr=verbose > 1)
 
 
 def remaining(system_kwargs):
@@ -196,11 +192,8 @@ def map_prep(psets, name, system_kwargs, chdir, out_subdirs, keep_results=True, 
     verbose = system_kwargs['verbose']
     vstats = system_kwargs['vstats']
 
-    if verbose > 0:
-        print('paramsurvey.map starting work on', name, file=sys.stderr)
-        sys.stderr.flush()
-    pslogger.log('paramsurvey.map starting work on '+name)
-    pslogger.log('paramsurvey.map system_kwargs '+repr(system_kwargs))
+    pslogger.log('paramsurvey.map starting work on '+name, stderr=verbose)
+    pslogger.log('paramsurvey.map system_kwargs '+repr(system_kwargs), stderr=verbose > 1)
 
     psets = psets_prep(psets)
     if system_kwargs['limit'] >= 0:
@@ -232,17 +225,15 @@ def map_finalize(name, system_kwargs, system_stats):
     verbose = system_kwargs['verbose']
     vstats = system_kwargs['vstats']
 
-    if verbose:
-        print('finished getting results', file=sys.stderr)
-        sys.stderr.flush()
+    pslogger.log('finished getting results', stderr=verbose)
 
     progress = system_kwargs['progress']
     progress.finalize(verbose, system_kwargs['pset_ids'])
-    progress.report(final=True, other_fd=pslogger.logfd)
-    system_stats.report(vstats, final=True, other_fd=pslogger.logfd)
+    progress.report(final=True)
+    system_stats.report(final=True)
 
     missing = list(system_kwargs['pset_ids'].values())
-    report_missing(missing, verbose, other_fd=pslogger.logfd)
+    report_missing(missing, verbose)
 
     if 'results' in system_kwargs:
         results = system_kwargs['results'].finalize()
@@ -297,8 +288,7 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
     for user_ret, system_ret in ret:
         if 'result' in user_ret and not isinstance(user_ret['result'], dict) and user_ret['result'] is not None:
             # fake an exception, make this case look like other failures
-            if verbose > 1:
-                print('user function did not return a dict. faking an exception that says that.', file=sys.stderr)
+            pslogger.log('user function did not return a dict. faking an exception that says that.', stderr=verbose > 1)
             user_ret['exception'] = "ValueError('user function did not return a dict: {}')".format(
                 repr(user_ret['result']))
             user_ret['result'] = {}
@@ -310,17 +300,14 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
         if 'exception' in user_ret:
             progress.failures += 1
             progress.exceptions += 1
-            pslog = 'saw exception in worker: ' + user_ret['exception']
-            if verbose > 0:
-                print(pslog, file=sys.stderr)
-            pslog += '\n  pset: '+repr(system_kwargs['pset_ids'][pset_id])
+            pslogger.log('saw exception in worker: ' + user_ret['exception'], stderr=verbose)
+            pslogger.log('pset: '+repr(system_kwargs['pset_ids'][pset_id]), stderr=verbose > 1)
+
             system_kwargs['pset_ids'][pset_id]['_exception'] = user_ret['exception']
+
             if 'traceback' in user_ret:
                 system_kwargs['pset_ids'][pset_id]['_traceback'] = user_ret['traceback']
-                pslog += '\n  traceback:\n' + user_ret['traceback']
-                if verbose > 1:
-                    print('saw traceback', user_ret['traceback'], file=sys.stderr)
-            pslogger.log(pslog)
+                pslogger.log('traceback:\n' + user_ret['traceback'], stderr=verbose > 1)
         else:
             del system_kwargs['pset_ids'][pset_id]
             user_ret['pset'].pop('_pset_id', None)
@@ -333,13 +320,13 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
                 system_kwargs['results'].append(new_row)
 
             progress.finished += 1
-            if verbose > 1:
-                print('finished: pset {} result {}'.format(repr(user_ret['pset']), repr(user_ret['result'])), file=sys.stderr)
+            if verbose > 2:
+                pslogger.log('finished: pset {} result {}'.format(repr(user_ret['pset']), repr(user_ret['result'])))
         if out_func:
             out_func(user_ret, system_kwargs, user_kwargs)
 
-    progress.report(verbose)
-    system_stats.report(vstats, other_fd=pslogger.logfd)
+    progress.report()
+    system_stats.report()
 
 
 def initialize_kwargs(global_kwargs, kwargs):
@@ -367,8 +354,7 @@ def resolve_kwargs(global_kwargs, kwargs):
         if k in global_kwargs:
             gkw = global_kwargs[k]
             if gkw.get('strong'):
-                if verbose:
-                    print('environment variable overrides passed in value for', k, file=sys.stderr)
+                pslogger.log('environment variable overrides passed in value for', k, verbose > 0)
                 system_kwargs[k] = gkw['value']
             else:
                 system_kwargs[k] = kwargs[k]

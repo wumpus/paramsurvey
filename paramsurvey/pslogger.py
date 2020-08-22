@@ -34,7 +34,7 @@ def atomic_create_ish(filenames):
 logfd = None
 
 
-def init(global_kwargs, pslogger_prefix='.paramsurvey-', pslogger_fd=None, **kwargs):
+def init(pslogger_prefix='.paramsurvey-', pslogger_fd=None, **kwargs):
     # always log if pslogger_fd is set
     # otherwise, never log within pytest.
     if pslogger_fd is None and 'PYTEST_CURRENT_TEST' in os.environ:
@@ -43,7 +43,6 @@ def init(global_kwargs, pslogger_prefix='.paramsurvey-', pslogger_fd=None, **kwa
     middle = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
     middleplus = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S.%f')
     middles = (middle, middleplus, middleplus+'a')
-    filenames = [pslogger_prefix+m+'.log' for m in middles]
 
     global logfd
     if pslogger_fd:
@@ -73,9 +72,13 @@ def init(global_kwargs, pslogger_prefix='.paramsurvey-', pslogger_fd=None, **kwa
     logfd.flush()
 
 
-def log(s):
+def log(*args, stderr=True):
     if logfd:
-        print(s, file=logfd)
+        print(*args, file=logfd)
+        logfd.flush()
+    if stderr:
+        print(*args, file=sys.stderr)
+        sys.stderr.flush()
 
 
 def finalize():

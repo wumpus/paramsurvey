@@ -22,8 +22,10 @@ def init(system_kwargs, ncores=None, **kwargs):
 
     if ncores is None:
         ncores = multiprocessing.cpu_count()
-    if system_kwargs['verbose']:
-        print('initializing multiprocessing pool with {} processes'.format(ncores), file=sys.stderr)
+
+    verbose = system_kwargs['verbose']
+    pslogger.log('initializing multiprocessing pool with {} processes'.format(ncores), stderr=verbose)
+
     pool = multiprocessing.Pool(processes=ncores)
     our_ncores = ncores
 
@@ -77,15 +79,16 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
                 user_ret['result'] = result
             except Exception as e:
                 user_ret['exception'] = repr(e)
-                print('saw an exception in the worker function', file=sys.stderr)
-                print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
-                traceback.print_exc()
                 user_ret['traceback'] = traceback.format_exc()
+                #print('saw an exception in the worker function', file=sys.stderr)
+                #print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
+                #traceback.print_exc()
             ret.append([user_ret, system_ret])
         return ret
     except Exception as e:
-        print('\nException {} raised in the do_work_wrapper,\n'
-              'an unknown number of results lost\n'.format(e), file=sys.stderr)
+        err = ('\nException {} raised in the do_work_wrapper,\n'
+               'an unknown number of results lost\n'.format(e))
+        print(err, file=sys.stderr)
         traceback.print_exc()
         sys.stderr.flush()
         # cannot increment progress[failures] here because we are in the child & it is not returned
@@ -102,20 +105,18 @@ def callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
 
 def error_callback(out_func, system_stats, system_kwargs, user_kwargs, e):
     system_kwargs['outstanding'] -= 1
-    print('error_callback, exception is', repr(e), file=sys.stderr)
+    pslogger.log('python multiprocessing error_callback, exception is', repr(e))
     # do not raise here, it causes a hang
     # we do not know the pset, so we cannot fake a return value
 
 
 def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size):
-    verbose = system_kwargs['verbose']
+    progress = system_kwargs['progress']
 
-    count = 0
     while system_kwargs['outstanding'] > cores*factor:
         time.sleep(0.1)
-        count += 1
-        if count % 10 == 0 and verbose > 2:
-            print('looping in the progress loop', file=sys.stderr)
+        progress.report()
+        system_stats.report()
 
     return group_size
 
@@ -146,8 +147,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
     if group_size is None:
         # make this dynamic someday
         group_size = pick_chunksize(len(psets), cores, factor=100)
-        if verbose > 1:
-            print('initial group_size is', group_size, file=sys.stderr)
+        pslogger.log('initial group_size is', group_size, stderr=verbose > 1)
 
     callback_partial = functools.partial(callback, out_func, system_stats, system_kwargs, user_kwargs)
     error_callback_partial = functools.partial(error_callback, out_func, system_stats, system_kwargs, user_kwargs)
@@ -169,8 +169,8 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
                              {}, callback_partial, error_callback_partial)
             system_kwargs['outstanding'] += 1
             progress.started += len(pset_group)
-            progress.report(verbose)
-            system_stats.report(vstats, other_fd=pslogger.logfd)
+            progress.report()
+            system_stats.report()
 
         if pset_index >= len(psets):
             break
@@ -178,9 +178,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
         # group_size can change within this function
         group_size = progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 
-    if verbose:
-        print('getting the residue, length', utils.remaining(system_kwargs), file=sys.stderr)
-        sys.stderr.flush()
+    pslogger.log('getting the residue, length', utils.remaining(system_kwargs), stderr=verbose > 0)
 
     progress_until_fewer(cores, 0, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 

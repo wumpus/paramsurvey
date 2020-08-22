@@ -73,19 +73,19 @@ def test_record_iotime():
 
 
 def test_percentiles():
+    # just a crash test
     raw_stats = {'default': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]}
     s = stats.PerfStats(raw_stats)
     s.print_percentile('default')
     s.print_percentiles('default')  # empty
     s.print_percentiles(None)  # same as first
-    s.print_percentiles(None, file=sys.stderr)  # same as first, but on stderr
 
 
 def test_histograms():
+    # just a crash test
     raw_stats = {'default': [0.1, 0.2, 0.2, 0.2, 0.2, 0.6, 0.7, 0.8, 0.9, 1.0]}
 
     s = stats.PerfStats(raw_stats)
     s.print_histogram('default')
     s.print_histograms('default')  # empty
     s.print_histograms(None)  # same as first
-    s.print_histograms(None, file=sys.stderr)  # same as first, but on stderr
