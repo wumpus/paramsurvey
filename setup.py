@@ -15,6 +15,7 @@ requires = [
     'hdrhistogram',
     'pandas',
     'pandas-appender>=0.9.1',
+    'pyfakefs',
 ]
 
 extras_require = {

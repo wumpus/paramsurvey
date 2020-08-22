@@ -14,9 +14,9 @@ import sys
 import socket
 
 
-def atomic_create_ish(filenames):  # this function is not in the test suite
+def atomic_create_ish(filenames):
     '''
-    Figure out which on this list of filenames is unique.
+    Figure out which on this list of filenames does not already exist.
     Not safe on NFS filesystems.
     '''
     for f in filenames:
