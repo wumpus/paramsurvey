@@ -28,13 +28,13 @@ class MapProgress(object):
         self.print_log_dt = 30  # hardwired
 
         self.total = d.get('total', 0)
-        self.started = d.get('started', 0)
+        self.active = d.get('active', 0)
         self.finished = d.get('finished', 0)
         self.failures = d.get('failures', 0)
         self.exceptions = d.get('exceptions', 0)
 
     def __str__(self):
-        attrs = ('total', 'started', 'finished', 'failures', 'exceptions')
+        attrs = ('total', 'active', 'finished', 'failures', 'exceptions')
         return ', '.join([k+': '+str(getattr(self, k)) for k in attrs])
 
     def pick_dt(self, verbose):
@@ -48,6 +48,7 @@ class MapProgress(object):
             return 1000000
 
     def finalize(self, verbose, missing):
+        self.active = 0
         failures = self.failures
         actual_failures = len(missing)
 
@@ -167,11 +168,6 @@ def report_missing(missing, verbose):
         pslogger.log('missing psets:', stderr=verbose > 1)
         for pset in missing:
             pslogger.log(' ', pset, stderr=verbose > 1)
-
-
-def remaining(system_kwargs):
-    progress = system_kwargs['progress']
-    return progress.started - progress.finished
 
 
 def get_pset_group(psets, pset_index, group_size):
@@ -330,6 +326,7 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
                 system_kwargs['results'].append(new_row)
 
             progress.finished += 1
+            progress.active -= 1
             if verbose > 2:
                 pslogger.log('finished: pset {} result {}'.format(repr(user_ret['pset']), repr(user_ret['result'])))
         if out_func:

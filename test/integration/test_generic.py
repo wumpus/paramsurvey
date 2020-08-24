@@ -47,6 +47,7 @@ def test_basics(paramsurvey_init):
     assert len(results) == len(psets), 'one return for each pset'
     assert len(results.missing) == 0
     assert results.progress.total == len(psets)
+    assert results.progress.active == 0
     assert results.progress.finished == len(psets)
     assert results.progress.failures == 0
     assert results.progress.exceptions == 0

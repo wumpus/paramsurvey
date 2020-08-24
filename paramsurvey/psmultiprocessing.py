@@ -105,6 +105,7 @@ def callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
 
 def error_callback(out_func, system_stats, system_kwargs, user_kwargs, e):
     system_kwargs['outstanding'] -= 1
+
     pslogger.log('python multiprocessing error_callback, exception is', repr(e))
     # do not raise here, it causes a hang
     # we do not know the pset, so we cannot fake a return value
@@ -168,7 +169,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
                              (func, worker_system_kwargs, user_kwargs, pset_group),
                              {}, callback_partial, error_callback_partial)
             system_kwargs['outstanding'] += 1
-            progress.started += len(pset_group)
+            progress.active += len(pset_group)
             progress.report()
             system_stats.report()
 
@@ -178,7 +179,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
         # group_size can change within this function
         group_size = progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 
-    pslogger.log('getting the residue, length', utils.remaining(system_kwargs), stderr=verbose > 0)
+    pslogger.log('getting the residue, length', progress.active, stderr=verbose > 0)
 
     progress_until_fewer(cores, 0, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 

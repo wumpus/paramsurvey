@@ -231,7 +231,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
             system_kwargs['pset_ids'].update(pset_ids)
 
             futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
-            progress.started += len(pset_group)
+            progress.active += len(pset_group)
             progress.report()
             system_stats.report()
 
@@ -241,7 +241,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
         # cores and group_size can change within this function
         futures, cores, group_size = progress_until_fewer(futures, cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 
-    pslogger.log('getting the residue, length', utils.remaining(system_kwargs), stderr=verbose > 0)
+    pslogger.log('getting the residue, length', progress.active, stderr=verbose > 0)
 
     progress_until_fewer(futures, cores, 0, out_func, system_stats, system_kwargs, user_kwargs, group_size)
 

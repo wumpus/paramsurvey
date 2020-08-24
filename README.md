@@ -85,9 +85,9 @@ The MapResults object has several properties:
 
 * `results` is a Pandas DataFrame containing the values of the pset and the keys returned by the worker function. If you prefer to deal with dictionaries
 and are not worried about memory usage, `results.to_listdict` returns a list of dictionaries.
-* `failed` is a list of failed psets dictionaries, plus an extra '_exception' key if an exception was raised in the worker function
-* `progress` is a MapProgress object with properties containing the details of pset execution: total, started, finished, failures, exceptions
-* `stats` is a PerfStats object containing performance statistics
+* `failed` is a list of failed psets dictionaries, plus an extra '_exception' key if an exception was raised in the worker function.
+* `progress` is a MapProgress object with properties containing the details of pset execution: total, active, finished, failures, exceptions.
+* `stats` is a PerfStats object containing performance statistics.
 
 ## Worker function limitations
 
