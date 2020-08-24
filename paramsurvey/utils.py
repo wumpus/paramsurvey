@@ -78,6 +78,12 @@ class MapProgress(object):
 class MapResults(object):
     '''
     A container object for the outcome of paramsurvey.map()
+
+    Properties
+    ----------
+
+    df : DataFrame
+
     '''
     def __init__(self, results, missing, progress, stats, verbose=0):
         if results is not None:
@@ -107,10 +113,14 @@ class MapResults(object):
     def to_listdict(self):
         # memory inefficient
         if not self._results_as_dict:
+            vmem0 = vmem()
             size = self.df.memory_usage().sum()
             if self._verbose > 1 or self._verbose > 0 and size > 1000000:
-                print('converting Pandas DataFrame to listdict, pandas size was {} bytes'.format(size))
+                pslogger.log('converting Pandas DataFrame to listdict, pandas size was {} bytes'.format(size))
             self._results_as_dict = self._results.to_dict(orient='records')
+            delta = vmem() - vmem0
+            if self._verbose > 1 or self._verbose > 0 and delta > 1.:
+                pslogger.log(' vmem increased by {} gigabytes'.format(delta))
         return self._results_as_dict
 
     @property

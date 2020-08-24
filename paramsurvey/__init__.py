@@ -67,6 +67,39 @@ global_kwargs = {
 
 
 def init(**kwargs):
+    '''Initialize the paramsurvey system.
+
+    Paramters
+    ---------
+
+    verbose : int, default 1
+        Verbosity level for the paramsurvey system. 0=quiet, 1 = print some
+        status every 30 seconds, 2 = print status every second, 3 = print
+        status for every activity. Will be overridden by the environment
+        variable `PARAMSURVEY_VERBOSE`, if set. The purppose of these environment
+        variables is to aid debugging without editing your source code.
+    backend : str, default 'multiprocessing'
+        Which backend to use. Currently paramsurvey supports 'multiprocessing'
+        and 'ray'. Will be overridden by the environment variable
+        `PARAMSURVEY_BACKEND`, if set.
+    limit : int, default -1
+        Artifically limit the number of parameter sets computed. The default of
+        `-1` means to compute everything. Useful for user testing. Will be
+        overridden by the environment variable `PARAMSURVEY_VERBOSE`, if set.
+    ncores : int, default -1
+        The number of cores to use. The default of `-1` means to use all cores.
+        Will be overridden by the environment variable `PARAMSURVEY_NCORES`, if set.
+    vstats : int, default 1
+        Similar to `verbose`, but for performance statistics reporting.
+        Will be overridden by the environment variable `PARAMSURVEY_VSTATS`, if set.
+    pslogger_prefix : str, default '.paramsurvey-'
+        Specifies a prefix for the logging system filename.
+    pslogger_fd : fd, optional
+        Specifies an already-open stream for logging. Used in tests.
+
+    Any additional keyword arguments will be passed to the `.init()` call
+    for the backend.
+    '''
     initialize_kwargs(global_kwargs, kwargs)
     verbose = global_kwargs['verbose']['value']
     backend = global_kwargs['backend']['value']
@@ -88,17 +121,52 @@ def init(**kwargs):
 
 
 def backend():
+    '''Returns the paramsurvey backend in use.
+
+    Returns
+    -------
+    str
+    '''
     return our_backend['name']
 
 
 def finalize(*args, **kwargs):
+    '''Finalizes the paramsurvey run. Optional. Useful for situations
+    like doing test coverage analysis with the multiprocessing module.
+    '''
     return our_backend['finalize'](*args, **kwargs)
 
 
 def current_core_count(*args, **kwargs):
+    '''Returns the count of compute cpu cores in the current cluster.
+
+    Returns
+    -------
+    int
+    '''
     return our_backend['current_core_count'](*args, **kwargs)
 
 
 def map(*args, **kwargs):
+    '''Runs a worker function over a list of parameters, returning the results.
+
+    Parameters
+    ----------
+    func : function
+    psets : a pandas DataFrame or list of dicts
+    out_func : function, optional
+    system_kwargs : dict, optional
+    user_kwargs : dict, optional
+    chdir : str, optional
+    out_subdirs : int, optional
+    progress_dt : float, optional
+    group_size : int, optional
+    name : str, default 'default'
+
+    Returns
+    -------
+    MapResults
+
+    '''
     system_kwargs, other_kwargs = resolve_kwargs(global_kwargs, kwargs)
     return our_backend['map'](*args, system_kwargs=system_kwargs, **other_kwargs)
