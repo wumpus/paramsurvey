@@ -306,6 +306,7 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
         if 'exception' in user_ret:
             progress.failures += 1
             progress.exceptions += 1
+            progress.active -= 1
             pslogger.log('saw exception in worker: ' + user_ret['exception'], stderr=verbose)
             pslogger.log('pset: '+repr(system_kwargs['pset_ids'][pset_id]), stderr=verbose > 1)
 
