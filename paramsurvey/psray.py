@@ -106,7 +106,7 @@ def handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs):
             ret = ray.get(ret)
     except Exception as e:
         # RayTaskError has been seen here
-        err = '\nSurprised by exception {} in ray.get, an unknown number of results lost\n'.format(e)
+        err = '\nSurprised exception in ray.get, an unknown number of results lost\n{}'.format(e)
         pslogger.log(err)
         pslogger.log(traceback.format_exc())
         return
