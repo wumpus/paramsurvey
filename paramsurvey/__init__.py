@@ -168,5 +168,10 @@ def map(*args, **kwargs):
     MapResults
 
     '''
+
+    # help the user out a bit, in case there is buffering
+    sys.stderr.flush()
+    sys.stdout.flush()
+
     system_kwargs, other_kwargs = resolve_kwargs(global_kwargs, kwargs)
     return our_backend['map'](*args, system_kwargs=system_kwargs, **other_kwargs)
