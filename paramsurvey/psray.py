@@ -135,6 +135,7 @@ def check_serialized_size(args, factor=1.2):
 def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size):
     verbose = system_kwargs['verbose']
     vstats = system_kwargs['vstats']
+    progress = system_kwargs['progress']
 
     while len(futures) > cores*factor:
         t0 = time.time()
@@ -166,6 +167,9 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
                 pslogger.log('surprised to see {} pset groups done at once'.format(len(done)))
             for ret in done:
                 handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
+        else:
+            progress.report()
+            system_stats.report()
 
         new_cores = current_core_count()
         if new_cores != cores:  # not tested
