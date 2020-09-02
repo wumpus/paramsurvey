@@ -6,6 +6,7 @@ import random
 import keyword
 import resource
 import os
+import datetime
 
 import pandas as pd
 from pandas_appender import DF_Appender
@@ -198,6 +199,7 @@ def map_prep(psets, name, system_kwargs, chdir, out_subdirs, keep_results=True, 
     verbose = system_kwargs['verbose']
     vstats = system_kwargs['vstats']
 
+    pslogger.log('paramsurvey.map start time', datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S'))
     pslogger.log('paramsurvey.map starting work on '+name, stderr=verbose)
     pslogger.log('paramsurvey.map system_kwargs '+repr(system_kwargs), stderr=verbose > 1)
 
@@ -246,6 +248,7 @@ def map_finalize(name, system_kwargs, system_stats):
     else:
         results = None
 
+    pslogger.log('paramsurvey.map end time', datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S'))
     pslogger.log('paramsurvey.map returning results')
 
     return MapResults(results, missing, system_kwargs['progress'], system_stats)

@@ -84,7 +84,7 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
 
         try:
             with stats.record_wallclock(name+'_wall', raw_stats):
-                with stats.record_iowait(name+'_io', raw_stats):
+                with stats.record_iowait(name+'_iowait', raw_stats):
                     result = func(pset, system_kwargs, user_kwargs, raw_stats)
             user_ret['result'] = result
         except Exception as e:

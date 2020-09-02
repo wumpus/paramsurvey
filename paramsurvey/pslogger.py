@@ -51,7 +51,7 @@ def init(pslogger_prefix='.paramsurvey-', pslogger_fd=None, **kwargs):
         logfd = atomic_create_ish([pslogger_prefix+m+'.log' for m in middles])
 
     print('paramsurvey starttime', middleplus, file=logfd)
-    print('hostname', socket.gethostname())
+    print('hostname', socket.gethostname(), file=logfd)
     print('command line', repr(sys.argv), file=logfd)
     for e in sorted(['PYTHONPATH', 'VIRTUAL_ENV', 'CONDA_DEFAULT_ENV', 'CONDA_PREFIX']):
         if e in os.environ:
@@ -62,7 +62,7 @@ def init(pslogger_prefix='.paramsurvey-', pslogger_fd=None, **kwargs):
             print(p, 'env vars', s, file=logfd)
     print('python sys.version', ' '.join(sys.version.splitlines()), file=logfd)
 
-    print('python modules:')
+    print('python modules:', file=logfd)
     for k in sorted(sys.modules):
         v = sys.modules[k]
         ver = getattr(v, '__version__', None)
@@ -82,4 +82,6 @@ def log(*args, stderr=True):
 
 
 def finalize():
+    now = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
+    print('paramsurvey endtime', now, file=logfd)
     logfd.close()
