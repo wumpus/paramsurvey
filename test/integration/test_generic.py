@@ -5,6 +5,8 @@ import pytest
 import sys
 from io import StringIO
 
+import pandas as pd
+
 import paramsurvey
 import paramsurvey.stats
 from paramsurvey.examples import sleep_worker, burn_worker
@@ -83,6 +85,32 @@ def test_basics(paramsurvey_init):
 
     results = paramsurvey.map(sleep_worker, psets, name='sleep_no_results', keep_results=False)
     assert len(results) == 0
+
+
+def test_results(paramsurvey_init):
+    ncores = max(4, paramsurvey.current_core_count())
+
+    duration = 0.1
+    psets = [{'duration': duration}] * ncores * 4
+
+    results = paramsurvey.map(sleep_worker, psets, name='simple')
+
+    df = results.to_df()
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == len(results)
+    with pytest.raises(ValueError):
+        results.to_dict()
+    with pytest.raises(ValueError):
+        results.to_dict(orient='dict')
+    assert [r.slept for r in results.itertuples()] == [r['slept'] for r in results.iterdicts()]
+
+    assert len(results.missing) == 0
+    for d in results.missing.iterdicts():
+        assert False, 'this should be empty'
+
+    df = results.missing.to_df()
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == len(results.missing)
 
 
 def do_test_args(pset, system_kwargs, user_kwargs):

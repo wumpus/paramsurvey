@@ -146,6 +146,9 @@ class DFIterDictsWrapper(pd.DataFrame):
     def iterdicts(self):
         return DFListDictIter(self)
 
+    def to_df(self):
+        return pd.DataFrame(self)
+
 
 class DFListDictIter:
     def __init__(self, df):
