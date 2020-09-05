@@ -85,7 +85,7 @@ def test_basics(paramsurvey_init):
     assert len(results) == 0
 
 
-def do_test_args(pset, system_kwargs, user_kwargs, raw_stats):
+def do_test_args(pset, system_kwargs, user_kwargs):
     # this function cannot be nested inside test_args() because nested funcs can't be pickled
     assert os.getcwd() == user_kwargs['expected_cwd'], 'chdir appears to work'
     assert 'out_subdir' in system_kwargs
@@ -147,7 +147,7 @@ def test_args(capsys, paramsurvey_init):
     assert results is None
 
 
-def do_raise(pset, system_kwargs, user_kwargs, raw_stats):
+def do_raise(pset, system_kwargs, user_kwargs):
     if 'raises' in pset and pset['raises']:
         raise ValueError('foo')
     return {'foo': 'bar'}
@@ -195,7 +195,7 @@ def test_out_func_raise():
     assert results.progress.exceptions == 2
 
 
-def do_nothing(pset, system_kwargs, user_kwargs, raw_stats):
+def do_nothing(pset, system_kwargs, user_kwargs):
     return {'foo': True}
 
 
@@ -224,7 +224,7 @@ def test_wrapper_exception(capsys, paramsurvey_init):
     assert 'failures: 2' in captured.out or 'failures: 2' in captured.err
 
 
-def bad_user_function(pset, system_kwargs, user_kwargs, raw_stats):
+def bad_user_function(pset, system_kwargs, user_kwargs):
     return 3
 
 

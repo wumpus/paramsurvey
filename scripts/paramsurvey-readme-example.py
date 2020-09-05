@@ -4,7 +4,7 @@ import paramsurvey
 
 # sleep_worker() must be declared before the paramsurvey.init() call (multiprocessing)
 # sleep_worker() cannot be a nested procedure (pickle)
-def sleep_worker(pset, system_kwargs, user_kwargs, raw_stats):
+def sleep_worker(pset, system_kwargs, user_kwargs):
     time.sleep(pset['duration'])
     return {'slept': pset['duration']}
 

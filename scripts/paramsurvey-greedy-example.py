@@ -5,7 +5,7 @@ import paramsurvey
 
 # metric() must be declared before the paramsurvey.init() call (multiprocessing)
 # metric() cannot be a nested procedure (pickle)
-def metric(pset, system_kwargs, user_kwargs, raw_stats):
+def metric(pset, system_kwargs, user_kwargs):
 
     existing_stations = pset['existing_stations']
     new_station = pset['station']

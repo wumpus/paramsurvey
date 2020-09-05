@@ -2,13 +2,13 @@ import paramsurvey
 import paramsurvey.params
 
 
-def first_stage(pset, system_kwargs, user_kwargs, raw_stats):
+def first_stage(pset, system_kwargs, user_kwargs):
     # compute something expensive related to 'a' and 'b'
     expensive = pset['a'] + pset['b']
     return {'expensive': expensive}
 
 
-def second_stage(pset, system_kwargs, user_kwargs, raw_stats):
+def second_stage(pset, system_kwargs, user_kwargs):
     # compute something using the precomputed 'expensive' and 'c'
     final = pset['expensive'] + pset['c']
     return {'final': final}

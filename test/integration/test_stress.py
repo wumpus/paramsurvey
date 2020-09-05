@@ -18,7 +18,7 @@ def paramsurvey_init(request):
     request.session.addfinalizer(finalize)
 
 
-def add_worker(pset, system_kwargs, user_kwargs, raw_stats):
+def add_worker(pset, system_kwargs, user_kwargs):
     return {'c': pset['a'] + pset['b']}
 
 
