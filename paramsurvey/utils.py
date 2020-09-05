@@ -356,7 +356,7 @@ def initialize_kwargs(global_kwargs, kwargs):
 
 def resolve_kwargs(global_kwargs, kwargs):
     # not quite perfect hack, so we can be verbose here
-    verbose = kwargs.get('verbose', 0) or global_kwargs['verbose']
+    verbose = kwargs.get('verbose', 0) or global_kwargs['verbose']['value']
 
     system_kwargs = {}
     other_kwargs = {}
