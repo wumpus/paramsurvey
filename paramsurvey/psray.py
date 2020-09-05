@@ -83,7 +83,7 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
         user_ret = {'pset': pset}
 
         try:
-            with stats.record_wallclock(name+'_wall', raw_stats):
+            with stats.record_wallclock(name+'_wallclock', raw_stats):
                 with stats.record_iowait(name+'_iowait', raw_stats):
                     result = func(pset, system_kwargs, user_kwargs, raw_stats)
             user_ret['result'] = result
