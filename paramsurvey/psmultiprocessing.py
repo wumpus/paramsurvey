@@ -1,7 +1,6 @@
 import os
 import sys
 import traceback
-import json
 import functools
 import time
 import multiprocessing

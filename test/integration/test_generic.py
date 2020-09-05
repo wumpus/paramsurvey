@@ -182,6 +182,19 @@ def test_worker_exception(capsys, paramsurvey_init):
     assert 'pset:' in log, 'our pset logline seen'
 
 
+def test_out_func_raise():
+    def out_func(user_ret, system_kwargs, user_kwargs):
+        raise ValueError()
+
+    psets = [{'duration': 0.1}] * 2
+
+    name = 'out func raises'
+
+    results = paramsurvey.map(sleep_worker, psets, out_func=out_func, name=name)
+
+    assert results.progress.exceptions == 2
+
+
 def do_nothing(pset, system_kwargs, user_kwargs, raw_stats):
     return {'foo': True}
 

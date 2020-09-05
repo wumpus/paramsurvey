@@ -7,6 +7,7 @@ import keyword
 import resource
 import os
 import datetime
+import traceback
 
 import pandas as pd
 from pandas_appender import DF_Appender
@@ -333,8 +334,15 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
             progress.active -= 1
             if verbose > 2:
                 pslogger.log('finished: pset {} result {}'.format(repr(user_ret['pset']), repr(user_ret['result'])))
+
         if out_func:
-            out_func(user_ret, system_kwargs, user_kwargs)
+            try:
+                out_func(user_ret, system_kwargs, user_kwargs)
+            except Exception as e:
+                progress.exceptions += 1
+                progress.failures += 1
+                pslogger.log('saw exception in a user-supplied out_func:', repr(e), stderr=verbose)
+                pslogger.log('traceback:\n' + traceback.format_exc(), stderr=verbose)
 
     progress.report()
     system_stats.report()
