@@ -14,7 +14,7 @@ import time
 import paramsurvey
 
 
-def sleep_worker(pset, system_kwargs, user_kwargs, raw_stats):
+def sleep_worker(pset, system_kwargs, user_kwargs):
     time.sleep(pset['duration'])
     return {'slept': pset['duration']}
 
@@ -25,8 +25,10 @@ psets = [{'duration': 0.3}] * 5
 
 results = paramsurvey.map(sleep_worker, psets, verbose=2)
 
-for r in results:
+for r in results.itertuples():
     print(r.duration, r.slept)
+for r in results.iterdicts():
+    print(r['duration'], r['slept'])
 ```
 
 prints, in addition to some debugging output, a result from each of the 5 sleep_worker calls.
@@ -36,6 +38,14 @@ Here are a few more examples:
 * [The above example, with a few notes](scripts/paramsurvey-readme-example.py)
 * [An example of a multi-stage computation](scripts/paramsurvey-multistage-example.py), running several `map()` functions in a row
 * [An example of greedy optimization](scripts/paramsurvey-greedy-example.py), selecting the best alternative from each `map()` result
+
+These examples are installed with the package, so you can run them like this:
+
+```
+$ paramsurvey-readme-example.py
+$ paramsurvey-multistage-example.py
+$ paramsurvey-greedy-example.py
+```
 
 ## Philosophy
 

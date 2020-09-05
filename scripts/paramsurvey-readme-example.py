@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import time
 import paramsurvey
 
@@ -16,8 +18,10 @@ def main():
 
     results = paramsurvey.map(sleep_worker, psets, verbose=2)
 
-    for r in results:
+    for r in results.itertuples():
         print(r.duration, r.slept)
+    for r in results.iterdicts():
+        print(r['duration'], r['slept'])
 
 
 # for Windows, you must have a __name__ == __main__' guard on all executable code in the main program (multiprocessing)

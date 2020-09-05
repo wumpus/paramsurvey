@@ -1,14 +1,18 @@
-.PHONY: unit test clean_coverage test_coverage distclean dist_check dist
+.PHONY: unit scripts test clean_coverage test_coverage distclean dist_check dist
 
 unit:
 	# hint: PYTEST_STDERR_VISIBLE=-s
 	PYTHONPATH=. pytest test/unit ${PYTEST_STDERR_VISIBLE}
 
-test: unit
+scripts:
+	PYTHONPATH=.:scripts python scripts/paramsurvey-readme-example.py
+	PYTHONPATH=.:scripts python scripts/paramsurvey-greedy-example.py
+	PYTHONPATH=.:scripts python scripts/paramsurvey-multistage-example.py
+
+test: unit scripts
 	# hint: PYTEST_STDERR_VISIBLE=-s works for these, too
 	PYTHONPATH=. test/integration/test-multiprocessing.sh test/integration
 	PYTHONPATH=.:test/integration test/integration/test-ray.sh test/integration
-
 clean_coverage:
 	rm -f .coverage
 

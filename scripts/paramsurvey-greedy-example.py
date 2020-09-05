@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import random
 
 import paramsurvey
@@ -33,8 +35,8 @@ def main():
         psets = list({'station': s, 'existing_stations': picked_stations} for s in stations)
         results = paramsurvey.map(metric, psets, verbose=0)
 
-        best_metric = max(r.metric for r in results)
-        best_stations = [r.station for r in results if r.metric == best_metric]
+        best_metric = max(r.metric for r in results.itertuples())
+        best_stations = [r.station for r in results.itertuples() if r.metric == best_metric]
         print('picking station(s)', *best_stations)
         picked_stations.extend(best_stations)
         [stations.pop(bs) for bs in best_stations]

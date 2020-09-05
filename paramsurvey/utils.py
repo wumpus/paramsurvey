@@ -8,6 +8,7 @@ import resource
 import os
 import datetime
 import traceback
+import warnings
 
 import pandas as pd
 from pandas_appender import DF_Appender
@@ -78,53 +79,30 @@ class MapProgress(object):
             pslogger.log(self.name, 'progress:', str(self), stderr=final or last)
 
 
-class MapResults(object):
+class MapResults(pd.DataFrame):
     '''
     A container object for the outcome of paramsurvey.map()
 
     Properties
     ----------
 
-    df : DataFrame
+    to_df : DataFrame
 
     '''
     def __init__(self, results, missing, progress, stats, verbose=0):
-        if results is not None:
-            self._results = results
-        else:
-            self._results = pd.DataFrame(None)
-        self._results_as_dict = None
-        self._missing = missing
+        super().__init__(results)
+        self._results_as_listdict = None
+        with warnings.catch_warnings():
+            # suppress "Pandas doesn't allow columns to be created via a new attribute name"
+            warnings.simplefilter('ignore', category=UserWarning)
+            self._missing = DFIterDictsWrapper(missing)
         self._progress = progress
         self._stats = stats
         self._verbose = verbose
 
     @property
-    def df(self):
-        return self._results
-
-    @property
     def verbose(self):
         return self._verbose
-
-    def __iter__(self):
-        return self._results.itertuples(index=False)
-
-    def __len__(self):
-        return self._results.shape[0]  # rows
-
-    def to_listdict(self):
-        # memory inefficient
-        if not self._results_as_dict:
-            vmem0 = vmem()
-            size = self.df.memory_usage().sum()
-            if self._verbose > 1 or self._verbose > 0 and size > 1000000:
-                pslogger.log('converting Pandas DataFrame to listdict, pandas size was {} bytes'.format(size))
-            self._results_as_dict = self._results.to_dict(orient='records')
-            delta = vmem() - vmem0
-            if self._verbose > 1 or self._verbose > 0 and delta > 1.:
-                pslogger.log(' vmem increased by {} gigabytes'.format(delta))
-        return self._results_as_dict
 
     @property
     def missing(self):
@@ -136,33 +114,53 @@ class MapResults(object):
 
     @property
     def stats(self):
-        # stats.PerfStats
         return self._stats
 
+    def to_df(self):
+        return pd.DataFrame(self)
 
-'''
-class PDFWrapper(object):
-    def __init__(self, df, verbose=0):
-        self.df = df
-        self._as_dict = None
-        self._verbose = verbose
+    def to_dict(self, orient=None):
+        if orient != 'records':
+            raise ValueError('only orient=records is supported')
+
+        df = self.to_df()
+        if not self._results_as_listdict:
+            vmem0 = vmem()
+            size = df.memory_usage().sum()
+            if self._verbose > 1 or self._verbose > 0 and size > 1000000:
+                pslogger.log('converting Pandas DataFrame to listdict, pandas size was {} bytes'.format(size))
+            self._results_as_listdict = df.to_dict(orient='records')
+            delta = vmem() - vmem0
+            if self._verbose > 1 or self._verbose > 0 and delta > 1.:
+                pslogger.log(' vmem increased by {} gigabytes'.format(delta))
+        return self._results_as_listdict
+
+    def iterdicts(self):
+        return DFListDictIter(self.to_df())
+
+
+class DFIterDictsWrapper(pd.DataFrame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def iterdicts(self):
+        return DFListDictIter(self)
+
+
+class DFListDictIter:
+    def __init__(self, df):
+        self._it = df.itertuples(index=False)
+        self._colmap = [(c, '_{}'.format(i)) for i, c in enumerate(df.columns)]
 
     def __iter__(self):
-        return self.df.itertuples(index=False)
+        return self
 
-    def __len__(self):
-        #return self.df.shape[0]  # rows
-        return len(self.df)
-
-    def to_listdict(self):
-        # memory inefficient
-        if not self._as_dict:
-            size = self.df.memory_usage().sum()
-            if self._verbose > 1 or self._verbose > 0 and size > 1000000:
-                print('converting Pandas DataFrame to listdict, size was {} bytes'.format(size))
-            self._as_dict = self.pd.to_dict(orient='records')
-        return self._as_dict
-'''
+    def __next__(self):
+        d = next(self._it)._asdict()
+        for k1, k2 in self._colmap:
+            if k2 in d:
+                d[k1] = d.pop(k2)
+        return d
 
 
 def report_missing(missing, verbose):
@@ -183,7 +181,7 @@ def psets_prep(psets):
     if not isinstance(psets, pd.DataFrame):
         psets = pd.DataFrame(psets)
 
-    for bad in ('_pset_id', '_exception'):
+    for bad in ('_pset_id', '_exception', '_traceback'):
         if bad in psets.columns:
             raise ValueError('disallowed column name {} appears in pset'.format(bad))
     for c in psets.columns.values:
@@ -243,6 +241,7 @@ def map_finalize(name, system_kwargs, system_stats):
 
     missing = list(system_kwargs['pset_ids'].values())
     report_missing(missing, verbose)
+    missing = pd.DataFrame(missing)
 
     if 'results' in system_kwargs:
         results = system_kwargs['results'].finalize()

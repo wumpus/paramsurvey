@@ -30,9 +30,9 @@ def sums(n):
 
     results = paramsurvey.map(add_worker, psets, name='stress_{}'.format(n))
 
-    assert len(results.df) == n**2
+    assert len(results) == n**2
     assert len(results.missing) == 0
-    assert results.df['c'].sum() == n * n * (n-1)
+    assert results.to_df()['c'].sum() == n * n * (n-1)
 
 
 def test_stress_10(paramsurvey_init):

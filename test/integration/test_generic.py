@@ -43,7 +43,7 @@ def test_basics(paramsurvey_init):
     elapsed = time.time() - start
     assert elapsed > duration, 'must take at least {} time'.format(duration)
 
-    assert [r.slept == duration for r in results], 'everyone slept '+str(duration)
+    assert [r.slept == duration for r in results.itertuples()], 'everyone slept '+str(duration)
     assert len(results) == len(psets), 'one return for each pset'
     assert len(results.missing) == 0
     assert results.progress.total == len(psets)
@@ -53,7 +53,7 @@ def test_basics(paramsurvey_init):
     assert results.progress.exceptions == 0
     assert isinstance(results.verbose, int)
 
-    df_as_listdict = results.to_listdict()
+    df_as_listdict = results.to_dict('records')
     assert len(df_as_listdict) == len(results)
     assert [d['slept'] == duration for d in df_as_listdict]
 
@@ -70,7 +70,7 @@ def test_basics(paramsurvey_init):
     assert results.progress.failures == 0
     assert results.progress.exceptions == 0
 
-    assert [r.slept == duration for r in results], 'everyone slept '+str(duration)
+    assert [r.slept == duration for r in results.itertuples()], 'everyone slept '+str(duration)
     assert len(results) == len(psets), 'one return for each pset'
 
     start = time.time()
@@ -78,7 +78,7 @@ def test_basics(paramsurvey_init):
     elapsed = time.time() - start
     assert elapsed > duration*3, 'must take at least {} time'.format(duration)
 
-    assert [r.burned == duration for r in results], 'everyone burned '+str(duration)
+    assert [r.burned == duration for r in results.itertuples()], 'everyone burned '+str(duration)
     assert len(results) == len(psets), 'one return for each pset'
 
     results = paramsurvey.map(sleep_worker, psets, name='sleep_no_results', keep_results=False)
@@ -160,8 +160,9 @@ def test_worker_exception(capsys, paramsurvey_init):
     results = paramsurvey.map(do_raise, psets, name='test_worker_exception')
     assert len(results) == 6
     assert len(results.missing) == 1
-    assert '_exception' in results.missing[0]
-    assert '_traceback' in results.missing[0]
+    m1 = next(results.missing.iterdicts())
+    assert '_exception' in m1
+    assert '_traceback' in m1
     assert results.progress.total == 7
     assert results.progress.finished == 6
     assert results.progress.failures == 1
@@ -233,7 +234,7 @@ def test_bad_user_function(paramsurvey_init):
 
     results = paramsurvey.map(bad_user_function, psets, name='bad_user_function')
 
-    print(results.df)
+    print(results.to_df())
     print(results.missing)
     print(results.stats)
 

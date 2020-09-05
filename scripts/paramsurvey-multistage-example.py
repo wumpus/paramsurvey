@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import paramsurvey
 import paramsurvey.params
 
@@ -25,7 +27,7 @@ def main():
 
     results = paramsurvey.map(second_stage, psets, verbose=2)
 
-    print(results.df)
+    print(results.to_df())
 
 
 # for Windows, you must have a __name__ == __main__' guard on all executable code in the main program (multiprocessing)
