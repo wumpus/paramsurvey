@@ -219,7 +219,7 @@ def test_out_func_raise():
 
     name = 'out func raises'
 
-    results = paramsurvey.map(sleep_worker, psets, out_func=out_func, name=name)
+    results = paramsurvey.map(sleep_worker, psets, out_func=out_func, name=name, verbose=2)
 
     assert results.progress.exceptions == 2
 
@@ -231,7 +231,7 @@ def do_nothing(pset, system_kwargs, user_kwargs):
 def test_wrapper_exception(capsys, paramsurvey_init):
     psets = [{'actually_raise': False}, {'actually_raise': True}, {'actually_raise': False}, {'actually_raise': True}, {'actually_raise': False}]
 
-    results = paramsurvey.map(do_nothing, psets, raise_in_wrapper=ValueError('test_wrapper_exception'))
+    results = paramsurvey.map(do_nothing, psets, raise_in_wrapper=ValueError('test_wrapper_exception'), verbose=0)
 
     assert len(results) == 3
     assert len(results.missing) == 2

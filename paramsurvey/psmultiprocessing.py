@@ -31,6 +31,7 @@ def init(system_kwargs, ncores=None, **kwargs):
 
 def finalize():
     # needed to make things like pytest coverage reporting work
+    pslogger.finalize()
     pool.close()
     pool.join()
 

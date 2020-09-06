@@ -49,6 +49,7 @@ def init(system_kwargs, ncores=None, **kwargs):
 
 
 def finalize():
+    pslogger.finalize()
     ray.shutdown()
 
 
@@ -168,12 +169,12 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
                 pslogger.log('surprised to see {} pset groups done at once'.format(len(done)))
             for ret in done:
                 handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
-        else:
+        else:  # not tested  # pragma: no cover
             progress.report()
             system_stats.report()
 
         new_cores = current_core_count()
-        if new_cores != cores:  # not tested
+        if new_cores != cores:  # not tested  # pragma: no cover
             if verbose:
                 pslogger.log('core count changed from {} to {}'.format(cores, new_cores))
             cores = new_cores

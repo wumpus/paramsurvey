@@ -83,5 +83,6 @@ def log(*args, stderr=True):
 
 def finalize():
     now = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
-    print('paramsurvey endtime', now, file=logfd)
-    logfd.close()
+    if logfd:
+        print('paramsurvey endtime', now, file=logfd)
+    print('paramsurvey endtime', now, file=sys.stderr)
