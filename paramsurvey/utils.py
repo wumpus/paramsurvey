@@ -364,7 +364,7 @@ def initialize_kwargs(global_kwargs, kwargs):
         v['value'] = type(value)
 
 
-def resolve_kwargs(global_kwargs, kwargs):
+def resolve_kwargs(global_kwargs, kwargs, backend, backends):
     # not quite perfect hack, so we can be verbose here
     verbose = kwargs.get('verbose', 0) or global_kwargs['verbose']['value']
 
@@ -385,7 +385,19 @@ def resolve_kwargs(global_kwargs, kwargs):
         if k not in system_kwargs:
             system_kwargs[k] = global_kwargs[k]['value']
 
-    return system_kwargs, other_kwargs
+    backend_prefixes = tuple(x+'_' for x in backends.keys())
+    kept_other_kwargs = {}
+    for k in other_kwargs:
+        if k.startswith(backend_prefixes):
+            if k.startswith(backend+'_'):
+                k2 = k.replace(backend+'_', '', 1)
+                kept_other_kwargs[k2] = other_kwargs[k]
+            else:
+                pslogger.log('discarding kwarg due to our backend choice: ', k, other_kwargs[k], stderr=verbose > 1)
+        else:
+            kept_other_kwargs[k] = other_kwargs[k]
+
+    return system_kwargs, kept_other_kwargs
 
 
 def make_subdir_name(count, prefix='ps'):

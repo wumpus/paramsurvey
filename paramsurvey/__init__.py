@@ -114,7 +114,7 @@ def init(**kwargs):
         our_backend['name'] = backend
         if 'lazy' in our_backend:
             our_backend.update(our_backend['lazy']())
-        system_kwargs, other_kwargs = resolve_kwargs(global_kwargs, kwargs)
+        system_kwargs, other_kwargs = resolve_kwargs(global_kwargs, kwargs, backend, backends)
         our_backend['init'](system_kwargs, **other_kwargs)
     else:  # pragma: no cover
         raise ValueError('unknown backend '+backend+', valid backends: '+', '.join(backends.keys()))
@@ -173,5 +173,5 @@ def map(*args, **kwargs):
     sys.stderr.flush()
     sys.stdout.flush()
 
-    system_kwargs, other_kwargs = resolve_kwargs(global_kwargs, kwargs)
+    system_kwargs, other_kwargs = resolve_kwargs(global_kwargs, kwargs, our_backend['name'], backends)
     return our_backend['map'](*args, system_kwargs=system_kwargs, **other_kwargs)

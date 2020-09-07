@@ -77,37 +77,44 @@ def test_init_resolve_kwargs():
     gkwargs = copy2(paramsurvey.global_kwargs)
     with patch.dict(os.environ, {'PARAMSURVEY_VERBOSE': '3'}, clear=True):
         utils.initialize_kwargs(gkwargs, {'verbose': 1})
-        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {'verbose': 2, 'unrecognized': 'asdf'})
+        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {'verbose': 2, 'unrecognized': 'asdf'}, '', {})
         assert system_kwargs['verbose'] == 3, 'env variables trump all'
         assert other_kwargs['unrecognized'] == 'asdf', 'unrecognized args pass through'
 
     gkwargs = copy2(paramsurvey.global_kwargs)
     with patch.dict(os.environ, {}, clear=True):
         utils.initialize_kwargs(gkwargs, {'verbose': 1})
-        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {'verbose': 2})
+        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {'verbose': 2}, '', {})
         assert system_kwargs['verbose'] == 2, 'closest wins'
         assert other_kwargs == {}
 
     gkwargs = copy2(paramsurvey.global_kwargs)
     with patch.dict(os.environ, {}, clear=True):
         utils.initialize_kwargs(gkwargs, {'verbose': 1})
-        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {})
+        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {}, '', {})
         assert system_kwargs['verbose'] == 1, 'init kwarg comes last'
         assert other_kwargs == {}
 
     gkwargs = copy2(paramsurvey.global_kwargs)
     with patch.dict(os.environ, {}, clear=True):
         utils.initialize_kwargs(gkwargs, {})
-        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {})
+        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {}, '', {})
         assert system_kwargs['verbose'] == 1, 'default'
         assert other_kwargs == {}
 
     gkwargs = copy2(paramsurvey.global_kwargs)
     with patch.dict(os.environ, {'PARAMSURVEY_BACKEND': 'FOO'}, clear=True):
         utils.initialize_kwargs(gkwargs, {})
-        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {})
+        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, {}, '', {})
         assert system_kwargs['backend'] == 'FOO', 'type works'
         assert other_kwargs == {}
+
+    gkwargs = copy2(paramsurvey.global_kwargs)
+    with patch.dict(os.environ, {}, clear=True):
+        utils.initialize_kwargs(gkwargs, {})
+        kwargs = {'ray_foo': 1, 'multiprocessing_bar': 2, 'other_baz': 3}
+        system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, kwargs, 'ray', {'ray': '', 'multiprocessing': ''})
+        assert other_kwargs == {'foo': 1, 'other_baz': 3}
 
 
 def test_psets_empty():
