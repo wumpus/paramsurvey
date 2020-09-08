@@ -31,12 +31,17 @@ class PerfStats(object):
         for name, elapsed in raw_stats.items():
             g = self.d.get(name, defaultdict(float))
             if 'hist' not in g:
-                maxhist = max(elapsed[0] * 2, 30) * 1000  # milliseconds
+                maxelapsed = max(elapsed)
+                maxhist = max(maxelapsed * 2, 600) * 1000  # milliseconds, minimum 10 minutes
                 g['hist'] = HdrHistogram(10, int(maxhist), 2)  # 10 milliseconds-..., 2 sig figs
+                g['maxhist'] = int(maxhist)
             for e in elapsed:
                 g['count'] += 1.0
                 g['time'] += e
                 g['hist'].record_value(int(e * 1000))
+                if e * 1000 > g['maxhist']:
+                    # will be silently not recorded in hist
+                    pass
             self.d[name] = g
         #for k in list(raw_stats.keys()):
         #    del raw_stats[k]
@@ -71,9 +76,11 @@ class PerfStats(object):
     def print_percentile(self, name, stderr=False):
         if name in self.d:
             hist = self.d[name]['hist']
-            pslogger.log('counter {}, counts {}'.format(name, hist.get_total_count()), stderr=stderr)
+            total = self.d[name]['time']
+            mean = total / self.d[name]['count']
+            pslogger.log('counter {}, total {:.0f}s, mean {:.2f}s, counts {}'.format(name, total, mean, hist.get_total_count()), stderr=stderr)
             for pct in (50, 90, 95, 99):
-                pslogger.log('counter {}, {}%tile: {:.1f}s'.format(name, pct, hist.get_value_at_percentile(pct)/1000.), stderr=stderr)
+                pslogger.log('counter {}, {}%tile: {:.2f}s'.format(name, pct, hist.get_value_at_percentile(pct)/1000.), stderr=stderr)
 
     def print_histograms(self, name='default', stderr=False):
         self.print_histogram(name, stderr=stderr)
