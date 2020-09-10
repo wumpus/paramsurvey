@@ -4,6 +4,7 @@ import tempfile
 import pytest
 import sys
 from io import StringIO
+import platform
 
 import pandas as pd
 
@@ -115,15 +116,21 @@ def test_results(paramsurvey_init):
 
 def do_test_args(pset, system_kwargs, user_kwargs):
     # this function cannot be nested inside test_args() because nested funcs can't be pickled
-    assert os.getcwd() == user_kwargs['expected_cwd'], 'chdir appears to work'
+    print('GREG worker getcwd is', os.getcwd())
+    assert os.getcwd() == user_kwargs['expected_cwd'], 'chdir appears to work, getcwd=' + os.getcwd()
     assert 'out_subdir' in system_kwargs
 
 
 def test_args(capsys, paramsurvey_init):
-    chdir = tempfile.gettempdir()
+    if platform.system() == 'Darwin':
+        # in Darwin, the tempfile directory is process-specific
+        # and can't be accessed by a different multiprocessing Pool process
+        # this one is shared between all processes
+        chdir = '/private/var/tmp'
+    else:
+        chdir = tempfile.gettempdir()
     if os.getcwd() == chdir:
-        # whoops
-        pass
+        pytest.skip('somehow we were already in the chdir')
 
     out_func_called = False
     test_user_kwargs = {'test': 1, 'expected_cwd': chdir}

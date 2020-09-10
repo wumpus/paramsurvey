@@ -19,6 +19,16 @@ matrix:
     arch: arm64
   - python: 3.8
     arch: s390x
+  - name: "OSX"
+    env: ONLY_BUILTINS=1
+    os: osx
+    osx_image: xcode12  # 10.15.5
+    language: shell
+    install:
+      # for osx we can't say "python: 3.8" so we use the system python3
+      - python3 --version
+      - pip3 install .
+      - pip3 install .[test]
   include:
   - python: 3.5
     env: ONLY_BUILTINS=1
@@ -27,6 +37,16 @@ matrix:
       - pip install .[test]
   - python: 3.8
     env: PARAMSURVEY_VERBOSE=3 PYTEST_STDERR_VISIBLE=-s
+  - name: "OSX"
+    env: ONLY_BUILTINS=1
+    os: osx
+    osx_image: xcode12  # 10.15.5
+    language: shell
+    install:
+      # for osx we can't say "python: 3.8" so we use the system python
+      - python3 --version
+      - pip3 install .
+      - pip3 install .[test]
 #  - python: 3.8
 #    arch: arm64  # works but takes 35 minutes
 #    env: ONLY_BUILTINS=1
@@ -48,6 +68,7 @@ git:
 before_install:
   # temporary workaround for s390x and arm64 permissions problem
   # https://travis-ci.community/t/permission-issue-while-building-wheels-for-various-python-packages/7822/12
+  - sudo mkdir -p ~/.cache/pip/wheels  # does not exist on osx
   - sudo chown -Rv $USER:$GROUP ~/.cache/pip/wheels
 
 install:

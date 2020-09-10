@@ -9,6 +9,7 @@ import os
 import datetime
 import traceback
 import warnings
+import platform
 
 import pandas as pd
 from pandas_appender import DF_Appender
@@ -419,4 +420,7 @@ def psets_empty(psets):
 
 def vmem():
     ru = resource.getrusage(resource.RUSAGE_SELF)
-    return ru[2]/1000000.  # gigabytes
+    gigs = ru[2]/(1024*1024)  # gigabytes
+    if platform.system() == 'Darwin':
+        gigs = gigs / 1024.
+    return gigs
