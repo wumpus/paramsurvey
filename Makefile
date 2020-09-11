@@ -1,4 +1,4 @@
-.PHONY: unit scripts test clean_coverage test_coverage distclean dist_check dist
+.PHONY: unit scripts generic test clean_coverage test_coverage distclean dist_check dist
 
 unit:
 	# hint: PYTEST_STDERR_VISIBLE=-s
@@ -9,10 +9,13 @@ scripts:
 	PYTHONPATH=.:scripts python scripts/paramsurvey-greedy-example.py
 	PYTHONPATH=.:scripts python scripts/paramsurvey-multistage-example.py
 
-test: unit scripts
+generic:
 	# hint: PYTEST_STDERR_VISIBLE=-s works for these, too
 	PYTHONPATH=. test/integration/test-multiprocessing.sh test/integration
 	PYTHONPATH=.:test/integration test/integration/test-ray.sh test/integration
+
+test: unit scripts generic
+
 clean_coverage:
 	rm -f .coverage
 
