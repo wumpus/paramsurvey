@@ -3,23 +3,22 @@ sudo: true
 dist: xenial
 
 python:
-  - 3.5
+  - 3.5  # installing ray takes 6m30s. also a complaint about numpy<1.16, I guess travis has an old version
   - 3.6
   - 3.7
   - 3.8
-#  - 3.9-dev
+  - 3.9
 #  - nightly
 
 matrix:
   fast_finish: true
   allow_failures:
-  - python: 3.9-dev  # pandas wheel takes a long time to compile and gets a compile error
-  - python: nightly  # pandas wheel takes a long time to compile and gets a compile error
+  - python: nightly
   - python: 3.8
     arch: arm64
   - python: 3.8
     arch: s390x
-  - name: "OSX"
+  - name: "OSX"  # takes a normal amount of time
     env: ONLY_BUILTINS=1
     os: osx
     osx_image: xcode12  # 10.15.5
