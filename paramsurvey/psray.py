@@ -39,7 +39,7 @@ def init(system_kwargs, ncores=None, **kwargs):
     # should allow these to be kwargs
     address, password = read_ray_config()
     kwargs['address'] = address
-    kwargs['redis_password'] = password
+    kwargs['_redis_password'] = password  # added the leading _ in ray 1.0.0
 
     if os.environ.get('RAY_LOCAL_MODE', False):
         kwargs['local_mode'] = True

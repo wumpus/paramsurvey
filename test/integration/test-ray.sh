@@ -15,7 +15,7 @@ echo $(hostname):$PORT $REDIS_PASSWORD > ~/.ray-test-72363726-details
 
 GIGABYTE=1000000000  # close enough
 
-ray start --head --redis-port=$PORT --redis-password=$REDIS_PASSWORD --memory $GIGABYTE --object-store-memory $GIGABYTE --redis-max-memory $GIGABYTE
+ray start --head --port=$PORT --redis-password=$REDIS_PASSWORD --memory $GIGABYTE --object-store-memory $GIGABYTE --redis-max-memory $GIGABYTE
 
 # in order to find both the uninstalled paramsurvey and our test program,
 # which ray needs to pickle, the PYTHONPATH must be manipulated. See
