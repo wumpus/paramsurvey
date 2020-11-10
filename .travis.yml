@@ -3,12 +3,12 @@ sudo: true
 dist: xenial
 
 python:
-  - 3.5  # installing ray takes 6m30s. also a complaint about numpy<1.16, I guess travis has an old version
+  #- 3.5  # ray >=1 does not support; before: installing ray takes 6m30s. also a complaint about numpy<1.16, I guess travis has an old version
   - 3.6
   - 3.7
   - 3.8
   - 3.9
-#  - nightly
+  #- nightly
 
 matrix:
   fast_finish: true
