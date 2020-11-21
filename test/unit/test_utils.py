@@ -116,6 +116,11 @@ def test_init_resolve_kwargs():
         system_kwargs, other_kwargs = utils.resolve_kwargs(gkwargs, kwargs, 'ray', {'ray': '', 'multiprocessing': ''})
         assert other_kwargs == {'foo': 1, 'other_baz': 3}
 
+    gkwargs = copy2(paramsurvey.global_kwargs)
+    with patch.dict(os.environ, {'PARAMSURVEY_VERBOSE': 'None'}, clear=True):
+        with pytest.raises(ValueError):
+            utils.initialize_kwargs(gkwargs, {})
+
 
 def test_psets_empty():
     psets = []

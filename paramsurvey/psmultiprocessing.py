@@ -13,20 +13,32 @@ pool = None
 our_ncores = None
 
 
-def init(system_kwargs, ncores=None, **kwargs):
+def init(system_kwargs, **kwargs):
     global pool
     global our_ncores
     if pool:  # yes we can be called multiple times  # pragma: no cover
         return
 
-    if ncores is None:
-        ncores = multiprocessing.cpu_count()
+    pool_kwargs = {}
+
+    ncores = system_kwargs.pop('ncores', None)
+    if ncores is None or ncores == 0:
+        ncores = _core_count()
+    elif ncores < 0:
+        # negative ncores means subtract
+        ncores = max(_core_count() + ncores, 1)
+    pool_kwargs['processes'] = ncores
+    our_ncores = ncores
+
+    max_tasks_per_child = system_kwargs.pop('max_tasks_per_child', None)
+    if max_tasks_per_child:
+        pool_kwargs['maxtasksperchild'] = max_tasks_per_child
 
     verbose = system_kwargs['verbose']
     pslogger.log('initializing multiprocessing pool with {} processes'.format(ncores), stderr=verbose)
+    pslogger.log('Pool() kwargs are', pool_kwargs, stderr=verbose > 1)
 
-    pool = multiprocessing.Pool(processes=ncores)
-    our_ncores = ncores
+    pool = multiprocessing.Pool(**pool_kwargs)
 
 
 def finalize():
@@ -36,10 +48,19 @@ def finalize():
     pool.join()
 
 
+def _core_count():
+    try:
+        return len(os.sched_getaffinity(0))
+    except (AttributeError, NotImplementedError, OSError):
+        return multiprocessing.cpu_count()
+    # Windows: len(psutil.Process().cpu_affinity())
+
+
 def current_core_count():
-    # XXX should be the pool size, if configured by init(ncores=)
-    # XXX also affected by os.sched_getaffinity
-    return multiprocessing.cpu_count()
+    if our_ncores is not None:
+        return our_ncores
+    else:
+        return _core_count()
 
 
 def pick_chunksize(length, cores, factor=4):
@@ -124,7 +145,7 @@ def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, u
 
 
 def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=None, out_subdirs=None,
-        progress_dt=None, group_size=None, name='default', **kwargs):
+        progress_dt=None, group_size=None, name='default', max_tasks_per_child=None, **kwargs):
 
     verbose = system_kwargs['verbose']
     vstats = system_kwargs['vstats']
@@ -134,6 +155,9 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
 
     psets, system_stats, system_kwargs = utils.map_prep(psets, name, system_kwargs, chdir,
                                                         out_subdirs, progress_dt=progress_dt, **kwargs)
+
+    if max_tasks_per_child is not None:
+        pslogger.log('max_tasks_per_child={} is ignored by the multiprocessing map() call, do it in init()'.format(max_tasks_per_child), stderr=verbose)
 
     progress = system_kwargs['progress']
     cores = current_core_count()

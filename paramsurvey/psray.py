@@ -5,7 +5,6 @@ import json
 import time
 
 import ray
-#import pyarrow
 
 from . import utils
 from . import stats
@@ -21,20 +20,36 @@ def read_ray_config():
     return address, password
 
 
-def init(system_kwargs, ncores=None, **kwargs):
+def init(system_kwargs, **kwargs):
     if ray.is_initialized():
         # this happens with our test scripts
         # also a user might call init() repeatedly, perhaps with inconsistant args
-        pslogger.log('ray.init called repeatedly')
-        pslogger.log('system_kwargs', repr(system_kwargs), stderr=False)
-        pslogger.log('ncores', ncores, stderr=False)
-        pslogger.log('kwargs', repr(kwargs), stderr=False)
+        pslogger.log('init.ray called repeatedly')
         return
+
+    verbose = system_kwargs['verbose']
 
     ray_kwargs = {}
 
-    if ncores:
-        ray_kwargs['num_cpus'] = ncores
+    ncores = system_kwargs.pop('ncores', None)
+    if ncores is not None:
+        if ncores >= 0:
+            # what does ncores=0 mean to ray?
+            ray_kwargs['num_cpus'] = ncores
+            pslogger.log('init.ray ncores=', ncores, 'probably has no effect', stderr=verbose > 1)
+        else:
+            pslogger.log('init.ray negative ncores=', ncores, 'ignored', stderr=verbose)
+
+    max_tasks_per_child = system_kwargs.pop('max_tasks_per_child', None)
+    if max_tasks_per_child:
+        if verbose:
+            pslogger.log('init.ray max_tasks_per_child=', max_tasks_per_child, stderr=verbose > 1)
+
+        # the docs say this should work, but it gets: TypeError: options() got an unexpected keyword argument 'max_calls'
+        # paramsurvey.psray.do_work_wrapper = paramsurvey.psray.do_work_wrapper.options(max_calls=max_tasks_per_child)
+
+        # this is a hack that works, if it is used before the workers are instantiated
+        do_work_wrapper._max_calls = max_tasks_per_child
 
     # should allow these to be kwargs
     address, password = read_ray_config()
@@ -213,6 +228,8 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
     factor = 2.4
 
     # temporary: this works in ray map calls, but check serialize raises on it
+    # so we add it after checking the size
+    # remove this case once we fixe check_serialized_size to use the real ray serializer
     if 'raise_in_wrapper' in system_kwargs:
         worker_system_kwargs['raise_in_wrapper'] = system_kwargs['raise_in_wrapper']
 

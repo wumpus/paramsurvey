@@ -21,7 +21,7 @@ def test_multiprocessing_error_callback(paramsurvey_init):
     if paramsurvey.backend() != 'multiprocessing':
         pytest.skip('only valid for multiprocessing backend')
 
-    psets = [{'fd': sys.stdout, 'duration': 0.1}]  # won't pickle
+    psets = [{'fd': sys.stdout, 'duration': 0.1}]  # won't pickle, calls the error_callback
     results = paramsurvey.map(sleep_worker, psets)
     assert results.progress.total == 1
     assert results.progress.finished == 0

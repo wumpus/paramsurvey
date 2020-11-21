@@ -13,6 +13,7 @@ def test_all_env_variables(monkeypatch, capsys):
         'PARAMSURVEY_VERBOSE': '3',
         'PARAMSURVEY_LIMIT': '1',
         'PARAMSURVEY_NCORES': '2',
+        'PARAMSURVEY_MAX_TASKS_PER_CHILD': '2',
         'PARAMSURVEY_VSTATS': '3',
     }
     for k, v in var.items():

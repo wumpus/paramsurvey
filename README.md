@@ -64,7 +64,7 @@ performance statistics, and information about any failures.
 
 You can call `paramsurvey.map()` more than once.
 
-## Controlling verbosity
+## Keyword arguments to init() and map()
 
 The `paramsurvey` code has a set of keyword arguments (and corresponding environment
 variables) to aid debugging and testing. They are:
@@ -76,13 +76,23 @@ variables) to aid debugging and testing. They are:
   * 2 = print something every second
   * 3 = print something for every action
 * `vstats=1` -- controls the verbosity of the performance statistics system, with similar values as `verbose`
-* `limit=-1` -- limits the number of psets actually computed to this number (-1 meaning "all")
+* `limit=0` -- limits the number of psets actually computed to this number (0 meaning "all")
+* `ncores=-1` -- limits the number of cores used, in this case 1 less than the number available (multiprocessing only)
+* `max_tasks_per_child=3` -- the number of tasks a child will do before restarting. Useful to limit memory leaks. Default: infinite
 
 Each of these has a corresponding environment variable,
 e.g. `PARAMSURVEY_BACKEND`, `PARAMSURVEY_VERBOSE`.  If the environment
 variable is set, it overrides the values set in the source code. If a
 kwarg is set for a `map()` call, that value overrides any value
 specified for the `init()` call.
+
+For example, if you wish to debug a large computation by running a small
+subset of it on a single node, the environment variables allow you to do
+this without editing your source code:
+
+```
+$ PARAMSURVEY_BACKEND=multiprocessing PARAMSURVEY_VERBOSE=3 PARAMSURVEY_LIMIT=10 ./myprogram.py
+```
 
 For retrospective debugging, i.e. your run crashes and you are sad
 that you specified a lower verbosity than you desire post-crash,

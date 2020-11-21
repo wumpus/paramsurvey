@@ -207,7 +207,7 @@ def map_prep(psets, name, system_kwargs, chdir, out_subdirs, keep_results=True, 
     pslogger.log('paramsurvey.map system_kwargs '+repr(system_kwargs), stderr=verbose > 1)
 
     psets = psets_prep(psets)
-    if system_kwargs['limit'] >= 0:
+    if system_kwargs['limit'] is not None and system_kwargs['limit'] >= 0:
         psets = psets.iloc[:system_kwargs['limit']]
 
     system_kwargs['progress'] = MapProgress(name, {'total': len(psets)}, verbose=verbose, progress_dt=progress_dt)
@@ -362,7 +362,14 @@ def initialize_kwargs(global_kwargs, kwargs):
         else:
             value = v.get('default')
         type = v.get('type', int)
-        v['value'] = type(value)
+        if value is not None:
+            try:
+                v['value'] = type(value)
+            except (TypeError, ValueError) as e:
+                pslogger.log('exception {} converting type of {} {} {}'.format(str(e), k, repr(value), str(type)), stderr=True)
+                raise
+        else:
+            v['value'] = value
 
 
 def resolve_kwargs(global_kwargs, kwargs, backend, backends):

@@ -24,5 +24,8 @@ ray start --head --port=$PORT --redis-password=$REDIS_PASSWORD --memory $GIGABYT
 RAY_HEAD_FILE=~/.ray-test-72363726-details PARAMSURVEY_BACKEND=ray pytest $COVERAGE $1
 RAY_LOCAL_MODE=1 RAY_HEAD_FILE=~/.ray-test-72363726-details PARAMSURVEY_BACKEND=ray pytest $COVERAGE $PYTEST_STDERR_VISIBLE $1
 
+RAY_HEAD_FILE=~/.ray-test-72363726-details PARAMSURVEY_BACKEND=ray pytest $COVERAGE $1/test-generic_init_max_tasks_per_child.py
+# do not test max_tasks with local mode
+
 ray stop
 

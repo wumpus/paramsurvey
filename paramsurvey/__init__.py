@@ -60,8 +60,9 @@ default_backend = 'multiprocessing'
 global_kwargs = {
     'verbose': {'env': 'PARAMSURVEY_VERBOSE', 'default': 1},
     'backend': {'env': 'PARAMSURVEY_BACKEND', 'default': default_backend, 'type': str},
-    'limit': {'env': 'PARAMSURVEY_LIMIT', 'default': -1},
-    'ncores': {'env': 'PARAMSURVEY_NCORES', 'default': -1},
+    'limit': {'env': 'PARAMSURVEY_LIMIT', 'default': None},
+    'ncores': {'env': 'PARAMSURVEY_NCORES', 'default': None},
+    'max_tasks_per_child': {'env': 'PARAMSURVEY_MAX_TASKS_PER_CHILD', 'default': None},
     'vstats': {'env': 'PARAMSURVEY_VSTATS', 'default': 1},
 }
 
@@ -69,29 +70,35 @@ global_kwargs = {
 def init(**kwargs):
     '''Initialize the paramsurvey system.
 
-    Paramters
+    Parameters
     ---------
 
-    verbose : int, default 1
-        Verbosity level for the paramsurvey system. 0=quiet, 1 = print some
-        status every 30 seconds, 2 = print status every second, 3 = print
-        status for every activity. Will be overridden by the environment
-        variable `PARAMSURVEY_VERBOSE`, if set. The purppose of these environment
-        variables is to aid debugging without editing your source code.
     backend : str, default 'multiprocessing'
         Which backend to use. Currently paramsurvey supports 'multiprocessing'
         and 'ray'. Will be overridden by the environment variable
         `PARAMSURVEY_BACKEND`, if set.
-    limit : int, default -1
-        Artifically limit the number of parameter sets computed. The default of
-        `-1` means to compute everything. Useful for user testing. Will be
-        overridden by the environment variable `PARAMSURVEY_VERBOSE`, if set.
-    ncores : int, default -1
-        The number of cores to use. The default of `-1` means to use all cores.
-        Will be overridden by the environment variable `PARAMSURVEY_NCORES`, if set.
+    verbose : int, default 1
+        Verbosity level for the paramsurvey system. 0=quiet, 1 = print some
+        status every 30 seconds, 2 = print status every second, 3 = print
+        status for every activity. Will be overridden by the environment
+        variable `PARAMSURVEY_VERBOSE`, if set.
     vstats : int, default 1
         Similar to `verbose`, but for performance statistics reporting.
         Will be overridden by the environment variable `PARAMSURVEY_VSTATS`, if set.
+    limit : int, default None
+        Artifically limit the number of parameter sets computed. The default of
+        `None` means to compute everything. Useful for user testing. Will be
+        overridden by the environment variable `PARAMSURVEY_VERBOSE`, if set.
+    ncores : int, default None
+        The number of cores to use. The default of `None` means to use all cores.
+        A negative value will result in that many cores being unused.
+        Only the multiprocessing backend uses this parameter.
+        Will be overridden by the environment variable `PARAMSURVEY_NCORES`, if set.
+    max_tasks_per_child: int, default None
+        The number of tasks a child will complete before restarting. Helpful for
+        keeping memory leaks in check. The default of `None` means that the child
+        will not restart.
+        Will be overridden by the environment variable `PARAMSURVEY_MAX_TASKS_PER_CHILD`, if set.
     pslogger_prefix : str, default '.paramsurvey-'
         Specifies a prefix for the logging system filename.
     pslogger_fd : fd, optional
@@ -163,6 +170,10 @@ def map(*args, **kwargs):
     group_size : int, optional
     name : str, default 'default'
 
+    verbose : int, default 1
+    vstats : int, default 1
+    limit : int, default None
+
     Returns
     -------
     MapResults
@@ -173,5 +184,10 @@ def map(*args, **kwargs):
     sys.stderr.flush()
     sys.stdout.flush()
 
+    for kw in ('backend', 'ncores', 'max_tasks_per_child'):
+        if kw in kwargs:
+            raise ValueError('{} can only be passed to init, not map'.format(kw))
+
     system_kwargs, other_kwargs = resolve_kwargs(global_kwargs, kwargs, our_backend['name'], backends)
+
     return our_backend['map'](*args, system_kwargs=system_kwargs, **other_kwargs)

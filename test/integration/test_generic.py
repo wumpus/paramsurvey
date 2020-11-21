@@ -291,5 +291,15 @@ def test_kwargs(paramsurvey_init):
     assert len(results) == 3
 
 
+def test_map_ncores(paramsurvey_init):
+    with pytest.raises(ValueError):
+        paramsurvey.map(sleep_worker, [{'foo': 1}], ncores=3)
+
+
+def test_map_max_tasks_per_child(paramsurvey_init):
+    with pytest.raises(ValueError):
+        paramsurvey.map(sleep_worker, [{'foo': 1}], max_tasks_per_child=1)
+
+
 def test_overlarge_pset():
     pass
