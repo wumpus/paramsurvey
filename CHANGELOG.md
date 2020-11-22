@@ -1,3 +1,7 @@
+- 0.4.8
+	+ requires (and works with) ray>=1
+	+ added ncores and max_tasks_per_child kwargs for init()
+
 - 0.4.7
 	+ changed API for return value of paramsurvey.map()
 	+ changed API for the worker function (raw_stats moved into system_kwargs)
