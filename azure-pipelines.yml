@@ -1,0 +1,102 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+trigger:
+- main
+
+jobs:
+  - job: linux
+    pool:
+      vmImage: 'ubuntu-latest'
+    strategy:
+      matrix:
+        Python35noray:
+          python.version: '3.5'
+          myenv: ONLY_BUILTINS=1
+        Python36:
+          python.version: '3.6'
+        Python37:
+          python.version: '3.7'
+        Python38:
+          python.version: '3.8'
+        Python38verbose:
+          python.version: '3.8'
+          myenv: "PARAMSURVEY_VERBOSE=3 PYTEST_STDERR_VISIBLE=-s"
+        Python39noray:
+          python.version: '3.9'
+          myenv: ONLY_BUILTINS=1
+
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(python.version)'
+      displayName: 'Use Python $(python.version)'
+
+    - script: |
+        python -m pip install --upgrade pip
+        pip install . .[test]
+        if [ ! -z "$(myenv)" ]; then
+          export $(myenv)
+        fi
+        if [ -z "$ONLY_BUILTINS" ]; then
+          pip install .[ray]
+        fi
+      displayName: 'Install dependencies'
+
+    - script: |
+        pip install pytest pytest-azurepipelines
+        if [ ! -z "$(myenv)" ]; then
+          export $(myenv)
+        fi
+        make test_coverage
+      displayName: 'pytest'
+
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: Cobertura
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+        reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+      displayName: 'coverage'
+
+  - job: macos
+    pool:
+      vmImage: 'macOS-latest'
+    strategy:
+      matrix:
+        Python38noray:
+          python.version: '3.8'
+          myenv: ONLY_BUILTINS=1
+
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(python.version)'
+      displayName: 'Use Python $(python.version)'
+
+    - script: |
+        python -m pip install --upgrade pip
+        pip install . .[test]
+        if [ ! -z "$(myenv)" ]; then
+          export $(myenv)
+        fi
+        if [ -z "$ONLY_BUILTINS" ]; then
+          pip install .[ray]
+        fi
+      displayName: 'Install dependencies'
+
+    - script: |
+        pip install pytest pytest-azurepipelines
+        if [ ! -z "$(myenv)" ]; then
+          export $(myenv)
+        fi
+        make test_coverage
+      displayName: 'pytest'
+
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: Cobertura
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+        reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+      displayName: 'coverage'
