@@ -27,6 +27,7 @@ jobs:
           export $(myenv)
         fi
         if [ -z "$ONLY_BUILTINS" ]; then
+          sudo apt-get -y install libopenblas-base libopenblas-dev
           pip install cython
           pip install -e 'git+https://github.com/acxz/ray.git@py39#egg=ray&subdirectory=python'
           pip install pyarrow
