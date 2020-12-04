@@ -20,13 +20,14 @@ jobs:
       displayName: 'Use Python $(python.version)'
 
     - script: |
+        set -e
         python -m pip install --upgrade pip
         pip install . .[test]
         if [ ! -z "$(myenv)" ]; then
           export $(myenv)
         fi
         if [ -z "$ONLY_BUILTINS" ]; then
-          pip install 'git+https://github.com/acxz/ray.git@py39#egg=ray&subdirectory=python'
+          pip install -e 'git+https://github.com/acxz/ray.git@py39#egg=ray&subdirectory=python'
           pip install pyarrow
           # pip install .[ray]
         fi
