@@ -26,7 +26,7 @@ jobs:
           export $(myenv)
         fi
         if [ -z "$ONLY_BUILTINS" ]; then
-          pip install git+https://github.com/acxz/ray.git@py39#egg=ray&subdirectory=python
+          pip install 'git+https://github.com/acxz/ray.git@py39#egg=ray&subdirectory=python'
           pip install .[ray]
         fi
       displayName: 'Install dependencies'
