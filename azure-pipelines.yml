@@ -27,7 +27,8 @@ jobs:
         fi
         if [ -z "$ONLY_BUILTINS" ]; then
           pip install 'git+https://github.com/acxz/ray.git@py39#egg=ray&subdirectory=python'
-          pip install .[ray]
+          pip install pyarrow
+          # pip install .[ray]
         fi
       displayName: 'Install dependencies'
 
