@@ -7,21 +7,11 @@ jobs:
       vmImage: 'ubuntu-latest'
     strategy:
       matrix:
-        Python35noray:
-          python.version: '3.5'
-          myenv: ONLY_BUILTINS=1
-        Python36:
-          python.version: '3.6'
-        Python37:
-          python.version: '3.7'
-        Python38:
-          python.version: '3.8'
-        Python38verbose:
-          python.version: '3.8'
-          myenv: "PARAMSURVEY_VERBOSE=3 PYTEST_STDERR_VISIBLE=-s"
         Python39noray:
           python.version: '3.9'
           myenv: ONLY_BUILTINS=1
+        Python39withray:
+          python.version: '3.9'
 
     steps:
     - task: UsePythonVersion@0
@@ -36,6 +26,7 @@ jobs:
           export $(myenv)
         fi
         if [ -z "$ONLY_BUILTINS" ]; then
+          pip install git+https://github.com/acxz/ray.git@py39#egg=ray&subdirectory=python
           pip install .[ray]
         fi
       displayName: 'Install dependencies'
