@@ -14,6 +14,7 @@ def return_pid(pset, system_kwargs, user_kwargs):
 
 
 def test_init_max_tasks_per_child():
+    # this test is in a separate file because it cannot share a session with test_generic
     paramsurvey.init(pslogger_fd=pslogger_fd, max_tasks_per_child=1)
 
     psets = [{'foo': 1}] * 10
