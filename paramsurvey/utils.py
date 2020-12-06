@@ -321,7 +321,10 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
 
             if 'traceback' in user_ret:
                 system_kwargs['pset_ids'][pset_id]['_traceback'] = user_ret['traceback']
-                pslogger.log('traceback:\n' + user_ret['traceback'], stderr=verbose > 1)
+                verbose_t = verbose > 1
+                pslogger.log('traceback:\n' + user_ret['traceback'], stderr=verbose_t)
+                if verbose > 0 and not verbose_t:
+                    print('(traceback is in', pslogger.logger_filename+')', file=sys.stderr)
         else:
             del system_kwargs['pset_ids'][pset_id]
             user_ret['pset'].pop('_pset_id', None)

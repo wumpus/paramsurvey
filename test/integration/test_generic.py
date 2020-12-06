@@ -116,7 +116,6 @@ def test_results(paramsurvey_init):
 
 def do_test_args(pset, system_kwargs, user_kwargs):
     # this function cannot be nested inside test_args() because nested funcs can't be pickled
-    print('GREG worker getcwd is', os.getcwd())
     assert os.getcwd() == user_kwargs['expected_cwd'], 'chdir appears to work, getcwd=' + os.getcwd()
     assert 'out_subdir' in system_kwargs
 
@@ -211,6 +210,8 @@ def test_worker_exception(capsys, paramsurvey_init):
 
     # the standard progress function prints this
     assert 'failures: 1' in captured.out or 'failures: 1' in captured.err
+    assert 'exceptions: 1' in captured.out or 'exceptions: 1' in captured.err
+    assert 'traceback is in' in captured.err, 'pointer to hidden logfile given at default verbose'
 
     log = pslogger_fd.getvalue()
     assert 'Traceback' in log, 'python traceback seen'

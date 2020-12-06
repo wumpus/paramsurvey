@@ -13,6 +13,8 @@ import os
 import sys
 import socket
 
+logger_filename = None
+
 
 def atomic_create_ish(filenames):
     '''
@@ -22,6 +24,8 @@ def atomic_create_ish(filenames):
     for f in filenames:
         try:
             fd = open(f, 'xt')
+            global logger_filename
+            logger_filename = f
         except FileExistsError:
             continue
         break
@@ -47,6 +51,8 @@ def init(pslogger_prefix='.paramsurvey-', pslogger_fd=None, **kwargs):
     global logfd
     if pslogger_fd:
         logfd = pslogger_fd
+        global logger_filename
+        logger_filename = '(internal)'
     else:
         logfd = atomic_create_ish([pslogger_prefix+m+'.log' for m in middles])
 
