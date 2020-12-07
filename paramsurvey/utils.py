@@ -386,7 +386,7 @@ def resolve_kwargs(global_kwargs, kwargs, backend, backends):
         if k in global_kwargs:
             gkw = global_kwargs[k]
             if gkw.get('strong'):
-                pslogger.log('environment variable overrides passed in value for', k, verbose > 0)
+                pslogger.log('environment variable overrides passed in value for '+k, verbose > 0)
                 system_kwargs[k] = gkw['value']
             else:
                 system_kwargs[k] = kwargs[k]
