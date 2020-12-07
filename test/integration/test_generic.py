@@ -293,8 +293,19 @@ def test_kwargs(paramsurvey_init):
 
 
 def test_map_ncores(paramsurvey_init):
+    # valid for init() but not map()
     with pytest.raises(ValueError):
         paramsurvey.map(sleep_worker, [{'foo': 1}], ncores=3)
+
+
+def test_invalid_kwarg(paramsurvey_init):
+    with pytest.raises(TypeError):
+        paramsurvey.init(doesnotexist=True)
+    with pytest.raises(TypeError):
+        paramsurvey.map(sleep_worker, [{}], doesnotexist=True)
+    with pytest.raises(TypeError):
+        paramsurvey.map(sleep_worker, [{}], ray={'doesnotexist': True}, multiprocessing={'doesnotexist': True})
+    pass
 
 
 def test_overlarge_pset():

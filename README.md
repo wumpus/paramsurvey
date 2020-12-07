@@ -99,6 +99,15 @@ that you specified a lower verbosity than you desire post-crash,
 `paramsurvey` creates a hidden logfile in the current directory for
 every run, named `.paramusurvey-DATE-TIME.log`.
 
+### Backend-specific arguments
+
+Both `init()` and `map()` take a backend-specific keyword argument named for the backend, and
+ignored by other backends. For example, to pass an argument only used by the `ray` backend,
+
+```
+paramsurvey.map(..., ray={'num_gpus': 1})
+```
+
 ## The MapResults object
 
 The MapResults object has several properties:

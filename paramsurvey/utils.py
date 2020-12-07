@@ -198,7 +198,7 @@ def psets_prep(psets):
     return psets
 
 
-def map_prep(psets, name, system_kwargs, chdir, out_subdirs, keep_results=True, progress_dt=None, **kwargs):
+def map_prep(psets, name, system_kwargs, chdir, out_subdirs, keep_results=True, progress_dt=None, raise_in_wrapper=None):
     verbose = system_kwargs['verbose']
     vstats = system_kwargs['vstats']
 
@@ -220,8 +220,8 @@ def map_prep(psets, name, system_kwargs, chdir, out_subdirs, keep_results=True, 
         system_kwargs['out_subdirs'] = out_subdirs
     if name:
         system_kwargs['name'] = name
-    if 'raise_in_wrapper' in kwargs:
-        system_kwargs['raise_in_wrapper'] = kwargs['raise_in_wrapper']
+    if raise_in_wrapper:
+        system_kwargs['raise_in_wrapper'] = raise_in_wrapper
 
     system_kwargs['pset_ids'] = {}
 
@@ -396,19 +396,14 @@ def resolve_kwargs(global_kwargs, kwargs, backend, backends):
         if k not in system_kwargs:
             system_kwargs[k] = global_kwargs[k]['value']
 
-    backend_prefixes = tuple(x+'_' for x in backends.keys())
-    kept_other_kwargs = {}
-    for k in other_kwargs:
-        if k.startswith(backend_prefixes):
-            if k.startswith(backend+'_'):
-                k2 = k.replace(backend+'_', '', 1)
-                kept_other_kwargs[k2] = other_kwargs[k]
-            else:
-                pslogger.log('discarding kwarg due to our backend choice: ', k, other_kwargs[k], stderr=verbose > 1)
-        else:
-            kept_other_kwargs[k] = other_kwargs[k]
+    backend_kwargs = other_kwargs.pop(backend, {})
 
-    return system_kwargs, kept_other_kwargs
+    for b in backends:
+        if b in other_kwargs:
+            pslogger.log('discarding kwarg {} due to our backend choice'.format(b), stderr=verbose > 1)
+            other_kwargs.pop(b)
+
+    return system_kwargs, backend_kwargs, other_kwargs
 
 
 def make_subdir_name(count, prefix='ps'):

@@ -13,13 +13,11 @@ pool = None
 our_ncores = None
 
 
-def init(system_kwargs, **kwargs):
+def init(system_kwargs, backend_kwargs):
     global pool
     global our_ncores
     if pool:  # yes we can be called multiple times  # pragma: no cover
         return
-
-    pool_kwargs = {}
 
     ncores = system_kwargs.pop('ncores', None)
     if ncores is None or ncores == 0:
@@ -27,18 +25,18 @@ def init(system_kwargs, **kwargs):
     elif ncores < 0:
         # negative ncores means subtract
         ncores = max(_core_count() + ncores, 1)
-    pool_kwargs['processes'] = ncores
+    backend_kwargs['processes'] = ncores
     our_ncores = ncores
 
     max_tasks_per_child = system_kwargs.pop('max_tasks_per_child', None)
     if max_tasks_per_child:
-        pool_kwargs['maxtasksperchild'] = max_tasks_per_child
+        backend_kwargs['maxtasksperchild'] = max_tasks_per_child
 
     verbose = system_kwargs['verbose']
     pslogger.log('initializing multiprocessing pool with {} processes'.format(ncores), stderr=verbose)
-    pslogger.log('Pool() kwargs are', pool_kwargs, stderr=verbose > 1)
+    pslogger.log('Pool() kwargs are', backend_kwargs, stderr=verbose > 1)
 
-    pool = multiprocessing.Pool(**pool_kwargs)
+    pool = multiprocessing.Pool(**backend_kwargs)
 
 
 def finalize():
@@ -145,13 +143,17 @@ def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, u
 
 
 def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=None, out_subdirs=None,
-        progress_dt=None, group_size=None, name='default', max_tasks_per_child=None, **kwargs):
+        progress_dt=None, group_size=None, name='default', max_tasks_per_child=None, backend_kwargs={},
+        **kwargs):
 
     verbose = system_kwargs['verbose']
     vstats = system_kwargs['vstats']
 
     if utils.psets_empty(psets):
         return
+
+    if backend_kwargs:
+        raise TypeError('multiprocessing.map does not currently take any backend kwargs')
 
     psets, system_stats, system_kwargs = utils.map_prep(psets, name, system_kwargs, chdir,
                                                         out_subdirs, progress_dt=progress_dt, **kwargs)

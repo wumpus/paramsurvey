@@ -20,7 +20,7 @@ def read_ray_config():
     return address, password
 
 
-def init(system_kwargs, **kwargs):
+def init(system_kwargs, backend_kwargs):
     if ray.is_initialized():
         # this happens with our test scripts
         # also a user might call init() repeatedly, perhaps with inconsistant args
@@ -29,16 +29,10 @@ def init(system_kwargs, **kwargs):
 
     verbose = system_kwargs['verbose']
 
-    ray_kwargs = {}
-
     ncores = system_kwargs.pop('ncores', None)
     if ncores is not None:
-        if ncores >= 0:
-            # what does ncores=0 mean to ray?
-            ray_kwargs['num_cpus'] = ncores
-            pslogger.log('init.ray ncores=', ncores, 'probably has no effect', stderr=verbose > 1)
-        else:
-            pslogger.log('init.ray negative ncores=', ncores, 'ignored', stderr=verbose)
+        pslogger.log('init.ray ncores={} ignored'.format(ncores), stderr=verbose)
+        # when we actually are willing to start ray here, pay attention to ncores
 
     max_tasks_per_child = system_kwargs.pop('max_tasks_per_child', None)
     if max_tasks_per_child:
@@ -51,16 +45,16 @@ def init(system_kwargs, **kwargs):
         # this is a hack that works, if it is used before the workers are instantiated
         do_work_wrapper._max_calls = max_tasks_per_child
 
-    # should allow these to be kwargs
-    address, password = read_ray_config()
-    kwargs['address'] = address
-    kwargs['_redis_password'] = password  # added the leading _ in ray 1.0.0
+    if 'address' not in backend_kwargs and '_redis_password' not in backend_kwargs:
+        address, password = read_ray_config()
+        backend_kwargs['address'] = address
+        backend_kwargs['_redis_password'] = password  # added the leading _ in ray 1.0.0
 
     if os.environ.get('RAY_LOCAL_MODE', False):
-        kwargs['local_mode'] = True
+        backend_kwargs['local_mode'] = True
 
     # should we create a ray head if there is no cluster?
-    ray.init(**kwargs)
+    ray.init(**backend_kwargs)
 
 
 def finalize():
@@ -200,7 +194,7 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
 
 
 def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=None, out_subdirs=None,
-        progress_dt=None, group_size=None, name='default', **kwargs):
+        progress_dt=None, group_size=None, name='default', backend_kwargs={}, **kwargs):
 
     verbose = system_kwargs['verbose']
     vstats = system_kwargs['vstats']
@@ -241,6 +235,11 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
         len(psets), cores, group_size, system_kwargs['verbose']
     ), stderr=verbose > 1)
 
+    wrapper = do_work_wrapper
+
+    if backend_kwargs:
+        wrapper = wrapper.options(**backend_kwargs)
+
     futures = []
     pset_index = 0
 
@@ -253,7 +252,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
             pset_group, pset_ids = utils.make_pset_ids(pset_group)
             system_kwargs['pset_ids'].update(pset_ids)
 
-            futures.append(do_work_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
+            futures.append(wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
             progress.active += len(pset_group)
             progress.report()
             system_stats.report()
