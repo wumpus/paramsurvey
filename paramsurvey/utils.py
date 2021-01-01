@@ -5,6 +5,7 @@ import math
 import random
 import keyword
 import resource
+import psutil
 import os
 import datetime
 import traceback
@@ -424,8 +425,51 @@ def psets_empty(psets):
 
 
 def vmem():
+    # not sure what the exact equivalent in psutil is?
     ru = resource.getrusage(resource.RUSAGE_SELF)
     gigs = ru[2]/(1024*1024)  # gigabytes
     if platform.system() == 'Darwin':
         gigs = gigs / 1024.
     return gigs
+
+
+def memory_limits(raw=False):
+    limits = {}
+
+    # everywhere
+    limits['available'] = psutil.virtual_memory().available
+
+    # macos and windows don't have these, even though macos does support getrlimit
+    try:
+        p = psutil.Process()
+        limits['rlimit_as'] = p.rlimit(psutil.RLIMIT_AS)[0]
+        limits['rlimit_rss'] = p.rlimit(psutil.RLIMIT_RSS)[0]
+    except Exception as e:
+        print('GREG psutil.rlimit saw exception', str(e))
+        raise
+
+    # macos
+    limits['rrlimit_rss'] = resource.getrlimit(resource.RLIMIT_RSS)[0]
+
+    try:
+        with open('/sys/fs/cgroup/memory/memory.limit_in_bytes') as f:
+            cgroup = f.read()
+            if len(cgroup) < 19:
+                limits['cgroup'] = int(cgroup)
+            else:
+                # if improbably big, actually RLIM_INFINITY
+                limits['cgroup'] = resource.RLIM_INFINITY
+    except Exception as e:
+        print('GREG cgroup saw exception', str(e))
+
+    raw_limits = limits.copy()
+
+    for k, v in limits.copy().items():
+        if v is None or v == resource.RLIM_INFINITY:
+            del limits[k]
+
+    lim = min([rl for rl in limits.values() if rl > 0])
+
+    if raw:
+        return lim, raw_limits
+    return lim

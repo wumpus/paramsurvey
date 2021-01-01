@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch
 import os
+import platform
 
 import pandas as pd
 
@@ -147,3 +148,19 @@ def test_vmem():
     vmem1 = utils.vmem()
     # vmem might not go up at all, if there is free memory
     assert vmem1 <= vmem0 + 0.011, 'vmem does not go up more than expected'
+
+
+def test_memory_limits():
+    lim, limits = utils.memory_limits(raw=True)
+    assert 'available' in limits
+
+    megabyte = 1024 * 1024
+
+    assert lim > megabyte, 'at least a megabyte'
+    assert lim < megabyte ** 3, 'less than an exabyte'
+
+    assert lim <= limits['available']
+
+    if platform.system == 'Linux':
+        for e in ('rlimit_as', 'rlimit_rss', 'cgroups'):
+            assert e in limits, 'expected '+e+' in limits'
