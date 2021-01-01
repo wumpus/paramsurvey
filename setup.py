@@ -12,6 +12,7 @@ test_requirements = ['pytest>=4.6', 'coverage', 'pytest-cov', 'pytest-sugar', 'c
 # pytest-cov requires pytest >= 4.6, dunno why this doesn't just work in travis-ci
 
 requires = [
+    'psutil',
     'hdrhistogram',
     'pandas',
     'pandas-appender>=0.9.1',
