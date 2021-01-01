@@ -444,9 +444,8 @@ def memory_limits(raw=False):
         p = psutil.Process()
         limits['rlimit_as'] = p.rlimit(psutil.RLIMIT_AS)[0]
         limits['rlimit_rss'] = p.rlimit(psutil.RLIMIT_RSS)[0]
-    except Exception as e:
-        print('GREG psutil.rlimit saw exception', str(e))
-        raise
+    except AttributeError:
+        pass
 
     # macos
     limits['rrlimit_rss'] = resource.getrlimit(resource.RLIMIT_RSS)[0]
@@ -459,8 +458,8 @@ def memory_limits(raw=False):
             else:
                 # if improbably big, actually RLIM_INFINITY
                 limits['cgroup'] = resource.RLIM_INFINITY
-    except Exception as e:
-        print('GREG cgroup saw exception', str(e))
+    except FileNotFoundError:
+        pass
 
     raw_limits = limits.copy()
 

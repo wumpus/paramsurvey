@@ -164,3 +164,7 @@ def test_memory_limits():
     if platform.system == 'Linux':
         for e in ('rlimit_as', 'rlimit_rss', 'cgroups'):
             assert e in limits, 'expected '+e+' in limits'
+    if platform.system == 'Darwin':
+        for e in ('rrlimit_rss'):
+            assert e in limits, 'expected '+e+' in limits'
+        assert 'cgroup' not in limits, 'wut macos now has cgroups?'
