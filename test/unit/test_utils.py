@@ -181,6 +181,9 @@ def test_resource_complaint(capsys):
         paramsurvey.utils._other_complaint(verbose=1)
         out, err = capsys.readouterr()
         assert not err
+    if platform.system() != 'Linux':
+        # only Linux has uss/dirty/swap
+        return
     with patch('psutil.Process.memory_full_info',
                return_value=pfullmem(uss=1, dirty=1, swap=0)):
         paramsurvey.utils._other_complaint(verbose=1)
