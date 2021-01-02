@@ -2,8 +2,10 @@ import pytest
 from unittest.mock import patch
 import os
 import platform
+import collections
 
 import pandas as pd
+import psutil
 
 import paramsurvey
 from paramsurvey import utils
@@ -148,6 +150,47 @@ def test_vmem():
     vmem1 = utils.vmem()
     # vmem might not go up at all, if there is free memory
     assert vmem1 <= vmem0 + 0.011, 'vmem does not go up more than expected'
+
+
+def test_resource_complaint(capsys):
+    with patch('paramsurvey.utils.memory_available_pct', return_value=6):
+        paramsurvey.utils._memory_complaint(verbose=1)
+        out, err = capsys.readouterr()
+        assert err
+        paramsurvey.utils._memory_complaint(verbose=1)
+        out, err = capsys.readouterr()
+        assert not err, 'one complaint per level'
+    with patch('paramsurvey.utils.memory_available_pct', return_value=1):
+        paramsurvey.utils._memory_complaint(verbose=1)
+        out, err = capsys.readouterr()
+        assert err, 'second complaint if available falls'
+
+    with patch('psutil.getloadavg', return_value=(100., 100., 100.)):
+        paramsurvey.utils._loadavg_complaint(verbose=1)
+        out, err = capsys.readouterr()
+        assert err
+    with patch('psutil.getloadavg', return_value=(0., 0., 0.)):
+        paramsurvey.utils._loadavg_complaint(verbose=1)
+        out, err = capsys.readouterr()
+        assert not err
+
+    pfullmem = collections.namedtuple('pfullmem', ['uss', 'dirty', 'swap'])
+
+    with patch('psutil.Process.memory_full_info',
+               return_value=pfullmem(0, 0, 0)):
+        paramsurvey.utils._other_complaint(verbose=1)
+        out, err = capsys.readouterr()
+        assert not err
+    with patch('psutil.Process.memory_full_info',
+               return_value=pfullmem(uss=1, dirty=1, swap=0)):
+        paramsurvey.utils._other_complaint(verbose=1)
+        out, err = capsys.readouterr()
+        assert err
+    with patch('psutil.Process.memory_full_info',
+               return_value=pfullmem(uss=1, dirty=0, swap=1)):
+        paramsurvey.utils._other_complaint(verbose=1)
+        out, err = capsys.readouterr()
+        assert err
 
 
 def test_memory_limits():

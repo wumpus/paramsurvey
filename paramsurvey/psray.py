@@ -178,9 +178,11 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
                 pslogger.log('surprised to see {} pset groups done at once'.format(len(done)))
             for ret in done:
                 handle_return(out_func, ret, system_stats, system_kwargs, user_kwargs)
-        else:  # not tested  # pragma: no cover
+        else:  # not tested
+            # XXX to test, we need a lower timeout
             progress.report()
             system_stats.report()
+            utils.memory_available_complaint(prefix='driver node', verbose=verbose)
 
         new_cores = current_core_count()
         if new_cores != cores:  # not tested  # pragma: no cover

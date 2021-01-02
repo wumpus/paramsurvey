@@ -433,6 +433,63 @@ def vmem():
     return gigs
 
 
+def memory_available_pct():
+    total = psutil.virtual_memory().total
+    available = psutil.virtual_memory().available
+    return int(100 * available / total)
+
+
+memory_available_levels = [10, 5, 1, 0]
+
+
+def _memory_complaint(prefix='node ', verbose=1):
+    if not memory_available_levels:
+        return
+    av = memory_available_pct()
+    avl = memory_available_levels.copy()
+
+    value = avl.pop(0)
+    prev = 101
+    while av < value:
+        prev = value
+        value = avl.pop(0)
+
+    if prev < 100:
+        pslogger.log('{}memory available has fallen below {}%'.format(prefix, prev), stderr=verbose)
+        # complain once per level
+        while memory_available_levels[0] >= prev:
+            memory_available_levels.pop(0)
+
+
+def _loadavg_complaint(prefix='node ', verbose=1):
+    all_cores = os.cpu_count()
+    load1, _, _ = psutil.getloadavg()
+    if load1 > all_cores * 2:
+        pslogger.log('{}load1 average of {} is high'.format(prefix, load1), stderr=verbose)
+
+
+def _other_complaint(prefix='node ', verbose=1):
+    if platform.system() == 'Linux':
+        p = psutil.Process()
+        mfi = p.memory_full_info()  # takes 1ms
+        alarming = mfi.uss * 0.1
+
+        if mfi.dirty > alarming:
+            pct = int(100 * mfi.dirty / alarming)
+            pslogger.log('{}dirty is an alarming {}%'.format(prefix, pct), stderr=verbose)
+        if mfi.swap > alarming:
+            pct = int(100 * mfi.swap / alarming)
+            pslogger.log('{}swap is an alarming {}%'.format(prefix, pct), stderr=verbose)
+
+
+def resource_complaint(prefix='node ', verbose=1):
+    prefix = prefix.rstrip() + ' '
+
+    _memory_complaint(prefix=prefix, verbose=verbose)
+    _loadavg_complaint(prefix=prefix, verbose=verbose)
+    _other_complaint(prefix=prefix, verbose=verbose)
+
+
 def memory_limits(raw=False):
     limits = {}
 

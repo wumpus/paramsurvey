@@ -133,11 +133,13 @@ def error_callback(out_func, system_stats, system_kwargs, user_kwargs, e):
 
 def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size):
     progress = system_kwargs['progress']
+    verbose = system_kwargs['verbose']
 
     while system_kwargs['outstanding'] > cores*factor:
         time.sleep(0.1)
         progress.report()
         system_stats.report()
+        utils.resource_complaint(verbose=verbose)
 
     return group_size
 
