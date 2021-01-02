@@ -4,6 +4,7 @@ import traceback
 import functools
 import time
 import multiprocessing
+import psutil
 
 from . import utils
 from . import stats
@@ -48,10 +49,9 @@ def finalize():
 
 def _core_count():
     try:
-        return len(os.sched_getaffinity(0))
+        return len(psutil.Process().cpu_affinity())  # linux, windows
     except (AttributeError, NotImplementedError, OSError):
-        return multiprocessing.cpu_count()
-    # Windows: len(psutil.Process().cpu_affinity())
+        return multiprocessing.cpu_count()  # macos, older linux
 
 
 def current_core_count():
