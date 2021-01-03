@@ -1,5 +1,6 @@
 __pycache__
 .coverage
+coverage.xml
 .eggs/
 dist/
 paramsurvey.egg-info/
