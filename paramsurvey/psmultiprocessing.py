@@ -124,7 +124,11 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
 
 def callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
     system_kwargs['outstanding'] -= 1
-    utils.handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs)
+    try:
+        utils.handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs)
+    except Exception as e:
+        pslogger.log('exception in multiprocessing callback:', str(e), stderr=True)
+        pslogger.log('traceback:\n' + traceback.format_exc(), stderr=True)
 
 
 def error_callback(out_func, system_stats, system_kwargs, user_kwargs, e):
