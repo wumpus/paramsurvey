@@ -1,12 +1,11 @@
 import os
-import sys
 import traceback
-import json
 import time
 
 import ray
 
 from . import utils
+from .psresource import resource_stats, resource_complaint
 from . import stats
 from . import pslogger
 
@@ -105,6 +104,11 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
             #traceback.print_exc()
             user_ret['traceback'] = traceback.format_exc()
         ret.append([user_ret, system_ret])
+
+    if ret:
+        # add worker resource information to the final system_ret
+        ret[-1][1]['resource_stats'] = resource_stats()
+
     return ret
 
 
@@ -182,7 +186,7 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
             # XXX to test, we need a lower timeout
             progress.report()
             system_stats.report()
-            utils.memory_available_complaint(prefix='driver node', verbose=verbose)
+            resource_complaint(resource_stats(worker=False), verbose=verbose)
 
         new_cores = current_core_count()
         if new_cores != cores:  # not tested  # pragma: no cover

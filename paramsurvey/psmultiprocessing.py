@@ -7,6 +7,7 @@ import multiprocessing
 import psutil
 
 from . import utils
+from .psresource import resource_stats, resource_complaint
 from . import stats
 from . import pslogger
 
@@ -61,6 +62,18 @@ def current_core_count():
         return _core_count()
 
 
+def check_memory_per_worker(wanted, verbose=False):
+    # checks
+    # if caller specifies memory, comment on it, use fewer cores in multiprocessing if necessary
+    # return back a worker memory size if the caller did not specify
+    pass
+
+    # have work_wrapper report memory usage?
+    # summarize it? same as perf stats histogram?
+    # complain about possible leaks? (growth over time)
+    # good advice: not just that memory is short but our workers are the cause of memory being short
+
+
 def pick_chunksize(length, cores, factor=4):
     # chunksize computation similar to what Python does for a multiprocessing.Pool
     # except the fudge factor can be changed. bigger factor == smaller chunks.
@@ -106,7 +119,7 @@ def do_work_wrapper_inner(func, system_kwargs, user_kwargs, psets):
 
     if ret:
         # add worker resource information to the final system_ret
-        ret[-1][1]['resource_stats'] = utils.resource_stats()
+        ret[-1][1]['resource_stats'] = resource_stats()
 
     return ret
 
@@ -152,7 +165,7 @@ def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, u
         time.sleep(0.1)
         progress.report()
         system_stats.report()
-        utils.resource_complaint(utils.resource_stats(worker=False), verbose=verbose)
+        resource_complaint(resource_stats(worker=False), verbose=verbose)
 
     return group_size
 

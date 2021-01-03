@@ -4,6 +4,7 @@ import sys
 import paramsurvey
 import paramsurvey.params
 import paramsurvey.utils
+import paramsurvey.psresource
 
 
 @pytest.fixture(scope="session")
@@ -36,14 +37,14 @@ def sums(n):
 
 
 def test_stress_10(paramsurvey_init):
-    vmem0 = paramsurvey.utils.vmem()
+    vmem0 = paramsurvey.psresource.vmem()
     sums(10)  # 100
-    vmem1 = paramsurvey.utils.vmem()
+    vmem1 = paramsurvey.psresource.vmem()
     assert vmem1 - vmem0 < 0.01  # gigabytes
 
 
 def test_stress_100(paramsurvey_init):
-    vmem0 = paramsurvey.utils.vmem()
+    vmem0 = paramsurvey.psresource.vmem()
     sums(50)  # 2,500 ... 6 seconds on 4 cores
-    vmem1 = paramsurvey.utils.vmem()
+    vmem1 = paramsurvey.psresource.vmem()
     assert vmem1 - vmem0 < 0.013  # gigabytes
