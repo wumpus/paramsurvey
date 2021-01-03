@@ -152,48 +152,85 @@ def test_vmem():
     assert vmem1 <= vmem0 + 0.011, 'vmem does not go up more than expected'
 
 
+def test_resource_stats():
+    rs = utils.resource_stats()
+    for k in ('hostname', 'pid', 'total', 'available', 'load1', 'worker'):
+        assert k in rs
+
+
 def test_resource_complaint(capsys):
-    with patch('paramsurvey.utils.memory_available_pct', return_value=6):
-        paramsurvey.utils._memory_complaint(verbose=1)
-        out, err = capsys.readouterr()
-        assert err
-        paramsurvey.utils._memory_complaint(verbose=1)
-        out, err = capsys.readouterr()
-        assert not err, 'one complaint per level'
-    with patch('paramsurvey.utils.memory_available_pct', return_value=1):
-        paramsurvey.utils._memory_complaint(verbose=1)
-        out, err = capsys.readouterr()
-        assert err, 'second complaint if available falls'
+    rs = utils.resource_stats()
 
-    with patch('psutil.getloadavg', return_value=(100., 100., 100.)):
-        paramsurvey.utils._loadavg_complaint(verbose=1)
-        out, err = capsys.readouterr()
-        assert err
-    with patch('psutil.getloadavg', return_value=(0., 0., 0.)):
-        paramsurvey.utils._loadavg_complaint(verbose=1)
+    h = 'bob'
+    hp = 'bob:32'
+
+    rsc = rs.copy()
+    rsc['available'] = rsc['total'] * 0.06
+    paramsurvey.utils._memory_complaint(h, hp, rsc)
+    out, err = capsys.readouterr()
+    assert err
+    paramsurvey.utils._memory_complaint(h, hp, rsc)
+    out, err = capsys.readouterr()
+    assert not err, 'one complaint per level'
+
+    rsc = rs.copy()
+    rsc['available'] = rsc['total'] * 0.01
+    paramsurvey.utils._memory_complaint(h, hp, rsc)
+    out, err = capsys.readouterr()
+    assert err, 'second complaint if available falls'
+
+    rsc = rs.copy()
+    rsc['load1'] = 0.
+    paramsurvey.utils._loadavg_complaint(h, hp, rsc)
+    out, err = capsys.readouterr()
+    assert not err
+
+    rsc = rs.copy()
+    rsc['load1'] = 100.
+    paramsurvey.utils._loadavg_complaint(h, hp, rsc)
+    out, err = capsys.readouterr()
+    assert err
+
+    rsc = rs.copy()
+    rsc['load1'] = 0.
+    paramsurvey.utils._loadavg_complaint(h, hp, rsc)
+    out, err = capsys.readouterr()
+    assert err, 'load returned to normal'
+
+    rsc = rs.copy()
+    rsc['load1'] = 0.
+    paramsurvey.utils._loadavg_complaint(h, hp, rsc)
+    out, err = capsys.readouterr()
+    assert not err
+
+    rs1 = rs.copy()
+    rs1['uss'] = rs1['total'] / 4
+    rs1['dirty'] = 0
+    rs1['swap'] = 0
+
+    for weird_key in ('uss', 'dirty', 'swap'):
+        rs1c = rs1.copy()
+        del rs1c[weird_key]
+        paramsurvey.utils._other_complaint(h, hp, rs1c)
         out, err = capsys.readouterr()
         assert not err
 
-    pfullmem = collections.namedtuple('pfullmem', ['uss', 'dirty', 'swap'])
+    rs1c = rs1.copy()
+    paramsurvey.utils._other_complaint(h, hp, rs1c)
+    out, err = capsys.readouterr()
+    assert not err
 
-    with patch('psutil.Process.memory_full_info',
-               return_value=pfullmem(0, 0, 0)):
-        paramsurvey.utils._other_complaint(verbose=1)
-        out, err = capsys.readouterr()
-        assert not err
-    if platform.system() != 'Linux':
-        # only Linux has uss/dirty/swap
-        return
-    with patch('psutil.Process.memory_full_info',
-               return_value=pfullmem(uss=1, dirty=1, swap=0)):
-        paramsurvey.utils._other_complaint(verbose=1)
-        out, err = capsys.readouterr()
-        assert err
-    with patch('psutil.Process.memory_full_info',
-               return_value=pfullmem(uss=1, dirty=0, swap=1)):
-        paramsurvey.utils._other_complaint(verbose=1)
-        out, err = capsys.readouterr()
-        assert err
+    rs1c = rs1.copy()
+    rs1c['dirty'] = rs1c['uss']
+    paramsurvey.utils._other_complaint(h, hp, rs1c)
+    out, err = capsys.readouterr()
+    assert err
+
+    rs1c = rs1.copy()
+    rs1c['swap'] = rs1c['uss']
+    paramsurvey.utils._other_complaint(h, hp, rs1c)
+    out, err = capsys.readouterr()
+    assert err
 
 
 def test_memory_limits():

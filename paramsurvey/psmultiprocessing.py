@@ -103,6 +103,11 @@ def do_work_wrapper_inner(func, system_kwargs, user_kwargs, psets):
             #print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
             #traceback.print_exc()
         ret.append([user_ret, system_ret])
+
+    if ret:
+        # add worker resource information to the final system_ret
+        ret[-1][1]['resource_stats'] = utils.resource_stats()
+
     return ret
 
 
@@ -147,7 +152,7 @@ def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, u
         time.sleep(0.1)
         progress.report()
         system_stats.report()
-        utils.resource_complaint(verbose=verbose)
+        utils.resource_complaint(utils.resource_stats(worker=False), verbose=verbose)
 
     return group_size
 
