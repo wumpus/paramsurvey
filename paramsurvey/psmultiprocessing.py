@@ -70,41 +70,45 @@ def pick_chunksize(length, cores, factor=4):
     return chunksize
 
 
+def do_work_wrapper_inner(func, system_kwargs, user_kwargs, psets):
+    if 'raise_in_wrapper' in system_kwargs and any(pset.get('actually_raise', False) for pset in psets):
+        raise system_kwargs['raise_in_wrapper']  # for testing
+
+    if 'out_subdirs' in system_kwargs:
+        # the entire pset group gets the same out_subdir
+        system_kwargs['out_subdir'] = utils.make_subdir_name(system_kwargs['out_subdirs'])
+
+    # multiprocesing workers start with parent's PWD so this probably won't get used
+    if 'chdir' in system_kwargs:
+        os.chdir(system_kwargs['chdir'])
+
+    name = system_kwargs['name']
+
+    ret = []
+    for pset in psets:
+        raw_stats = dict()
+        system_kwargs['raw_stats'] = raw_stats
+        system_ret = {'raw_stats': raw_stats}
+        user_ret = {'pset': pset}
+
+        try:
+            with stats.record_wallclock(name+'_wallclock', raw_stats):
+                with stats.record_iowait(name+'_iowait', raw_stats):
+                    result = func(pset, system_kwargs, user_kwargs)
+            user_ret['result'] = result
+        except Exception as e:
+            user_ret['exception'] = repr(e)
+            user_ret['traceback'] = traceback.format_exc()
+            #print('saw an exception in the worker function', file=sys.stderr)
+            #print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
+            #traceback.print_exc()
+        ret.append([user_ret, system_ret])
+    return ret
+
+
 def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
     try:
-        if 'raise_in_wrapper' in system_kwargs and any(pset.get('actually_raise', False) for pset in psets):
-            raise system_kwargs['raise_in_wrapper']  # for testing
-
-        if 'out_subdirs' in system_kwargs:
-            # the entire pset group gets the same out_subdir
-            system_kwargs['out_subdir'] = utils.make_subdir_name(system_kwargs['out_subdirs'])
-
-        # multiprocesing workers start with parent's PWD so this probably won't get used
-        if 'chdir' in system_kwargs:
-            os.chdir(system_kwargs['chdir'])
-
-        name = system_kwargs['name']
-
-        ret = []
-        for pset in psets:
-            raw_stats = dict()
-            system_kwargs['raw_stats'] = raw_stats
-            system_ret = {'raw_stats': raw_stats}
-            user_ret = {'pset': pset}
-
-            try:
-                with stats.record_wallclock(name+'_wallclock', raw_stats):
-                    with stats.record_iowait(name+'_iowait', raw_stats):
-                        result = func(pset, system_kwargs, user_kwargs)
-                user_ret['result'] = result
-            except Exception as e:
-                user_ret['exception'] = repr(e)
-                user_ret['traceback'] = traceback.format_exc()
-                #print('saw an exception in the worker function', file=sys.stderr)
-                #print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
-                #traceback.print_exc()
-            ret.append([user_ret, system_ret])
-        return ret
+        return do_work_wrapper_inner(func, system_kwargs, user_kwargs, psets)
     except Exception as e:
         err = ('\nException {} raised in the do_work_wrapper,\n'
                'an unknown number of results lost\n'.format(e))
