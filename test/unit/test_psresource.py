@@ -1,4 +1,5 @@
 import platform
+import pytest
 
 from paramsurvey import psresource
 
@@ -110,3 +111,17 @@ def test_memory_limits():
         for e in ('rrlimit_rss'):
             assert e in limits, 'expected '+e+' in limits'
         assert 'cgroup' not in limits, 'wut macos now has cgroups?'
+
+
+def test_memory_suffix():
+    tests = {
+        '1': 1,
+        '1G': 1024**3,
+        '1g': 1024**3,
+    }
+    for k, v in tests.items():
+        assert psresource.memory_suffix(k) == v
+    with pytest.raises(ValueError):
+        psresource.memory_suffix('q')
+    with pytest.raises(ValueError):
+        psresource.memory_suffix('1q')

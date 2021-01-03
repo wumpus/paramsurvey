@@ -10,7 +10,7 @@ from . import pslogger
 
 
 def vmem():
-    # replace with pusutil.Process().memory_inf().vms ?
+    # replace with pusutil.Process().memory_info().vms ?
 
     ru = resource.getrusage(resource.RUSAGE_SELF)
     gigs = ru[2]/(1024*1024)  # gigabytes
@@ -143,3 +143,18 @@ def memory_limits(raw=False):
     if raw:
         return lim, raw_limits
     return lim
+
+
+suffix_table = {
+    'k': 1024,
+    'm': 1024**2,
+    'g': 1024**3,
+    't': 1024**4,
+}
+
+
+def memory_suffix(s):
+    last = s[-1]
+    if last.isalpha() and last.lower() in suffix_table:
+        return int(s[:-1]) * suffix_table[last.lower()]
+    return int(s)
