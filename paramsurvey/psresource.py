@@ -30,12 +30,28 @@ def resource_stats(worker=True):
     if platform.system() == 'Linux' or platform.system() == 'Darwin':
         p = psutil.Process()
         mfi = p.memory_full_info()  # takes 1 millisecond
+        ret['rss'] = mfi.rss
         ret['uss'] = mfi.uss
         if hasattr(mfi, 'dirty'):
             ret['dirty'] = mfi.dirty  # Linux only
         if hasattr(mfi, 'swap'):
             ret['swap'] = mfi.swap  # Linux only
     return ret
+
+
+def to_gigs(s):
+    s = memory_suffix(s)
+    return '{:.2f}g'.format(max(s/(1024**3), 0.01))
+
+
+def print_worker_size(hostnamep, resource_stats, verbose):
+    if resource_stats['worker']:
+        w = 'worker '
+    else:
+        w = ''
+    pslogger.log('{} {}uss={} rss={}'.format(
+        hostnamep, w, to_gigs(resource_stats['rss']), to_gigs(resource_stats['uss']),
+    ), stderr=verbose)
 
 
 memory_available_levels = {}
@@ -56,6 +72,7 @@ def _memory_complaint(hostname, hostnamep, resource_stats, verbose=1):
 
     if prev < 100:
         pslogger.log('{} memory available has fallen below {}%'.format(hostnamep, prev), stderr=verbose)
+        print_worker_size(hostnamep, resource_stats, verbose)
 
 
 high_loadavg = defaultdict(float)
@@ -68,8 +85,10 @@ def _loadavg_complaint(hostname, hostnamep, resource_stats, verbose=1):
         if load1 > high_loadavg[hostname]:
             pslogger.log('{} load1-per-core average of {} is high'.format(hostnamep, load1), stderr=verbose)
             high_loadavg[hostname] = load1
+            print_worker_size(hostnamep, resource_stats, verbose)
         else:
             pslogger.log('{} load1-per-core average of {} is high'.format(hostnamep, load1), stderr=verbose > 2)
+            print_worker_size(hostnamep, resource_stats, verbose > 2)
     else:
         if hostname in high_loadavg:
             del high_loadavg[hostname]
@@ -85,10 +104,12 @@ def _other_complaint(hostname, hostnamep, resource_stats, verbose=1):
         if resource_stats['dirty'] > alarming:
             pct = int(100 * resource_stats['dirty'] / alarming)
             pslogger.log('{} dirty is an alarming {}%'.format(hostnamep, pct), stderr=verbose)
+            print_worker_size(hostnamep, resource_stats, verbose)
     if 'swap' in resource_stats:
         if resource_stats['swap'] > alarming:
             pct = int(100 * resource_stats['swap'] / alarming)
             pslogger.log('{} swap is an alarming {}%'.format(hostnamep, pct), stderr=verbose)
+            print_worker_size(hostnamep, resource_stats, verbose)
 
 
 def resource_complaint(resource_stats, verbose=1):
@@ -154,6 +175,10 @@ suffix_table = {
 
 
 def memory_suffix(s):
+    if isinstance(s, int):
+        return s
+    if isinstance(s, float):
+        return s
     last = s[-1]
     if last.isalpha() and last.lower() in suffix_table:
         return int(s[:-1]) * suffix_table[last.lower()]

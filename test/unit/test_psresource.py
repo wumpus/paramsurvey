@@ -18,6 +18,11 @@ def test_resource_stats():
         assert k in rs
 
 
+def test_to_gigs():
+    assert psresource.to_gigs(0) == '0.01g'
+    assert psresource.to_gigs(1024**3) == '1.00g'
+
+
 def test_resource_complaint(capsys):
     rs = psresource.resource_stats()
 
@@ -118,6 +123,8 @@ def test_memory_suffix():
         '1': 1,
         '1G': 1024**3,
         '1g': 1024**3,
+        1: 1,
+        1.0: 1.0,
     }
     for k, v in tests.items():
         assert psresource.memory_suffix(k) == v
