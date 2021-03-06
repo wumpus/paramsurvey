@@ -183,3 +183,24 @@ def memory_suffix(s):
     if last.isalpha() and last.lower() in suffix_table:
         return int(s[:-1]) * suffix_table[last.lower()]
     return int(s)
+
+
+def worker_memory_complaint_helper(mems, wanted, msg, verbose=False, raise_all=True):
+    mems = sorted(mems)
+    minimum = mems[0]
+    median = mems[int(len(mems)/2)]
+    maximum = mems[-1]
+
+    kind = None
+    if wanted > maximum:
+        kind = 'all'
+    elif wanted > median:
+        kind = 'many'
+    elif wanted > minimum:
+        kind = 'some'
+    if kind is not None:
+        pslogger.log(msg.format(kind), stderr=verbose)
+
+    if raise_all and kind == 'all':
+        # we are about to deadlock
+        raise ValueError('Too little memory for any node to run this worker')

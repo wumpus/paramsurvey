@@ -132,3 +132,26 @@ def test_memory_suffix():
         psresource.memory_suffix('q')
     with pytest.raises(ValueError):
         psresource.memory_suffix('1q')
+
+
+def test_worker_memory_complaint_helper(capsys):
+    psresource.worker_memory_complaint_helper((100, 100), 10, '', verbose=True)
+    assert capsys.readouterr()[1] == '', 'no complaint for plenty of memory'
+    psresource.worker_memory_complaint_helper((100,), 10, '', verbose=True)
+    assert capsys.readouterr()[1] == '', 'no complaint for plenty of memory'
+
+    with pytest.raises(ValueError):
+        psresource.worker_memory_complaint_helper((10,), 50, 'foo {}', verbose=True)
+
+    mems_multi = (10, 10)
+    psresource.worker_memory_complaint_helper(mems_multi, 50, 'foo {}', verbose=True, raise_all=False)
+    assert 'all' in capsys.readouterr()[1], 'multi all'
+    mems_multi = (100, 10, 10)
+    psresource.worker_memory_complaint_helper(mems_multi, 50, 'foo {}', verbose=True)
+    assert 'many' in capsys.readouterr()[1], 'multi many'
+    mems_multi = (100, 100, 10)
+    psresource.worker_memory_complaint_helper(mems_multi, 50, 'foo {}', verbose=True)
+    assert 'some' in capsys.readouterr()[1], 'multi some'
+
+    psresource.worker_memory_complaint_helper((10,), 50, 'foo {}', verbose=True, raise_all=False)
+    assert 'all' in capsys.readouterr()[1], 'single all'
