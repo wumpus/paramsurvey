@@ -109,6 +109,10 @@ def test_product():
     assert len(df) == 8
     assert df['col3'].dtype == 'category', 'sending in a category works'
 
+    ps3 = 3
+    with pytest.raises(ValueError):
+        df = paramsurvey.params.product(df1, df2, ps3)
+
 
 def test_add_column():
     df = paramsurvey.params.product({'col1': [1, 2]}, {'col2': [3, 4]}, {'col3': [5, 6]})

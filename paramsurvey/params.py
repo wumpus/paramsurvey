@@ -79,6 +79,8 @@ def product_step(a, df):
 
             if not is_category:
                 a = _coerce_to_category(series)
+    else:
+        raise ValueError('invalid type {} in product construction'.format(type(a)))
 
     dfa = pd.DataFrame(a)
     dfa['asdfasdf'] = 0
