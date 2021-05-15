@@ -18,6 +18,12 @@ def test__coerce_to_category():
     s2 = paramsurvey.params._coerce_to_category(s1)
     assert s2.dtype == 'category'
 
+    s1 = pd.Series([[0]] * 10)  # unhashable type
+    s2 = paramsurvey.params._infer_category(s1)
+    assert s1.equals(s2)
+    #assert s2.dtype != 'category'  # can't do this thanks to pandas
+    assert s2.dtype == 'object'
+
 
 def test__infer_category():
     s1 = pd.Series(range(10))
@@ -31,6 +37,8 @@ def test__infer_category():
     s1 = pd.Series([[0]] * 1000)  # unhashable type
     s2 = paramsurvey.params._infer_category(s1)
     assert s1.equals(s2)
+    #assert s2.dtype != 'category'  # can't do this thanks to pandas
+    assert s2.dtype == 'object'
 
     s1 = pd.Series([0] * 1000)
     s2 = paramsurvey.params._infer_category(s1)
@@ -65,6 +73,7 @@ def test_product():
 
     vi = sys.version_info
     if vi.major == 3 and vi.minor < 6:
+        # pre python 3.6 does not have ordered dicts by default
         df_dicts = paramsurvey.params.product(OrderedDict((('col1', [1, 2]), ('col2',  [3, 4]), ('col3', [5, 6]))))
     else:
         df_dicts = paramsurvey.params.product({'col1': [1, 2], 'col2': [3, 4], 'col3': [5, 6]})
@@ -89,6 +98,16 @@ def test_product():
     df_longer = paramsurvey.params.product(df_dicts, {'col4': [7, 8]})
     assert len(df_longer) == 16
     assert not df.equals(df_longer)
+
+    df3 = pd.DataFrame({'col3': [[5, 6], [7, 8]]})
+    df = paramsurvey.params.product(df1, df2, df3)
+    assert len(df) == 8
+    assert df['col3'].dtype == 'object', 'unhashable type inhibits category'
+
+    ps3 = pd.Series([5, 6], name='col3', dtype='category')
+    df = paramsurvey.params.product(df1, df2, ps3)
+    assert len(df) == 8
+    assert df['col3'].dtype == 'category', 'sending in a category works'
 
 
 def test_add_column():
