@@ -20,7 +20,7 @@ requires = [
 extras_require = {
     'ray': ['ray>=1', 'pyarrow'],
     'mpi': ['mpi4py'],
-    'test': test_requirements,  # setup no longer tests, so make them an extra that .travis.yml uses
+    'test': test_requirements,  # setup no longer tests, so make them an extra
 }
 
 setup_requires = ['setuptools_scm']
