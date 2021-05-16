@@ -7,9 +7,9 @@ jobs:
       vmImage: 'ubuntu-latest'
     strategy:
       matrix:
-        Python35noray:
-          python.version: '3.5'
-          myenv: ONLY_BUILTINS=1
+        #Python35noray:
+        #  python.version: '3.5'
+        #  myenv: ONLY_BUILTINS=1
         Python36:
           python.version: '3.6'
         Python37:

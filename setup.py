@@ -41,7 +41,7 @@ setup(
     author_email='lindahl@pbm.com',
     url='https://github.com/wumpus/paramsurvey',
     packages=packages,
-    python_requires=">=3.5.*",
+    python_requires=">=3.6.*",
     extras_require=extras_require,
     setup_requires=setup_requires,
     install_requires=requires,
@@ -57,7 +57,7 @@ setup(
         'Natural Language :: English',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
-        #'Programming Language :: Python :: 3.5',  # ray no longer supports py3.5
+        #'Programming Language :: Python :: 3.5',  # ray no longer supports py3.5, also setuptools_scm problem
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
