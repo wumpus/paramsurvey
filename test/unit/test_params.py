@@ -109,6 +109,13 @@ def test_product():
     assert len(df) == 8
     assert df['col3'].dtype == 'category', 'sending in a category works'
 
+    ps3 = pd.Series([5, 6], name='col3', dtype='category')
+    df = paramsurvey.params.product(df1, df2, ps3, infer_category=False)
+    assert len(df) == 8
+    assert df['col3'].dtype == 'category', 'category remains one'
+    with pytest.raises(TypeError):
+        assert df['col2'].dtype != 'category', 'not converted to a category'
+
     ps3 = 3
     with pytest.raises(ValueError):
         df = paramsurvey.params.product(df1, df2, ps3)
@@ -161,6 +168,7 @@ def test_param_stress():
     assert vmem1 - vmem0 < 1.055, 'tight limit that requires int16 type to pass'
 
     if 'TRAVIS_CPU_ARCH' in os.environ and os.environ['TRAVIS_CPU_ARCH'] == 's390x':
+        # s390x is slow
         return
 
     vmem0 = paramsurvey.utils.vmem()

@@ -4,19 +4,23 @@ helper functions to assist building sets of parameters
 build a human-friendly string usable for filenames and graphing purposes
 examine a list of work and eliminate units that have already been done
 '''
+import sys
+
 import pandas as pd
 
+from . import utils
 
-def product(*args):
+
+def product(*args, infer_category=True):
     df = pd.DataFrame()
     df['asdfasdf'] = 0
 
     for a in args:
         if isinstance(a, dict) and len(a) > 1:
             for key, value in a.items():
-                df = product_step({key: value}, df)
+                df = product_step({key: value}, df, infer_category=infer_category)
         else:
-            df = product_step(a, df)
+            df = product_step(a, df, infer_category=infer_category)
 
     df = df.drop(columns=['asdfasdf'])
     return df
@@ -32,8 +36,8 @@ def _coerce_to_category(a):
 def _infer_category(a):
     try:
         c = pd.Series(a, dtype='category')
-    except TypeError as e:
-        # e.g. unhashable type                                                                                                                             
+    except TypeError:
+        # e.g. unhashable type
         return a
 
     asize = a.memory_usage(index=False, deep=True)
@@ -43,9 +47,11 @@ def _infer_category(a):
     return a
 
 
-def product_step(a, df):
+def product_step(a, df, infer_category=True):
     # coerce a into a dtype='category' to save memory
-    if isinstance(a, dict):
+    if not infer_category:
+        pass
+    elif isinstance(a, dict):
         assert len(a) == 1
         for k, v in a.items():
             a = pd.Series(v, name=k)
@@ -84,7 +90,13 @@ def product_step(a, df):
 
     dfa = pd.DataFrame(a)
     dfa['asdfasdf'] = 0
+
+    vmem0 = utils.vmem()
     df = df.merge(dfa, how='outer')
+    vmem1 = utils.vmem()
+    if vmem1 - vmem0 > 0.1:
+        print('paramsurvey.params.product memory warning: memory increased by {} gigabytes'.format(vmem1 - vmem0), file=sys.stderr)
+
     return df
 
 

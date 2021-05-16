@@ -1,3 +1,6 @@
+- 0.4.10
+	+ infer_category=False option for .product(), because Pandas annoys users
+
 - 0.4.9
 	+ advertise hidden logfile when there are tracebacks in it
 	+ change API for backend-specific keyword arguments to init/map
