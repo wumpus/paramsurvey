@@ -53,16 +53,15 @@ backends = {
     },
 }
 
-global_kwargs = {}
 default_backend = 'multiprocessing'
 
-
 global_kwargs = {
-    'verbose': {'env': 'PARAMSURVEY_VERBOSE', 'default': 1},
     'backend': {'env': 'PARAMSURVEY_BACKEND', 'default': default_backend, 'type': str},
     'limit': {'env': 'PARAMSURVEY_LIMIT', 'default': None},
+    'memory': {'env': 'PARAMSURVEY_MEMORY', 'default': None, 'type': str},
     'ncores': {'env': 'PARAMSURVEY_NCORES', 'default': None},
     'max_tasks_per_child': {'env': 'PARAMSURVEY_MAX_TASKS_PER_CHILD', 'default': None},
+    'verbose': {'env': 'PARAMSURVEY_VERBOSE', 'default': 1},
     'vstats': {'env': 'PARAMSURVEY_VSTATS', 'default': 1},
 }
 
@@ -89,6 +88,11 @@ def init(**kwargs):
         Artifically limit the number of parameter sets computed. The default of
         `None` means to compute everything. Useful for user testing. Will be
         overridden by the environment variable `PARAMSURVEY_VERBOSE`, if set.
+    memory : int, default None
+        Specifies the amount of memory used by the worker function. If memory is
+        short, not all cores will be used by the backend. However, this memory
+        limit is not strictly enforced. A suffix of k, m, g, or t indicates
+        kilobytes, megabytes, etc.
     ncores : int, default None
         The number of cores to use. The default of `None` means to use all cores.
         A negative value will result in that many cores being unused.

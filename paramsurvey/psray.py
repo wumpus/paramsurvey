@@ -5,7 +5,7 @@ import time
 import ray
 
 from . import utils
-from .psresource import resource_stats, resource_complaint
+from .psresource import resource_stats, resource_complaint, worker_memory_complaint_helper
 from . import stats
 from . import pslogger
 
@@ -68,6 +68,44 @@ def current_core_count():
             continue
         cores += node.get('Resources', {}).get('CPU', 0)
     return int(cores)
+
+
+def ray_worker_memory_complaint(totals, percores, wanted, verbose=False, raise_all=True):
+    msg = '{} nodes are unable to run any workers due to lack of memory'
+    worker_memory_complaint_helper(totals, wanted, msg, verbose=False)
+    msg = '{} nodes are unable use all cores for this worker due to lack of memory'
+    worker_memory_complaint_helper(percores, wanted, msg, verbose=False)
+
+
+ray_mem_factor = None
+
+
+def check_memory_per_worker(wanted, verbose=False):
+    # what are the units for memory? 50 megabyte chunks at the moment
+    # https://github.com/ray-project/ray/issues/11198
+    # this bug indicates that ray's memory-limits client code might work? broken for ray.serve.
+    global ray_mem_factor
+    totals = []
+    percores = []
+    for node in ray.nodes():
+        if not node.get('Alive', False):  # pragma: no cover
+            continue
+        cores = node.get('Resources', {}).get('CPU')
+        if cores == 0:
+            continue
+        # XXX what should I do if I see < 1 cores?
+
+        mem = node.get('Resources', {}).get('memory')
+        if ray_mem_factor is None:
+            if mem < 1000000:
+                ray_mem_factor = 50000000  # 50 megabyte chunks, today's ray
+            else:
+                ray_mem_factor = 1  # bytes, some future ray API change?
+        mem *= ray_mem_factor
+        totals.append(mem)
+        percores.append(mem/cores)
+
+    ray_worker_memory_complaint(totals, percores, wanted, verbose=verbose)
 
 
 @ray.remote
@@ -216,6 +254,13 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
 
     progress = system_kwargs['progress']
     cores = current_core_count()
+
+    memory = system_kwargs['memory']
+    if memory is not None:
+        backend_kwargs['memory'] = memory
+        # XXX multiprocessing lower cores
+        # XXX set harder limit
+        # XXX if not set softer limit
 
     # make a cut-down copy to minimize size of args
     worker_system_kwargs = {}
