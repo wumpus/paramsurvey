@@ -1,3 +1,8 @@
+- 0.4.11
+	+ new pandas raises fewer TypeErrors
+	+ ray 3.9 now has a wheel, so test with it
+	+ change to main from master
+
 - 0.4.10
 	+ infer_category=False option for .product(), because Pandas annoys users
 
