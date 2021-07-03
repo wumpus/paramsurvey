@@ -1,3 +1,6 @@
+- 0.4.12
+	+ update changelog before tagging next time, eh
+
 - 0.4.11
 	+ new pandas raises fewer TypeErrors
 	+ ray 3.9 now has a wheel, so test with it
