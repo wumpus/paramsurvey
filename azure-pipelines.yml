@@ -1,5 +1,5 @@
 trigger:
-- master
+- main
 
 jobs:
   - job: linux
@@ -21,7 +21,6 @@ jobs:
           myenv: "PARAMSURVEY_VERBOSE=3 PYTEST_STDERR_VISIBLE=-s"
         Python39noray:
           python.version: '3.9'
-          myenv: ONLY_BUILTINS=1
 
     steps:
     - task: UsePythonVersion@0

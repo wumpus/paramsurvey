@@ -62,7 +62,7 @@ def product_step(a, df, infer_category=True):
             if a.dtype == 'category':
                 is_category = True
         except TypeError:
-            # why does this raise? well, it does.
+            # why does this raise? well, in older versions of pandas...
             is_category = False
 
         if not is_category:
@@ -80,7 +80,6 @@ def product_step(a, df, infer_category=True):
                 if series.dtype == 'category':
                     is_category = True
             except TypeError:
-                # why does this raise? well, it does.
                 is_category = False
 
             if not is_category:

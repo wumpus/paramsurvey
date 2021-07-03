@@ -30,14 +30,17 @@ def test__infer_category():
     s2 = paramsurvey.params._infer_category(s1)
     try:
         assert s2.dtype != 'category'
-    except TypeError:  # oh, pandas
+    except TypeError:  # older versions of pandas
         assert True
     assert s1.equals(s2)
 
     s1 = pd.Series([[0]] * 1000)  # unhashable type
     s2 = paramsurvey.params._infer_category(s1)
     assert s1.equals(s2)
-    #assert s2.dtype != 'category'  # can't do this thanks to pandas
+    try:
+        assert s2.dtype != 'category'
+    except TypeError:
+        assert True
     assert s2.dtype == 'object'
 
     s1 = pd.Series([0] * 1000)
@@ -113,8 +116,10 @@ def test_product():
     df = paramsurvey.params.product(df1, df2, ps3, infer_category=False)
     assert len(df) == 8
     assert df['col3'].dtype == 'category', 'category remains one'
-    with pytest.raises(TypeError):
+    try:
         assert df['col2'].dtype != 'category', 'not converted to a category'
+    except TypeError:
+        assert True
 
     ps3 = 3
     with pytest.raises(ValueError):
@@ -140,8 +145,8 @@ def test_add_column():
     df4 = paramsurvey.params.add_column(df, 'col4', lambda row: 0, infer_category=False)
     try:
         assert df4['col4'].dtype != 'category'
-    except TypeError:  # oh, pandas
-        pass
+    except TypeError:
+        assert True
 
 
 def params(m, n):
@@ -185,6 +190,7 @@ def test_param_quirks():
     # unhashable type 'list' will be inefficient but shouldn't crash
     psets = paramsurvey.params.product({'a': [[1], [2], [3]]})
     assert len(psets) == 3
-    with pytest.raises(TypeError):
-        # why does this assert a type error?
+    try:
         assert psets['a'].dtype != 'category'
+    except TypeError:
+        assert True
