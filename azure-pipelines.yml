@@ -1,6 +1,13 @@
 trigger:
 - main
 
+schedules:
+- cron: '42 0 * * 0'
+  displayName: 'weekly build'
+  branches:
+    include:
+    - main
+
 jobs:
   - job: linux
     pool:
