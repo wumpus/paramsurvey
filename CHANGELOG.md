@@ -1,3 +1,6 @@
+- 0.4.14
+	+ rename return from command-line helper from r.ret to r.cli
+
 - 0.4.13
 	+ fix README documention, "failed" was renamed to "missing" a while ago
 	+ add helper function to run command-line programs in the worker
