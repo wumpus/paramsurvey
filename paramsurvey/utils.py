@@ -10,6 +10,8 @@ import datetime
 import traceback
 import warnings
 import platform
+import subprocess
+import functools
 
 import pandas as pd
 from pandas_appender import DF_Appender
@@ -429,3 +431,21 @@ def vmem():
     if platform.system() == 'Darwin':
         gigs = gigs / 1024.
     return gigs
+
+
+def subprocess_run_worker(pset, system_kwargs, user_kwargs):
+    if 'run_args' not in pset:
+        raise ValueError('run_args key not found in pset')
+
+    run_kwargs = {}
+    if 'run_kwargs' in pset:
+        run_kwargs = pset['run_kwargs']
+    elif user_kwargs:
+        run_kwargs = user_kwargs.get('run_kwargs', {})
+
+    ret = subprocess.run(pset['run_args'], **run_kwargs)
+
+    # TODO
+    # emit a warning if exception=FileNotFoundError and shell=True not present and there's a space in the arg string
+
+    return {'ret': ret}

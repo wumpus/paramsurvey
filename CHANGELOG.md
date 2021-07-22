@@ -1,3 +1,7 @@
+- 0.4.13
+	+ fix README documention, "failed" was renamed to "missing" a while ago
+	+ add helper function to run command-line programs in the worker
+
 - 0.4.12
 	+ update changelog before tagging next time, eh
 

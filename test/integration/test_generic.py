@@ -5,13 +5,14 @@ import pytest
 import sys
 from io import StringIO
 import platform
+import subprocess
 
 import pandas as pd
 
 import paramsurvey
 import paramsurvey.stats
 from paramsurvey.examples import sleep_worker, burn_worker
-
+from paramsurvey.utils import subprocess_run_worker
 
 pslogger_fd = StringIO()
 
@@ -310,3 +311,37 @@ def test_invalid_kwarg(paramsurvey_init):
 
 def test_overlarge_pset():
     pass
+
+
+def test_subprocess_run():
+    psets = [{'run_args': 'true'}] * 10
+    results = paramsurvey.map(subprocess_run_worker, psets)
+    assert len(results) == len(psets)
+    assert results.progress.total == len(psets)
+    assert results.progress.finished == len(psets)
+    assert [r.ret.returncode == 0 for r in results.itertuples()], 'everyone exited 0'
+
+    psets = [{'run_args': '/this-command-does-not-exist', 'run_kwargs': {'check': True}}] * 10
+    results = paramsurvey.map(subprocess_run_worker, psets)
+    assert len(results) == 0
+    assert results.progress.total == len(psets)
+    assert results.progress.finished == 0
+    assert results.progress.exceptions == len(psets)
+    for r in results.missing.iterdicts():
+        assert 'FileNotFoundError' in r['_exception']
+
+    psets = [{'run_args': '/bin/false', 'run_kwargs': {'check': True}}] * 10
+    results = paramsurvey.map(subprocess_run_worker, psets)
+    for r in results.missing.iterdicts():
+        assert 'CalledProcessError' in r['_exception']
+
+    psets = [{'run_args': 'pwd'}] * 10
+    user_kwargs = {'run_kwargs': {'cwd': '/',
+                                  'stdout': subprocess.PIPE,  # capture_output is too modern (py3.7+)
+                                  'encoding': 'utf-8'}}
+    results = paramsurvey.map(subprocess_run_worker, psets, user_kwargs=user_kwargs)
+    assert len(results) == len(psets)
+    for r in results.itertuples():
+        assert isinstance(r.ret, subprocess.CompletedProcess)
+        assert r.ret.stdout.rstrip() == '/'
+        assert r.ret.returncode == 0

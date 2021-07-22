@@ -38,6 +38,7 @@ Here are a few more examples:
 * [The above example, with a few notes](scripts/paramsurvey-readme-example.py)
 * [An example of a multi-stage computation](scripts/paramsurvey-multistage-example.py), running several `map()` functions in a row
 * [An example of greedy optimization](scripts/paramsurvey-greedy-example.py), selecting the best alternative from each `map()` result
+* [An example that runs a command-line program for each pset](paramsurvey-cli.py)
 
 These examples are installed with the package, so you can run them like this:
 
