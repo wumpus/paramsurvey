@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 if [ ! -z "$COVERAGE" ]; then
     COVERAGE="--cov-report=xml --cov-append --cov-branch --cov paramsurvey -v -v"
 fi

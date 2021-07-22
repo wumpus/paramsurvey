@@ -330,7 +330,7 @@ def test_subprocess_run():
     for r in results.missing.iterdicts():
         assert 'FileNotFoundError' in r['_exception']
 
-    psets = [{'run_args': '/bin/false', 'run_kwargs': {'check': True}}] * 10
+    psets = [{'run_args': 'false', 'run_kwargs': {'check': True}}] * 10
     results = paramsurvey.map(subprocess_run_worker, psets)
     for r in results.missing.iterdicts():
         assert 'CalledProcessError' in r['_exception']

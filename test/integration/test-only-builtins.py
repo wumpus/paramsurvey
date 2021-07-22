@@ -3,5 +3,6 @@ import pytest
 import paramsurvey
 
 
-with pytest.raises(ValueError):
-    paramsurvey.init()
+def test_only_builtins():
+    with pytest.raises(ValueError):
+        paramsurvey.init()
