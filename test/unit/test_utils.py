@@ -147,3 +147,9 @@ def test_vmem():
     vmem1 = utils.vmem()
     # vmem might not go up at all, if there is free memory
     assert vmem1 <= vmem0 + 0.011, 'vmem does not go up more than expected'
+
+
+def test_subprocess_run_worker():
+    psets = [{}]  # run_args not in pset
+    with pytest.raises(ValueError):
+        utils.subprocess_run_worker(psets, {}, {})
