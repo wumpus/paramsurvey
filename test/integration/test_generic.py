@@ -319,7 +319,7 @@ def test_subprocess_run():
     assert len(results) == len(psets)
     assert results.progress.total == len(psets)
     assert results.progress.finished == len(psets)
-    assert [r.ret.returncode == 0 for r in results.itertuples()], 'everyone exited 0'
+    assert [r.cli.returncode == 0 for r in results.itertuples()], 'everyone exited 0'
 
     psets = [{'run_args': '/this-command-does-not-exist', 'run_kwargs': {'check': True}}] * 10
     results = paramsurvey.map(subprocess_run_worker, psets)
@@ -342,6 +342,6 @@ def test_subprocess_run():
     results = paramsurvey.map(subprocess_run_worker, psets, user_kwargs=user_kwargs)
     assert len(results) == len(psets)
     for r in results.itertuples():
-        assert isinstance(r.ret, subprocess.CompletedProcess)
-        assert r.ret.stdout.rstrip() == '/'
-        assert r.ret.returncode == 0
+        assert isinstance(r.cli, subprocess.CompletedProcess)
+        assert r.cli.stdout.rstrip() == '/'
+        assert r.cli.returncode == 0

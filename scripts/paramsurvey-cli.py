@@ -21,7 +21,8 @@ def main():
     results = paramsurvey.map(subprocess_run_worker, psets, user_kwargs=user_kwargs)
 
     for r in results.itertuples():
-        print(r.ret.returncode, r.ret.stdout.rstrip())
+        # r.cli is a subprocess.CompletedProcess object
+        print(r.cli.returncode, r.cli.stdout.rstrip())
 
 
 if __name__ == '__main__':

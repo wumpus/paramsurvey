@@ -448,4 +448,4 @@ def subprocess_run_worker(pset, system_kwargs, user_kwargs):
     # TODO
     # emit a warning if exception=FileNotFoundError and shell=True not present and there's a space in the arg string
 
-    return {'ret': ret}
+    return {'cli': ret}
