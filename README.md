@@ -112,10 +112,15 @@ paramsurvey.map(..., ray={'num_gpus': 1})
 
 The MapResults object has several properties:
 
-* `results` is a Pandas DataFrame containing the values of the pset and the keys returned by the worker function. If you prefer to deal with dictionaries
-and are not worried about memory usage, `results.to_dict` returns a list of dictionaries.
-* `failed` is a list of failed psets dictionaries, plus an extra '_exception' key if an exception was raised in the worker function.
-* `progress` is a MapProgress object with properties containing the details of pset execution: total, active, finished, failures, exceptions.
+* `results` is a Pandas DataFrame containing the values of the pset
+and the keys returned by the worker function. Iterating over these
+results is documented above, as either dicts or tuples.
+* `missing` is a DataFrame of psets that did not generate results,
+plus extra '_exception' and '_traceback' columns if an exception was
+raised in the worker function.
+* `progress` is a MapProgress object with properties containing the
+details of pset execution: total, active, finished, failures,
+exceptions.
 * `stats` is a PerfStats object containing performance statistics.
 
 ## Worker function limitations
