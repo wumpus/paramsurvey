@@ -37,12 +37,12 @@ jobs:
 
     - script: |
         python -m pip install --upgrade pip
-        pip install . .[test]
+        pip --use-feature=in-tree-build install . .[test]
         if [ ! -z "$(myenv)" ]; then
           export $(myenv)
         fi
         if [ -z "$ONLY_BUILTINS" ]; then
-          pip install .[ray]
+          pip --use-feature=in-tree-build install .[ray]
         fi
       displayName: 'Install dependencies'
 
@@ -80,12 +80,12 @@ jobs:
 
     - script: |
         python -m pip install --upgrade pip
-        pip install . .[test]
+        pip --use-feature=in-tree-build install . .[test]
         if [ ! -z "$(myenv)" ]; then
           export $(myenv)
         fi
         if [ -z "$ONLY_BUILTINS" ]; then
-          pip install .[ray]
+          pip --use-feature=in-tree-build install .[ray]
         fi
       displayName: 'Install dependencies'
 
