@@ -81,8 +81,8 @@ ray_mem_factor = None
 
 
 def check_memory_per_worker(wanted, verbose=False):
-    # what are the units for memory? 50 megabyte chunks at the moment
-    # https://github.com/ray-project/ray/issues/11198
+    # what are the units for memory? 50 megabyte chunks in older ray versions
+    # https://github.com/ray-project/ray/issues/11198 (marked "no longer relevant" on july 2021)
     # this bug indicates that ray's memory-limits client code might work? broken for ray.serve.
     global ray_mem_factor
     totals = []

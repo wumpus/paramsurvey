@@ -8,6 +8,9 @@ import os
 import datetime
 import traceback
 import warnings
+import platform
+import subprocess
+import functools
 
 import pandas as pd
 from pandas_appender import DF_Appender
@@ -322,9 +325,8 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
 
             if 'traceback' in user_ret:
                 system_kwargs['pset_ids'][pset_id]['_traceback'] = user_ret['traceback']
-                verbose_t = verbose > 1
-                pslogger.log('traceback:\n' + user_ret['traceback'], stderr=verbose_t)
-                if verbose > 0 and not verbose_t:
+                pslogger.log('traceback:\n' + user_ret['traceback'], stderr=verbose > 1)
+                if verbose > 0:
                     print('(traceback is in', pslogger.logger_filename+')', file=sys.stderr)
         else:
             del system_kwargs['pset_ids'][pset_id]
@@ -422,3 +424,21 @@ def psets_empty(psets):
         return psets.empty
     if not psets:
         return True
+
+
+def subprocess_run_worker(pset, system_kwargs, user_kwargs):
+    if 'run_args' not in pset:
+        raise ValueError('run_args key not found in pset')
+
+    run_kwargs = {}
+    if 'run_kwargs' in pset:
+        run_kwargs = pset['run_kwargs']
+    elif user_kwargs:
+        run_kwargs = user_kwargs.get('run_kwargs', {})
+
+    ret = subprocess.run(pset['run_args'], **run_kwargs)
+
+    # TODO
+    # emit a warning if exception=FileNotFoundError and shell=True not present and there's a space in the arg string
+
+    return {'cli': ret}

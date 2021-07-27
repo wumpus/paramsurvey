@@ -6,8 +6,8 @@ import os
 import pandas as pd
 import numpy as np
 
-from paramsurvey import params
-from paramsurvey import psresource
+import paramsurvey.params
+import paramsurvey.psresource
 
 
 def test__coerce_to_category():
@@ -16,25 +16,36 @@ def test__coerce_to_category():
     # returns the same thing if doesn't fire
 
     s1 = pd.Series(range(10))
-    s2 = params._coerce_to_category(s1)
+    s2 = paramsurvey.params._coerce_to_category(s1)
     assert s2.dtype == 'category'
+
+    s1 = pd.Series([[0]] * 10)  # unhashable type
+    s2 = paramsurvey.params._infer_category(s1)
+    assert s1.equals(s2)
+    #assert s2.dtype != 'category'  # can't do this thanks to pandas
+    assert s2.dtype == 'object'
 
 
 def test__infer_category():
     s1 = pd.Series(range(10))
-    s2 = params._infer_category(s1)
+    s2 = paramsurvey.params._infer_category(s1)
     try:
         assert s2.dtype != 'category'
-    except TypeError:  # oh, pandas
+    except TypeError:  # older versions of pandas
         assert True
     assert s1.equals(s2)
 
     s1 = pd.Series([[0]] * 1000)  # unhashable type
-    s2 = params._infer_category(s1)
+    s2 = paramsurvey.params._infer_category(s1)
     assert s1.equals(s2)
+    try:
+        assert s2.dtype != 'category'
+    except TypeError:
+        assert True
+    assert s2.dtype == 'object'
 
     s1 = pd.Series([0] * 1000)
-    s2 = params._infer_category(s1)
+    s2 = paramsurvey.params._infer_category(s1)
     assert s2.dtype == 'category'
 
 
@@ -43,7 +54,7 @@ def test_product():
     df2 = pd.DataFrame({'col2': [3, 4]})
     df3 = pd.DataFrame({'col3': [5, 6]})
 
-    df = params.product(df1, df2, df3)
+    df = paramsurvey.params.product(df1, df2, df3)
     assert len(df) == 8
     assert df['col1'].dtype == 'category'
 
@@ -57,7 +68,7 @@ def test_product():
     ps1 = pd.Series([1, 2], name='col1')
     ps2 = pd.Series([3, 4], name='col2')
     ps3 = pd.Series([5, 6], name='col3')
-    df_series = params.product(ps1, ps2, ps3)
+    df_series = paramsurvey.params.product(ps1, ps2, ps3)
     # assert pandas.testing.assert_frame_equal(df, df_series, check_column_type=False, check_dtype=False)  # no bueno
     assert df.equals(df_series), 'can create a product from series, too'
 
@@ -66,86 +77,111 @@ def test_product():
 
     vi = sys.version_info
     if vi.major == 3 and vi.minor < 6:
-        df_dicts = params.product(OrderedDict((('col1', [1, 2]), ('col2',  [3, 4]), ('col3', [5, 6]))))
+        # pre python 3.6 does not have ordered dicts by default
+        df_dicts = paramsurvey.params.product(OrderedDict((('col1', [1, 2]), ('col2',  [3, 4]), ('col3', [5, 6]))))
     else:
-        df_dicts = params.product({'col1': [1, 2], 'col2': [3, 4], 'col3': [5, 6]})
+        df_dicts = paramsurvey.params.product({'col1': [1, 2], 'col2': [3, 4], 'col3': [5, 6]})
     assert df.equals(df_dicts)
 
     col3 = df['col3']
     assert col3.equals(col3ac), 'verify that the last argument to product() varies the fastest'
 
-    df_dicts = params.product({'col1': [1, 2]}, {'col2': [3, 4]}, {'col3': [5, 6]})
+    df_dicts = paramsurvey.params.product({'col1': [1, 2]}, {'col2': [3, 4]}, {'col3': [5, 6]})
     assert df.equals(df_dicts)
 
     col3 = df['col3']
     assert col3.equals(col3ac), 'verify that the last argument to product() varies the fastest'
 
-    df_dicts = params.product({'col1': [1, 2]}, {'col2': [3, 4]})
-    df_dicts = params.product(df_dicts, {'col3': [5, 6]})
+    df_dicts = paramsurvey.params.product({'col1': [1, 2]}, {'col2': [3, 4]})
+    df_dicts = paramsurvey.params.product(df_dicts, {'col3': [5, 6]})
     assert df.equals(df_dicts)
 
     col3 = df['col3']
     assert col3.equals(col3ac), 'verify that the last argument to product() varies the fastest'
 
-    df_longer = params.product(df_dicts, {'col4': [7, 8]})
+    df_longer = paramsurvey.params.product(df_dicts, {'col4': [7, 8]})
     assert len(df_longer) == 16
     assert not df.equals(df_longer)
 
+    df3 = pd.DataFrame({'col3': [[5, 6], [7, 8]]})
+    df = paramsurvey.params.product(df1, df2, df3)
+    assert len(df) == 8
+    assert df['col3'].dtype == 'object', 'unhashable type inhibits category'
+
+    ps3 = pd.Series([5, 6], name='col3', dtype='category')
+    df = paramsurvey.params.product(df1, df2, ps3)
+    assert len(df) == 8
+    assert df['col3'].dtype == 'category', 'sending in a category works'
+
+    ps3 = pd.Series([5, 6], name='col3', dtype='category')
+    df = paramsurvey.params.product(df1, df2, ps3, infer_category=False)
+    assert len(df) == 8
+    assert df['col3'].dtype == 'category', 'category remains one'
+    try:
+        assert df['col2'].dtype != 'category', 'not converted to a category'
+    except TypeError:
+        assert True
+
+    ps3 = 3
+    with pytest.raises(ValueError):
+        df = paramsurvey.params.product(df1, df2, ps3)
+
 
 def test_add_column():
-    df = params.product({'col1': [1, 2]}, {'col2': [3, 4]}, {'col3': [5, 6]})
+    df = paramsurvey.params.product({'col1': [1, 2]}, {'col2': [3, 4]}, {'col3': [5, 6]})
     assert len(df) == 8
 
-    df2 = params.add_column(df, 'col4', lambda row: row['col1'] + row['col2'])
+    df2 = paramsurvey.params.add_column(df, 'col4', lambda row: row['col1'] + row['col2'])
 
     assert len(df2) == 8
     assert df2['col4'].to_numpy().sum() == (1+2)*4 + (3+4)*4
 
-    df3 = params.add_column(df, 'col4', lambda row: row['col1'] + row['col2'], infer_category=False)
+    df3 = paramsurvey.params.add_column(df, 'col4', lambda row: row['col1'] + row['col2'], infer_category=False)
     assert df3.equals(df2)  # infer not called
 
     df = pd.DataFrame([{'a': 0}] * 1000)
-    df4 = params.add_column(df, 'col4', lambda row: 0)
+    df4 = paramsurvey.params.add_column(df, 'col4', lambda row: 0)
     assert df4['col4'].dtype == 'category'
 
-    df4 = params.add_column(df, 'col4', lambda row: 0, infer_category=False)
+    df4 = paramsurvey.params.add_column(df, 'col4', lambda row: 0, infer_category=False)
     try:
         assert df4['col4'].dtype != 'category'
-    except TypeError:  # oh, pandas
-        pass
+    except TypeError:
+        assert True
 
 
 def param_product(m, n):
     d = {}
     for a in range(n):
         d['a{}'.format(a)] = range(m)
-    psets = params.product(d)
+    psets = paramsurvey.params.product(d)
     return psets
 
 
 def test_param_stress():
-    vmem0 = psresource.vmem()
+    vmem0 = paramsurvey.psresource.vmem()
     psets = param_product(1000, 2)  # 1 million
-    vmem1 = psresource.vmem()
+    vmem1 = paramsurvey.psresource.vmem()
     assert vmem1 - vmem0 < 0.1, 'pretty loose limit'
 
-    vmem0 = psresource.vmem()
+    vmem0 = paramsurvey.psresource.vmem()
     psets = param_product(5000, 2)  # 25 million
     print('memory')
     print(psets.memory_usage(deep=True))
-    vmem1 = psresource.vmem()
+    vmem1 = paramsurvey.psresource.vmem()
     print('change in vmem', vmem1-vmem0)
     # index is an int64, so usage is at least (int64 + 2*int16) = 8 bytes * 25mm = 0.4gbyte
     assert vmem1 - vmem0 < 1.055, 'tight limit that requires int16 type to pass'
 
     if 'TRAVIS_CPU_ARCH' in os.environ and os.environ['TRAVIS_CPU_ARCH'] == 's390x':
+        # s390x is slow
         return
 
-    vmem0 = psresource.vmem()
+    vmem0 = paramsurvey.psresource.vmem()
     psets = param_product(100, 4)  # 100 million int8
     print('memory')
     print(psets.memory_usage(deep=True))
-    vmem1 = psresource.vmem()
+    vmem1 = paramsurvey.psresource.vmem()
     print('change in vmem', vmem1-vmem0)
     # index is an int64, so usage is at least (int64 + 4*int8) = 8 bytes * 100mm = 0.8gbyte
     assert vmem1 - vmem0 < 3.4, 'tight limit that requires int8 to pass'
@@ -153,8 +189,9 @@ def test_param_stress():
 
 def test_param_quirks():
     # unhashable type 'list' will be inefficient but shouldn't crash
-    psets = params.product({'a': [[1], [2], [3]]})
+    psets = paramsurvey.params.product({'a': [[1], [2], [3]]})
     assert len(psets) == 3
-    with pytest.raises(TypeError):
-        # why does this assert a type error?
+    try:
         assert psets['a'].dtype != 'category'
+    except TypeError:
+        assert True

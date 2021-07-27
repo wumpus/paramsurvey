@@ -1,6 +1,6 @@
 # paramsurvey
 
-[![Build Status](https://dev.azure.com/lindahl0577/paramsurvey/_apis/build/status/wumpus.paramsurvey?branchName=master)](https://dev.azure.com/lindahl0577/paramsurvey/_build/latest?definitionId=1&branchName=master) [![Coverage](https://coveralls.io/repos/github/wumpus/paramsurvey/badge.svg?branch=master)](https://coveralls.io/github/wumpus/paramsurvey?branch=master) [![Apache License 2.0](https://img.shields.io/github/license/wumpus/paramsurvey.svg)](LICENSE)
+[![Build Status](https://dev.azure.com/lindahl0577/paramsurvey/_apis/build/status/wumpus.paramsurvey?branchName=main)](https://dev.azure.com/lindahl0577/paramsurvey/_build/latest?definitionId=1&branchName=main) [![Coverage](https://coveralls.io/repos/github/wumpus/paramsurvey/badge.svg?branch=main)](https://coveralls.io/github/wumpus/paramsurvey?branch=main) [![Apache License 2.0](https://img.shields.io/github/license/wumpus/paramsurvey.svg)](LICENSE)
 
 paramsurvey is a set of tools for creating and executing parameter surveys.
 
@@ -38,6 +38,7 @@ Here are a few more examples:
 * [The above example, with a few notes](scripts/paramsurvey-readme-example.py)
 * [An example of a multi-stage computation](scripts/paramsurvey-multistage-example.py), running several `map()` functions in a row
 * [An example of greedy optimization](scripts/paramsurvey-greedy-example.py), selecting the best alternative from each `map()` result
+* [An example that runs a command-line program for each pset](paramsurvey-cli.py)
 
 These examples are installed with the package, so you can run them like this:
 
@@ -112,10 +113,15 @@ paramsurvey.map(..., ray={'num_gpus': 1})
 
 The MapResults object has several properties:
 
-* `results` is a Pandas DataFrame containing the values of the pset and the keys returned by the worker function. If you prefer to deal with dictionaries
-and are not worried about memory usage, `results.to_dict` returns a list of dictionaries.
-* `failed` is a list of failed psets dictionaries, plus an extra '_exception' key if an exception was raised in the worker function.
-* `progress` is a MapProgress object with properties containing the details of pset execution: total, active, finished, failures, exceptions.
+* `results` is a Pandas DataFrame containing the values of the pset
+and the keys returned by the worker function. Iterating over these
+results is documented above, as either dicts or tuples.
+* `missing` is a DataFrame of psets that did not generate results,
+plus extra '_exception' and '_traceback' columns if an exception was
+raised in the worker function.
+* `progress` is a MapProgress object with properties containing the
+details of pset execution: total, active, finished, failures,
+exceptions.
 * `stats` is a PerfStats object containing performance statistics.
 
 ## Worker function limitations

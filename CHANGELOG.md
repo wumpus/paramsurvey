@@ -1,3 +1,21 @@
+- 0.4.14
+	+ rename return from command-line helper from r.ret to r.cli
+
+- 0.4.13
+	+ fix README documention, "failed" was renamed to "missing" a while ago
+	+ add helper function to run command-line programs in the worker
+
+- 0.4.12
+	+ update changelog before tagging next time, eh
+
+- 0.4.11
+	+ new pandas raises fewer TypeErrors
+	+ ray 3.9 now has a wheel, so test with it
+	+ change to main from master
+
+- 0.4.10
+	+ infer_category=False option for .product(), because Pandas annoys users
+
 - 0.4.9
 	+ advertise hidden logfile when there are tracebacks in it
 	+ change API for backend-specific keyword arguments to init/map

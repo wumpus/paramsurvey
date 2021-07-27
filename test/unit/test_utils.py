@@ -139,5 +139,3 @@ def test_psets_empty():
     assert utils.psets_empty(df)
     df = pd.DataFrame({'a': [1, 2]})
     assert not utils.psets_empty(df)
-
-
