@@ -3,4 +3,5 @@ __pycache__
 coverage.xml
 .eggs/
 dist/
+build/
 paramsurvey.egg-info/
