@@ -12,7 +12,7 @@ def test_all_env_variables(monkeypatch, capsys):
         # everything but PARAMSURVEY_BACKEND, which is always set externally
         'PARAMSURVEY_VERBOSE': '3',
         'PARAMSURVEY_LIMIT': '1',
-        'PARAMSURVEY_MEMORY': '1000',
+        'PARAMSURVEY_MEMORY': '1g',
         'PARAMSURVEY_NCORES': '2',
         'PARAMSURVEY_MAX_TASKS_PER_CHILD': '2',
         'PARAMSURVEY_VSTATS': '3',

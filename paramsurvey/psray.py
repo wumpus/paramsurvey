@@ -98,8 +98,10 @@ def check_memory_per_worker(wanted, verbose=False):
         mem = node.get('Resources', {}).get('memory')
         if ray_mem_factor is None:
             if mem < 1000000:
+                pslogger.log('GREG: I see chunks from Resources', stderr=True)
                 ray_mem_factor = 50000000  # 50 megabyte chunks, today's ray
             else:
+                pslogger.log('GREG: I see bytes from Resources', stderr=True)
                 ray_mem_factor = 1  # bytes, some future ray API change?
         mem *= ray_mem_factor
         totals.append(mem)
@@ -259,8 +261,8 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
     if memory is not None:
         backend_kwargs['memory'] = memory
         # XXX multiprocessing lower cores
-        # XXX set harder limit
-        # XXX if not set softer limit
+        # XXX set harder limit if explicit
+        # XXX create softer limit if not explicit
 
     # make a cut-down copy to minimize size of args
     worker_system_kwargs = {}
@@ -289,7 +291,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
     wrapper = do_work_wrapper
 
     if backend_kwargs:
-        wrapper = wrapper.options(**backend_kwargs)
+        wrapper = wrapper.options(**backend_kwargs) # XXX prove this works
 
     futures = []
     pset_index = 0

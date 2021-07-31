@@ -12,8 +12,8 @@ scripts:
 
 generic:
 	# hint: PYTEST_STDERR_VISIBLE=-s works for these, too
-	PYTHONPATH=. test/integration/test-multiprocessing.sh test/integration
 	PYTHONPATH=.:test/integration test/integration/test-ray.sh test/integration
+	PYTHONPATH=. test/integration/test-multiprocessing.sh test/integration
 
 test: unit scripts generic
 

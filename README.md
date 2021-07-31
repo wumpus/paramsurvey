@@ -124,6 +124,27 @@ details of pset execution: total, active, finished, failures,
 exceptions.
 * `stats` is a PerfStats object containing performance statistics.
 
+## Memory limits
+
+A program run that uses too much memory can easily cause the
+paramsurvey system to crash, defeating fault tolerance, or cause your
+laptop to halt and catch fire.  These symptoms doesn't necessarily
+directly point to excessive memory use as the cause.  At a minimum,
+paramsurvey needs to warn that memory problems are happening before
+mysterious bad things happen.
+
+* frequent complaints if any worker's memory usage is alarmingly high, or if a node
+begins swapping or gets behind writing dirty pages to disk
+
+* optional memory hints, which allow paramsurvey to limit the number
+of workers to avoid memory pressure.
+* memory="1g" can be added to paramsurvey.init() or paramsurvey.map() or PARAMSURVEY_MEMORY env var
+* this is the worker memory, perhaps should rename it?
+* should there also be a node memory limit? for multiprocessing try to find out pre-paramsurvey-start memory usage
+* ray: value is in backend_kwargs['memory'] and memory= passed to do_work_wrapper
+* multiprocessing: currently no memory in .map() or .init() ... need to reduce the number of workers to fit memory
+
+
 ## Worker function limitations
 
 The worker function runs in a different address space and possibly on a different server.
