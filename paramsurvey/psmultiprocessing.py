@@ -164,13 +164,13 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
     progress = system_kwargs['progress']
     cores = current_core_count()
 
-    # make a cut-down copy to minimize size of args
+    # make a cut-down copy to minimize size of args passed
     worker_system_kwargs = {}
     for key in ('raise_in_wrapper', 'out_subdirs', 'chdir', 'name'):
         if key in system_kwargs:
             worker_system_kwargs[key] = system_kwargs[key]
 
-    factor = 2.4  # XXX should be set based on args size
+    factor = utils.pick_factor((func, worker_system_kwargs, user_kwargs, psets[0:0]))  # TODO: eventually will adjust group_size
 
     if group_size is None:
         # make this dynamic someday

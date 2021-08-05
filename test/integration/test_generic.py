@@ -330,6 +330,17 @@ def test_subprocess_run():
     for r in results.missing.iterdicts():
         assert 'FileNotFoundError' in r['_exception']
 
+    psets = [{'run_args': '/this-command-does-not-exist extra spaces'}] * 10
+    results = paramsurvey.map(subprocess_run_worker, psets)
+    assert len(results) == 0
+    assert results.progress.total == len(psets)
+    assert results.progress.finished == 0
+    assert results.progress.exceptions == len(psets)
+    for r in results.missing.iterdicts():
+        assert 'FileNotFoundError' in r['_exception']
+    # sadly, the worker stderr/out is not captured so we can't do this test:
+    #assert 'shell=True' in captured.err, 'saw shell=True warning from utils.subprocess_run_worker'
+
     psets = [{'run_args': 'false', 'run_kwargs': {'check': True}}] * 10
     results = paramsurvey.map(subprocess_run_worker, psets)
     for r in results.missing.iterdicts():

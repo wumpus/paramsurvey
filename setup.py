@@ -15,10 +15,11 @@ requires = [
     'hdrhistogram',
     'pandas',
     'pandas-appender>=0.9.1',
+    'pickle5',
 ]
 
 extras_require = {
-    'ray': ['ray>=1', 'pyarrow'],
+    'ray': ['ray>=1'],
     'mpi': ['mpi4py'],
     'test': test_requirements,  # setup no longer tests, so make them an extra
 }
