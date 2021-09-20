@@ -153,3 +153,15 @@ def test_subprocess_run_worker():
     psets = [{}]  # run_args not in pset
     with pytest.raises(ValueError):
         utils.subprocess_run_worker(psets, {}, {})
+
+
+def test_pick_factor(capsys):
+    ret = utils.pick_factor('x' * 100)
+    captured = capsys.readouterr()
+    assert len(captured.err) == 0, 'no warning for small args'
+    assert ret > 0.
+
+    ret = utils.pick_factor('x' * 10000000)  # 10 megabytes
+    captured = capsys.readouterr()
+    assert len(captured.err) > 0, 'warning for large args'
+    assert ret > 0.

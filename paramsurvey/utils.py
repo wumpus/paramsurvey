@@ -11,7 +11,7 @@ import traceback
 import warnings
 import platform
 import subprocess
-import functools
+import pickle5
 
 import pandas as pd
 from pandas_appender import DF_Appender
@@ -442,9 +442,33 @@ def subprocess_run_worker(pset, system_kwargs, user_kwargs):
     elif user_kwargs:
         run_kwargs = user_kwargs.get('run_kwargs', {})
 
-    ret = subprocess.run(pset['run_args'], **run_kwargs)
-
-    # TODO
-    # emit a warning if exception=FileNotFoundError and shell=True not present and there's a space in the arg string
+    try:
+        ret = subprocess.run(pset['run_args'], **run_kwargs)
+    except FileNotFoundError:
+        if not run_kwargs.get('shell', False) and isinstance(pset['run_args'], str):
+            if ' ' in pset['run_args']:
+                # we are in the worker so we can't use pslogger()
+                print('utils.subprocess_run_worker: space in command string, did you need to set shell=True?', file=sys.stderr)
+        raise
 
     return {'cli': ret}
+
+
+def pick_factor(args):
+    try:
+        size = len(pickle5.dumps(args))
+    except Exception as e:
+        if str(e) != "cannot pickle '_io.FileIO' object":  # a test causes this one
+            pslogger.log('pick_factor: could not estimate arguments size due to pickle5 exception '+str(e), stderr=True)
+        size = 0
+
+    million = 1000000
+    if size > million:
+        mbytes = size / million
+        pslogger.log('worker args looks awfully large ({:.1f} megabytes)'.format(mbytes), stderr=True)
+
+    # also needs: memory, group size, ncores
+    # TODO if memory usage is too large, and group size was automatic, decrease group size
+    # TODO if after that memory usage is still big, reduce factor
+
+    return 2.4
