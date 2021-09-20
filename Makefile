@@ -9,6 +9,7 @@ scripts:
 	PYTHONPATH=.:scripts python scripts/paramsurvey-greedy-example.py
 	PYTHONPATH=.:scripts python scripts/paramsurvey-multistage-example.py
 	PYTHONPATH=.:scripts python scripts/paramsurvey-cli.py
+	PYTHONPATH=.:scripts python scripts/pset-creation-example.py
 
 generic:
 	# hint: PYTEST_STDERR_VISIBLE=-s works for these, too

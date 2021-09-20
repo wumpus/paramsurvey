@@ -1,9 +1,13 @@
+- 0.4.15 (as yet untagged)
+	+ warnings on size of args and for missing shell=True in cli
+	+ add example script for complicated pset creation (pset-creation-example.py)
+
 - 0.4.14
 	+ rename return from command-line helper from r.ret to r.cli
 
 - 0.4.13
 	+ fix README documention, "failed" was renamed to "missing" a while ago
-	+ add helper function to run command-line programs in the worker
+	+ add helper function to run command-line programs in the worker (with example paramsurvey-cli.py)
 
 - 0.4.12
 	+ update changelog before tagging next time, eh
