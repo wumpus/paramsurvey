@@ -6,7 +6,6 @@ import paramsurvey.stats
 
 
 def stats_worker(pset, system_kwargs, user_kwargs):
-    print('hi')
     raw_stats = system_kwargs['raw_stats']
 
     with paramsurvey.stats.record_wallclock('cpu-loop wallclock', raw_stats):
@@ -25,7 +24,7 @@ def main():
 
     psets = [{'foo': True}] * 5
 
-    results = paramsurvey.map(stats_worker, psets, name='stats-example', verbose=2)
+    results = paramsurvey.map(stats_worker, psets, name='stats-example', verbose=0)
 
     results.stats.print_histograms()
 
