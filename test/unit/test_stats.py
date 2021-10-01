@@ -45,7 +45,7 @@ def test_record_wallclock():
         # no good way to test the value
 
 
-def test_record_iotime():
+def test_record_iowait():
     raw_stats = {}
     duration = 0.1
     start = time.time()
