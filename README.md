@@ -40,6 +40,8 @@ Here are a few more examples:
 * [An example of greedy optimization](scripts/paramsurvey-greedy-example.py), selecting the best alternative from each `map()` result
 * [An example that runs a command-line program for each pset](scripts/paramsurvey-cli.py)
 * [An example of using helper functions to create the list of psets to compute](scripts/pset-creation-example.py)
+* [An example of using the stats to time subsections of your worker function](scripts/paramsurvey-stats-example.py)
+* [An example of using results.missing to re-run missing psets](scripts/paramsurvey-rerun-missing.py)
 
 These examples are installed with the package, so you can run them like this:
 
