@@ -152,6 +152,9 @@ class DFIterDictsWrapper(pd.DataFrame):
     def to_df(self):
         return pd.DataFrame(self)
 
+    def to_psets(self):
+        return pd.DataFrame(self).drop(columns=['_exception', '_traceback'])
+
 
 class DFListDictIter:
     def __init__(self, df):

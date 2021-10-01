@@ -25,8 +25,7 @@ def main():
             break
 
         # before I can use results.missing as psets, I have to remove the added columns
-        # XXX make helper function
-        psets = results.missing.drop(columns=['_exception', '_traceback'])
+        psets = results.missing.to_psets()
 
     print('final missing count', len(results.missing))
 

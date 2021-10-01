@@ -203,6 +203,14 @@ def test_worker_exception(capsys, paramsurvey_init):
     assert results.progress.failures == 1
     assert results.progress.exceptions == 1
 
+    psets2 = results.missing.to_psets()
+    assert len(psets2) == 1
+    m2 = next(paramsurvey.utils.DFIterDictsWrapper(psets2).iterdicts())
+    assert '_exception' not in m2
+    assert '_traceback' not in m2
+    assert 'raises' in m2
+    assert len(m2) == 1
+
     captured = readouterr_and_dump(capsys)
 
     # ray redirects stderr to stdout, while multiprocessing prints it in the worker
