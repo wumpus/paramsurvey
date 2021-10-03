@@ -1,4 +1,4 @@
-- 0.4.15 (as yet untagged)
+- 0.4.15
 	+ warnings on size of args and for missing shell=True in cli
 	+ add example script for complicated pset creation (pset-creation-example.py)
 	+ add example script for re-running missing psets, plus helper method results.missing.to_psets()

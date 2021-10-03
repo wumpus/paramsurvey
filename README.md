@@ -83,6 +83,7 @@ variables) to aid debugging and testing. They are:
 * `limit=0` -- limits the number of psets actually computed to this number (0 meaning "all")
 * `ncores=-1` -- limits the number of cores used, in this case 1 less than the number available (multiprocessing only)
 * `max_tasks_per_child=3` -- the number of tasks a child will do before restarting. Useful to limit memory leaks. Default: infinite
+* `group_size=N` -- bundle psets into groups, which is useful if a single pset's runtime is too short for `ray` to efficiently run them. One minute is a good runtime.
 
 Each of these has a corresponding environment variable,
 e.g. `PARAMSURVEY_BACKEND`, `PARAMSURVEY_VERBOSE`.  If the environment
