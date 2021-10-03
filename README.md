@@ -101,7 +101,9 @@ $ PARAMSURVEY_BACKEND=multiprocessing PARAMSURVEY_VERBOSE=3 PARAMSURVEY_LIMIT=10
 For retrospective debugging, i.e. your run crashes and you are sad
 that you specified a lower verbosity than you desire post-crash,
 `paramsurvey` creates a hidden logfile in the current directory for
-every run, named `.paramusurvey-DATE-TIME.log`.
+every run, named `.paramusurvey-DATE-TIME.log`. For example, this
+hidden logfile will always contain information about any exceptions
+raised in your worker code.
 
 ### Backend-specific arguments
 
@@ -126,6 +128,40 @@ raised in the worker function.
 details of pset execution: total, active, finished, failures,
 exceptions.
 * `stats` is a PerfStats object containing performance statistics.
+
+## Fault tolerance, and re-running failed computations
+
+If you have bugs in your code that raise exceptions, paramsurvey will
+diligently collect the exceptions and tracebacks and will print them
+into the output (verbose=2 or more) and also in the hidden logfile
+`.paramusurvey-DATE-TIME.log` mentioned in the previous section.
+Any pset causing an exception will be in the `results.missing` DataFrame.
+
+In addition to exceptions thrown by user code, the paramsurvey module
+and the laptop or cluster its running on can experience two kinds of
+errors. The first is failures of some nodes or processes in one of the
+distributed backends, like `ray`, `ray` will quietly re-run the pset
+as long as the head node and the driver are still alive. So, for example,
+it's safe to run most nodes in the computation as a "EC2 spot instance"
+or "preemptable node" in a cluster queue system like Slurm.
+
+The other kind of error is one that can't be caught by paramsurvey.
+This might include python `multiprocessing` completely crashing
+everything because your laptop is out of memory, or `ray` having
+indigestion because some nodes are low on memory and are responding
+slowly, but aren't totally dead.
+
+## Debugging checklist
+
+* Check the hidden logfail for details of previous runs
+* Use environment variables to shrink your run to a single pset, as mentioned above:
+```
+$ PARAMSURVEY_BACKEND=multiprocessing PARAMSURVEY_VERBOSE=3 PARAMSURVEY_LIMIT=1 ./myprogram.py
+```
+* Memory debugging: `print(paramsurvey.utils.vmem())` in a few places, values are in GBytes
+* Slow memory leaks: restart children after every Nth pset by adding `max_tasks_per_child=10` to the `paramsurvey.init()` call
+* Look at the performance statistics
+* Look at the example scripts linked above, which demonstrate most features mentioned in this README
 
 ## Worker function limitations
 

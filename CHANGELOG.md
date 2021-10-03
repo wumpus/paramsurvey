@@ -1,6 +1,9 @@
 - 0.4.15 (as yet untagged)
 	+ warnings on size of args and for missing shell=True in cli
 	+ add example script for complicated pset creation (pset-creation-example.py)
+	+ add example script for re-running missing psets, plus helper method results.missing.to_psets()
+	+ add example script for using the built-in stats system
+	+ README updates
 
 - 0.4.14
 	+ rename return from command-line helper from r.ret to r.cli
