@@ -35,13 +35,13 @@ prints, in addition to some debugging output, a result from each of the 5 sleep_
 
 Here are a few more examples:
 
-* [The above example, with a few notes](scripts/paramsurvey-readme-example.py)
-* [An example of a multi-stage computation](scripts/paramsurvey-multistage-example.py), running several `map()` functions in a row
-* [An example of greedy optimization](scripts/paramsurvey-greedy-example.py), selecting the best alternative from each `map()` result
-* [An example that runs a command-line program for each pset](scripts/paramsurvey-cli.py)
-* [An example of using helper functions to create the list of psets to compute](scripts/pset-creation-example.py)
-* [An example of using the stats to time subsections of your worker function](scripts/paramsurvey-stats-example.py)
-* [An example of using results.missing to re-run missing psets](scripts/paramsurvey-rerun-missing.py)
+* [The above example, with a few notes](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-readme-example.py)
+* [An example of a multi-stage computation](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-multistage-example.py), running several `map()` functions in a row
+* [An example of greedy optimization](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-greedy-example.py), selecting the best alternative from each `map()` result
+* [An example that runs a command-line program for each pset](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-cli.py)
+* [An example of using helper functions to create the list of psets to compute](https://github.com/wumpus/paramsurvey/blob/main/scripts/pset-creation-example.py)
+* [An example of using the stats to time subsections of your worker function](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-stats-example.py)
+* [An example of using results.missing to re-run missing psets](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-rerun-missing.py)
 
 These examples are installed with the package, so you can run them like this:
 
