@@ -15,6 +15,8 @@ import socket
 
 logger_filename = None
 
+saw_traceback = False
+
 
 def atomic_create_ish(filenames):
     '''
@@ -87,8 +89,18 @@ def log(*args, stderr=True):
         sys.stderr.flush()
 
 
+def traceback(what):
+    global saw_traceback
+    saw_traceback = what
+
+
 def finalize():
     now = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
     if logfd:
         print('paramsurvey endtime', now, file=logfd)
     print('paramsurvey endtime', now, file=sys.stderr)
+
+    global saw_traceback
+    if saw_traceback and logger_filename:
+        print('Exceptions with tracebacks from your code are in', logger_filename, file=sys.stderr)
+    saw_traceback = False  # only print once, even if paramsurvey.map() is called multiple times

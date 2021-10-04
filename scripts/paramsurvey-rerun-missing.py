@@ -13,7 +13,7 @@ def crash_worker(pset, system_kwargs, user_kwargs):
 
 def main():
     print('initial driver vmem', paramsurvey.utils.vmem(), 'GB')
-    paramsurvey.init(backend='multiprocessing', max_tasks_per_child=3)  # max-_tasks_per_child is useful for slow memory leaks
+    paramsurvey.init(backend='multiprocessing', max_tasks_per_child=10)  # max_tasks_per_child is useful for slow memory leaks
 
     psets = [{'pct_chance_crash': 10}] * 100
     count = 0

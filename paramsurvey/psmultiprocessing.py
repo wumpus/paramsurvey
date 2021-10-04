@@ -11,6 +11,8 @@ from . import pslogger
 
 pool = None
 our_ncores = None
+finalize_needed = False
+max_tasks_per_child_seen = False
 
 
 def init(system_kwargs, backend_kwargs):
@@ -31,19 +33,35 @@ def init(system_kwargs, backend_kwargs):
     max_tasks_per_child = system_kwargs.pop('max_tasks_per_child', None)
     if max_tasks_per_child:
         backend_kwargs['maxtasksperchild'] = max_tasks_per_child
+        global max_tasks_per_child_seen
+        max_tasks_per_child_seen = True
 
     verbose = system_kwargs['verbose']
     pslogger.log('initializing multiprocessing pool with {} processes'.format(ncores), stderr=verbose)
     pslogger.log('Pool() kwargs are', backend_kwargs, stderr=verbose > 1)
 
     pool = multiprocessing.Pool(**backend_kwargs)
+    global finalize_needed
+    finalize_needed = True
 
 
 def finalize():
-    # needed to make things like pytest coverage reporting work
+    global finalize_needed
+    if not finalize_needed:
+        return
+    finalize_needed = False
+
     pslogger.finalize()
+
+    # close and join are needed to make things like pytest coverage reporting work
     pool.close()
-    pool.join()
+
+    # pool.join tends to hang when used with max_tasks_per_child
+    # https://bugs.python.org/issue10332
+    # https://bugs.python.org/issue38799
+    # and many more.
+    if not max_tasks_per_child_seen:
+        pool.join()
 
 
 def _core_count():

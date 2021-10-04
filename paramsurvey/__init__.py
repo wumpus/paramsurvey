@@ -1,5 +1,6 @@
 import sys
 from pkg_resources import get_distribution, DistributionNotFound
+import atexit
 
 from . import psmultiprocessing
 from .utils import flatten_results, initialize_kwargs, resolve_kwargs
@@ -123,6 +124,10 @@ def init(**kwargs):
             our_backend.update(our_backend['lazy']())
         system_kwargs, backend_kwargs, other_kwargs = resolve_kwargs(global_kwargs, kwargs, backend, backends)
         our_backend['init'](system_kwargs, backend_kwargs, **other_kwargs)
+
+        # this is a little dangerous for python multiprocessing
+        atexit.register(finalize)
+
     else:  # pragma: no cover
         raise ValueError('unknown backend '+backend+', valid backends: '+', '.join(backends.keys()))
 
@@ -138,8 +143,9 @@ def backend():
 
 
 def finalize(*args, **kwargs):
-    '''Finalizes the paramsurvey run. Optional. Useful for situations
-    like doing test coverage analysis with the multiprocessing module.
+    '''Finalizes the paramsurvey run. Needed for doing test coverage
+    analysis with the multiprocessing module. Also prints a reminder
+    of the hidden logfile at exit.
     '''
     return our_backend['finalize'](*args, **kwargs)
 
