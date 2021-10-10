@@ -31,5 +31,3 @@ def test_all_env_variables(monkeypatch, capsys):
 
     captured = capsys.readouterr()
     assert len(captured.err) > 3, 'not very good test for verbosity'
-
-    paramsurvey.finalize()

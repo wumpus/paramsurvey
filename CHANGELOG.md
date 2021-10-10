@@ -1,3 +1,6 @@
+- 0.4.16 (not yet tagged)
+	+ made "finalize" function run atexit, removed explicit calls from tests
+
 - 0.4.15
 	+ warnings on size of args and for missing shell=True in cli
 	+ add example script for complicated pset creation (pset-creation-example.py)

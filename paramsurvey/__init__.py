@@ -7,6 +7,9 @@ from .utils import flatten_results, initialize_kwargs, resolve_kwargs
 from . import pslogger
 
 
+our_backend = None
+
+
 try:
     __version__ = get_distribution(__name__).version
 except DistributionNotFound:  # pragma: no cover
@@ -116,17 +119,24 @@ def init(**kwargs):
     kwargs.pop('pslogger_fd', None)
 
     global our_backend
+
     if backend in backends:
         pslogger.log('initializing paramsurvey {} backend'.format(backend), stderr=verbose)
-        our_backend = backends[backend]
-        our_backend['name'] = backend
-        if 'lazy' in our_backend:
-            our_backend.update(our_backend['lazy']())
+        if our_backend is None:
+            our_backend = backends[backend]
+            our_backend['name'] = backend
+            atexit.register(finalize)
+            if 'lazy' in our_backend:
+                our_backend.update(our_backend['lazy']())
+        else:
+            if our_backend != backends[backend]:
+                raise RuntimeError('paramsurvey.init called multiple times with different backends')
+            else:
+                pslogger.log('paramsurvey warning: init called multiple times, args ignored', stderr=verbose)
+                return
+
         system_kwargs, backend_kwargs, other_kwargs = resolve_kwargs(global_kwargs, kwargs, backend, backends)
         our_backend['init'](system_kwargs, backend_kwargs, **other_kwargs)
-
-        # this is a little dangerous for python multiprocessing
-        atexit.register(finalize)
 
     else:  # pragma: no cover
         raise ValueError('unknown backend '+backend+', valid backends: '+', '.join(backends.keys()))

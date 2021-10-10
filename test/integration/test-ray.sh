@@ -3,7 +3,7 @@
 set -e
 
 if [ ! -z "$COVERAGE" ]; then
-    COVERAGE="--cov-report=xml --cov-append --cov-branch --cov paramsurvey -v -v"
+    COVERAGE="--cov-append --cov-branch --cov paramsurvey -v -v"
 fi
 
 if [ ! -z "$ONLY_BUILTINS" ]; then

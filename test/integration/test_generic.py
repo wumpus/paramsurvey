@@ -21,12 +21,6 @@ pslogger_fd = StringIO()
 def paramsurvey_init(request):
     paramsurvey.init(pslogger_fd=pslogger_fd)
 
-    def finalize():
-        # needed to get pytest multiprocessing coverage
-        paramsurvey.finalize()
-
-    request.session.addfinalizer(finalize)
-
 
 def readouterr_and_dump(capsys):
     captured = capsys.readouterr()
@@ -307,9 +301,13 @@ def test_map_ncores(paramsurvey_init):
         paramsurvey.map(sleep_worker, [{'foo': 1}], ncores=3)
 
 
-def test_invalid_kwarg(paramsurvey_init):
+@pytest.mark.skip(reason='cannot call paramsurvey.init twice in a session')
+def test_invalid_kwarg_init():
     with pytest.raises(TypeError):
         paramsurvey.init(doesnotexist=True)
+
+
+def test_invalid_kwarg(paramsurvey_init):
     with pytest.raises(TypeError):
         paramsurvey.map(sleep_worker, [{}], doesnotexist=True)
     with pytest.raises(TypeError):
