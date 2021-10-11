@@ -18,12 +18,14 @@ from pandas_appender import DF_Appender
 
 from . import stats
 from . import pslogger
+from . import carbon
 
 
 class MapProgress(object):
     '''Class to track progress of a map()'''
     # would be perfect as a dataclass, once python 3.7 is our minimum
-    def __init__(self, name, d={}, verbose=1, progress_dt=None):
+    def __init__(self, name, d={}, verbose=1, progress_dt=None,
+                 carbon_server=None, carbon_port=None, carbon_prefix=None):
         self.name = name
         self.print_last = time.time()
         if progress_dt is not None:
@@ -32,6 +34,14 @@ class MapProgress(object):
             self.print_dt = self.pick_dt(verbose)
         self.print_log_last = time.time()
         self.print_log_dt = 30  # hardwired
+        self.carbon_server = carbon_server
+        self.carbon_port = carbon_port
+        if carbon_prefix:
+            self.carbon_prefix = carbon_prefix.rstrip('.')
+        else:
+            self.carbon_prefix = None
+        if carbon_server and carbon_port:
+            carbon.init()
 
         self.total = d.get('total', 0)
         self.active = d.get('active', 0)
@@ -80,6 +90,17 @@ class MapProgress(object):
 
         if final or last or log_last:
             pslogger.log(self.name, 'progress:', str(self), stderr=final or last)
+            if self.carbon_server and self.carbon_port:
+                carbon.carbon_push_pickle(self.construct_tuples(),
+                                          carbon_server=self.carbon_server,
+                                          carbon_port=self.carbon_port)
+
+    def construct_tuples(self):
+        # [(path, (timestamp, value)), ...]
+        timestamp = time.time()
+
+        attrs = ('total', 'active', 'finished', 'failures', 'exceptions')
+        return [(self.carbon_prefix+'.'+k, (timestamp, getattr(self, k))) for k in attrs]
 
 
 class MapResults(pd.DataFrame):
@@ -215,7 +236,12 @@ def map_prep(psets, name, system_kwargs, chdir, out_subdirs, keep_results=True, 
     if system_kwargs['limit'] is not None and system_kwargs['limit'] >= 0:
         psets = psets.iloc[:system_kwargs['limit']]
 
-    system_kwargs['progress'] = MapProgress(name, {'total': len(psets)}, verbose=verbose, progress_dt=progress_dt)
+    carbon_server = system_kwargs['carbon_server']
+    carbon_port = system_kwargs['carbon_port']
+    carbon_prefix = system_kwargs['carbon_prefix']
+    system_kwargs['progress'] = MapProgress(name, {'total': len(psets)},
+                                            verbose=verbose, progress_dt=progress_dt,
+                                            carbon_server=carbon_server, carbon_port=carbon_port, carbon_prefix=carbon_prefix)
 
     if keep_results:
         system_kwargs['results'] = DF_Appender(ignore_index=True)
@@ -363,7 +389,7 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
 def initialize_kwargs(global_kwargs, kwargs):
     for k, v in global_kwargs.items():
         value = None
-        if v['env'] in os.environ:
+        if 'env' in v and v['env'] in os.environ:
             value = os.environ[v['env']]
             v['strong'] = True
         elif kwargs.get(k) is not None:

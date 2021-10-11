@@ -19,7 +19,11 @@ def test_all_env_variables(monkeypatch, capsys):
     for k, v in var.items():
         monkeypatch.setenv(k, v)
 
-    assert len(var) == len(paramsurvey.global_kwargs) - 1, 'are we setting every env var'
+    env_entries = 0
+    for k, v in paramsurvey.global_kwargs.items():
+        if 'env' in v:
+            env_entries += 1
+    assert len(var) == env_entries - 1, 'are we setting every env var'
 
     # this is separate from the other tests because the env vars are read at init time
     paramsurvey.init(pslogger_fd=pslogger_fd)

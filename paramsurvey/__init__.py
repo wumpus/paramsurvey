@@ -68,6 +68,9 @@ global_kwargs = {
     'ncores': {'env': 'PARAMSURVEY_NCORES', 'default': None},
     'max_tasks_per_child': {'env': 'PARAMSURVEY_MAX_TASKS_PER_CHILD', 'default': None},
     'vstats': {'env': 'PARAMSURVEY_VSTATS', 'default': 1},
+    'carbon_server': {'default': None, 'type': str},
+    'carbon_port': {'default': None},
+    'carbon_prefix': {'default': None, 'type': str},
 }
 
 

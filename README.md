@@ -164,6 +164,14 @@ $ PARAMSURVEY_BACKEND=multiprocessing PARAMSURVEY_VERBOSE=3 PARAMSURVEY_LIMIT=1 
 * Look at the performance statistics
 * Look at the example scripts linked above, which demonstrate most features mentioned in this README
 
+## Carbon monitoring
+
+If you'd like to monitor your paramsurvey run in real-time on one of those fancy modern dashboard thingies,
+pass details to `paramsurvey.init(..., carbon_server="127.0.0.1", carbon_port=2004, carbon_prefix="paramsurvey")`
+The integrated code only knows how to send `pickle` and (so far) only records progress.
+
+![Progress graph example](https://github.com/wumpus/paramsurvey/blob/main/images/paramsurvey-graphite-graph.png)
+
 ## Worker function limitations
 
 The worker function runs in a different address space and possibly on a different server.

@@ -1,4 +1,5 @@
 - 0.4.16 (not yet tagged)
+	+ add carbon stats collection for "progress"
 	+ made "finalize" function run atexit, removed explicit calls from tests
 
 - 0.4.15
