@@ -74,16 +74,7 @@ def product_step(a, df, infer_category=True):
             # extract the series
             name = a.columns.values[0]
             series = a[name]
-            # if it is not dtype='category', make it so
-            is_category = False
-            try:
-                if series.dtype == 'category':
-                    is_category = True
-            except TypeError:
-                is_category = False
-
-            if not is_category:
-                a = _coerce_to_category(series)
+            a = _coerce_to_category(series)
     else:
         raise ValueError('invalid type {} in product construction'.format(type(a)))
 
