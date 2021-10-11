@@ -12,6 +12,7 @@ scripts:
 	PYTHONPATH=.:scripts python scripts/pset-creation-example.py
 	PYTHONPATH=.:scripts python scripts/paramsurvey-rerun-missing.py
 	PYTHONPATH=.:scripts python scripts/paramsurvey-stats-example.py
+	#paramsurvey-carbon-example.py  # needs a carbon server
 
 generic:
 	# hint: PYTEST_STDERR_VISIBLE=-s works for these, too
