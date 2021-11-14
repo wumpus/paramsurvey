@@ -53,13 +53,19 @@ def finalize():
 
     pslogger.finalize()
 
-    # close and join are needed to make things like pytest coverage reporting work
     pool.close()
+
+    # pytest expects that both pool.close and pool.join are called to collect coverage
+    # pool.join makes sure that the children have all exited
 
     # pool.join tends to hang when used with max_tasks_per_child
     # https://bugs.python.org/issue10332
     # https://bugs.python.org/issue38799
     # and many more.
+
+    # pool.join hangs if nested Pool __init__ has happened
+    # can't find a bugs.python.org ticket
+
     if not max_tasks_per_child_seen:
         pool.join()
 

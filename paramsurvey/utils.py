@@ -324,6 +324,27 @@ def make_pset_ids(psets):
     return ret, pset_ids
 
 
+def check_and_exit_if_nested_pool(user_ret):
+    # File ".../lib/python3.8/multiprocessing/process.py", line 118, in start
+    # assert not _current_process._config.get('daemon'), \
+    # AssertionError: daemonic processes are not allowed to have children
+
+    if 'exception' in user_ret:
+        e = user_ret['exception']
+        tb = user_ret.get('traceback')
+        if 'AssertionError' in e and 'daemonic processes are not allowed to have children' in e:
+            # this is multiprocessing only
+            # after this exception, pool.join() will hang.
+            # if we exit without calling pool.join(), in _run_finalizers this will happen:
+            # AssertionError: Cannot have cache with result_hander not alive
+
+            if tb:
+                pslogger.log(tb, stderr=True)
+            pslogger.log('Your code created its own multiprocessing pool, nesting them causes an exception', stderr=True)
+            sys.stderr.flush()
+            os._exit(1)
+
+
 def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs):
     progress = system_kwargs['progress']
     verbose = system_kwargs['verbose']
@@ -342,6 +363,8 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
         pset_id = user_ret['pset']['_pset_id']
 
         if 'exception' in user_ret:
+            check_and_exit_if_nested_pool(user_ret)
+
             progress.failures += 1
             progress.exceptions += 1
             progress.active -= 1
