@@ -35,10 +35,13 @@ prints, in addition to some debugging output, a result from each of the 5 sleep_
 
 Here are a few more examples:
 
-* [The above example, with a few notes](scripts/paramsurvey-readme-example.py)
-* [An example of a multi-stage computation](scripts/paramsurvey-multistage-example.py), running several `map()` functions in a row
-* [An example of greedy optimization](scripts/paramsurvey-greedy-example.py), selecting the best alternative from each `map()` result
-* [An example that runs a command-line program for each pset](paramsurvey-cli.py)
+* [The above example, with a few notes](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-readme-example.py)
+* [An example of a multi-stage computation](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-multistage-example.py), running several `map()` functions in a row
+* [An example of greedy optimization](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-greedy-example.py), selecting the best alternative from each `map()` result
+* [An example that runs a command-line program for each pset](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-cli.py)
+* [An example of using helper functions to create the list of psets to compute](https://github.com/wumpus/paramsurvey/blob/main/scripts/pset-creation-example.py)
+* [An example of using the stats to time subsections of your worker function](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-stats-example.py)
+* [An example of using results.missing to re-run missing psets](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-rerun-missing.py)
 
 These examples are installed with the package, so you can run them like this:
 
@@ -80,6 +83,7 @@ variables) to aid debugging and testing. They are:
 * `limit=0` -- limits the number of psets actually computed to this number (0 meaning "all")
 * `ncores=-1` -- limits the number of cores used, in this case 1 less than the number available (multiprocessing only)
 * `max_tasks_per_child=3` -- the number of tasks a child will do before restarting. Useful to limit memory leaks. Default: infinite
+* `group_size=N` -- bundle psets into groups, which is useful if a single pset's runtime is too short for `ray` to efficiently run them. One minute is a good runtime.
 
 Each of these has a corresponding environment variable,
 e.g. `PARAMSURVEY_BACKEND`, `PARAMSURVEY_VERBOSE`.  If the environment
@@ -98,7 +102,9 @@ $ PARAMSURVEY_BACKEND=multiprocessing PARAMSURVEY_VERBOSE=3 PARAMSURVEY_LIMIT=10
 For retrospective debugging, i.e. your run crashes and you are sad
 that you specified a lower verbosity than you desire post-crash,
 `paramsurvey` creates a hidden logfile in the current directory for
-every run, named `.paramusurvey-DATE-TIME.log`.
+every run, named `.paramusurvey-DATE-TIME.log`. For example, this
+hidden logfile will always contain information about any exceptions
+raised in your worker code.
 
 ### Backend-specific arguments
 
@@ -144,6 +150,47 @@ of workers to avoid memory pressure.
 * ray: value is in backend_kwargs['memory'] and memory= passed to do_work_wrapper
 * multiprocessing: currently no memory in .map() or .init() ... need to reduce the number of workers to fit memory
 
+## Fault tolerance, and re-running failed computations
+
+If you have bugs in your code that raise exceptions, paramsurvey will
+diligently collect the exceptions and tracebacks and will print them
+into the output (verbose=2 or more) and also in the hidden logfile
+`.paramusurvey-DATE-TIME.log` mentioned in the previous section.
+Any pset causing an exception will be in the `results.missing` DataFrame.
+
+In addition to exceptions thrown by user code, the paramsurvey module
+and the laptop or cluster its running on can experience two kinds of
+errors. The first is failures of some nodes or processes in one of the
+distributed backends, like `ray`, `ray` will quietly re-run the pset
+as long as the head node and the driver are still alive. So, for example,
+it's safe to run most nodes in the computation as a "EC2 spot instance"
+or "preemptable node" in a cluster queue system like Slurm.
+
+The other kind of error is one that can't be caught by paramsurvey.
+This might include python `multiprocessing` completely crashing
+everything because your laptop is out of memory, or `ray` having
+indigestion because some nodes are low on memory and are responding
+slowly, but aren't totally dead.
+
+## Debugging checklist
+
+* Check the hidden logfail for details of previous runs
+* Use environment variables to shrink your run to a single pset, as mentioned above:
+```
+$ PARAMSURVEY_BACKEND=multiprocessing PARAMSURVEY_VERBOSE=3 PARAMSURVEY_LIMIT=1 ./myprogram.py
+```
+* Memory debugging: `print(paramsurvey.utils.vmem())` in a few places, values are in GBytes
+* Slow memory leaks: restart children after every Nth pset by adding `max_tasks_per_child=10` to the `paramsurvey.init()` call
+* Look at the performance statistics
+* Look at the example scripts linked above, which demonstrate most features mentioned in this README
+
+## Carbon monitoring
+
+If you'd like to monitor your paramsurvey run in real-time on one of those fancy modern dashboard thingies,
+pass details to `paramsurvey.init(..., carbon_server="127.0.0.1", carbon_port=2004, carbon_prefix="paramsurvey")`
+The integrated code only knows how to send `pickle` and (so far) only records progress.
+
+![Progress graph example](https://github.com/wumpus/paramsurvey/blob/main/images/paramsurvey-graphite-graph.png)
 
 ## Worker function limitations
 

@@ -21,12 +21,6 @@ pslogger_fd = StringIO()
 def paramsurvey_init(request):
     paramsurvey.init(pslogger_fd=pslogger_fd)
 
-    def finalize():
-        # needed to get pytest multiprocessing coverage
-        paramsurvey.finalize()
-
-    request.session.addfinalizer(finalize)
-
 
 def readouterr_and_dump(capsys):
     captured = capsys.readouterr()
@@ -203,6 +197,14 @@ def test_worker_exception(capsys, paramsurvey_init):
     assert results.progress.failures == 1
     assert results.progress.exceptions == 1
 
+    psets2 = results.missing.to_psets()
+    assert len(psets2) == 1
+    m2 = next(paramsurvey.utils.DFIterDictsWrapper(psets2).iterdicts())
+    assert '_exception' not in m2
+    assert '_traceback' not in m2
+    assert 'raises' in m2
+    assert len(m2) == 1
+
     captured = readouterr_and_dump(capsys)
 
     # ray redirects stderr to stdout, while multiprocessing prints it in the worker
@@ -299,9 +301,13 @@ def test_map_ncores(paramsurvey_init):
         paramsurvey.map(sleep_worker, [{'foo': 1}], ncores=3)
 
 
-def test_invalid_kwarg(paramsurvey_init):
+@pytest.mark.skip(reason='cannot call paramsurvey.init twice in a session')
+def test_invalid_kwarg_init():
     with pytest.raises(TypeError):
         paramsurvey.init(doesnotexist=True)
+
+
+def test_invalid_kwarg(paramsurvey_init):
     with pytest.raises(TypeError):
         paramsurvey.map(sleep_worker, [{}], doesnotexist=True)
     with pytest.raises(TypeError):
@@ -329,6 +335,17 @@ def test_subprocess_run():
     assert results.progress.exceptions == len(psets)
     for r in results.missing.iterdicts():
         assert 'FileNotFoundError' in r['_exception']
+
+    psets = [{'run_args': '/this-command-does-not-exist extra spaces'}] * 10
+    results = paramsurvey.map(subprocess_run_worker, psets)
+    assert len(results) == 0
+    assert results.progress.total == len(psets)
+    assert results.progress.finished == 0
+    assert results.progress.exceptions == len(psets)
+    for r in results.missing.iterdicts():
+        assert 'FileNotFoundError' in r['_exception']
+    # sadly, the worker stderr/out is not captured so we can't do this test:
+    #assert 'shell=True' in captured.err, 'saw shell=True warning from utils.subprocess_run_worker'
 
     psets = [{'run_args': 'false', 'run_kwargs': {'check': True}}] * 10
     results = paramsurvey.map(subprocess_run_worker, psets)

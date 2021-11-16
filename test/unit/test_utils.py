@@ -139,3 +139,29 @@ def test_psets_empty():
     assert utils.psets_empty(df)
     df = pd.DataFrame({'a': [1, 2]})
     assert not utils.psets_empty(df)
+
+
+def test_vmem():
+    vmem0 = utils.vmem()
+    big = bytearray(10000000)  # 10 megs
+    vmem1 = utils.vmem()
+    # vmem might not go up at all, if there is free memory
+    assert vmem1 <= vmem0 + 0.011, 'vmem does not go up more than expected'
+
+
+def test_subprocess_run_worker():
+    psets = [{}]  # run_args not in pset
+    with pytest.raises(ValueError):
+        utils.subprocess_run_worker(psets, {}, {})
+
+
+def test_pick_factor(capsys):
+    ret = utils.pick_factor('x' * 100)
+    captured = capsys.readouterr()
+    assert len(captured.err) == 0, 'no warning for small args'
+    assert ret > 0.
+
+    ret = utils.pick_factor('x' * 10000000)  # 10 megabytes
+    captured = capsys.readouterr()
+    assert len(captured.err) > 0, 'warning for large args'
+    assert ret > 0.

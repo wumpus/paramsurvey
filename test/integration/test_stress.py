@@ -11,13 +11,6 @@ import paramsurvey.psresource
 def paramsurvey_init(request):
     paramsurvey.init()
 
-    def finalize():
-        # needed to get pytest multiprocessing coverage
-        print('paramsurvey.finalize called for session', file=sys.stderr)
-        paramsurvey.finalize()
-
-    request.session.addfinalizer(finalize)
-
 
 def add_worker(pset, system_kwargs, user_kwargs):
     return {'c': pset['a'] + pset['b']}

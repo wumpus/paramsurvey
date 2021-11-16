@@ -16,17 +16,27 @@ requires = [
     'hdrhistogram',
     'pandas',
     'pandas-appender>=0.9.1',
+    'pickle5',
 ]
 
 extras_require = {
-    'ray': ['ray>=1', 'pyarrow'],
+    'ray': ['ray>=1'],
     'mpi': ['mpi4py'],
     'test': test_requirements,  # setup no longer tests, so make them an extra
 }
 
 setup_requires = ['setuptools_scm']
 
-scripts = ['scripts/paramsurvey-readme-example.py']
+scripts = [
+    'scripts/paramsurvey-carbon-example.py',
+    'scripts/paramsurvey-cli.py',
+    'scripts/paramsurvey-greedy-example.py',
+    'scripts/paramsurvey-multistage-example.py',
+    'scripts/paramsurvey-readme-example.py',
+    'scripts/paramsurvey-rerun-missing.py',
+    'scripts/paramsurvey-stats-example.py',
+    'scripts/pset-creation-example.py',
+]
 
 this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:

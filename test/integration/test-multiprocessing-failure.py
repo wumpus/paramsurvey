@@ -9,13 +9,6 @@ from paramsurvey.examples import sleep_worker
 def paramsurvey_init(request):
     paramsurvey.init(ncores=2)
 
-    def finalize():
-        # needed to get pytest multiprocessing coverage
-        print('paramsurvey.finalize called for session', file=sys.stderr)
-        paramsurvey.finalize()
-
-    request.session.addfinalizer(finalize)
-
 
 def test_multiprocessing_error_callback(paramsurvey_init):
     if paramsurvey.backend() != 'multiprocessing':

@@ -24,5 +24,3 @@ def test_init_max_tasks_per_child():
 
     with pytest.raises(ValueError):
         results = paramsurvey.map(return_pid, psets, max_tasks_per_child=1, name='map_max_tasks_per_child set')
-
-    paramsurvey.finalize()

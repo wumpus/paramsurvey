@@ -1,9 +1,13 @@
 import sys
 from pkg_resources import get_distribution, DistributionNotFound
+import atexit
 
 from . import psmultiprocessing
 from .utils import flatten_results, initialize_kwargs, resolve_kwargs
 from . import pslogger
+
+
+our_backend = None
 
 
 try:
@@ -63,6 +67,9 @@ global_kwargs = {
     'max_tasks_per_child': {'env': 'PARAMSURVEY_MAX_TASKS_PER_CHILD', 'default': None},
     'verbose': {'env': 'PARAMSURVEY_VERBOSE', 'default': 1},
     'vstats': {'env': 'PARAMSURVEY_VSTATS', 'default': 1},
+    'carbon_server': {'default': None, 'type': str},
+    'carbon_port': {'default': None},
+    'carbon_prefix': {'default': None, 'type': str},
 }
 
 
@@ -119,14 +126,25 @@ def init(**kwargs):
     kwargs.pop('pslogger_fd', None)
 
     global our_backend
+
     if backend in backends:
         pslogger.log('initializing paramsurvey {} backend'.format(backend), stderr=verbose)
-        our_backend = backends[backend]
-        our_backend['name'] = backend
-        if 'lazy' in our_backend:
-            our_backend.update(our_backend['lazy']())
+        if our_backend is None:
+            our_backend = backends[backend]
+            our_backend['name'] = backend
+            atexit.register(finalize)
+            if 'lazy' in our_backend:
+                our_backend.update(our_backend['lazy']())
+        else:
+            if our_backend != backends[backend]:
+                raise RuntimeError('paramsurvey.init called multiple times with different backends')
+            else:
+                pslogger.log('paramsurvey warning: init called multiple times, args ignored', stderr=verbose)
+                return
+
         system_kwargs, backend_kwargs, other_kwargs = resolve_kwargs(global_kwargs, kwargs, backend, backends)
         our_backend['init'](system_kwargs, backend_kwargs, **other_kwargs)
+
     else:  # pragma: no cover
         raise ValueError('unknown backend '+backend+', valid backends: '+', '.join(backends.keys()))
 
@@ -142,8 +160,9 @@ def backend():
 
 
 def finalize(*args, **kwargs):
-    '''Finalizes the paramsurvey run. Optional. Useful for situations
-    like doing test coverage analysis with the multiprocessing module.
+    '''Finalizes the paramsurvey run. Needed for doing test coverage
+    analysis with the multiprocessing module. Also prints a reminder
+    of the hidden logfile at exit.
     '''
     return our_backend['finalize'](*args, **kwargs)
 

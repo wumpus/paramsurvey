@@ -1,9 +1,20 @@
+- 0.4.16 (not yet tagged)
+	+ add carbon stats collection for "progress"
+	+ made "finalize" function run atexit, removed explicit calls from tests
+
+- 0.4.15
+	+ warnings on size of args and for missing shell=True in cli
+	+ add example script for complicated pset creation (pset-creation-example.py)
+	+ add example script for re-running missing psets, plus helper method results.missing.to_psets()
+	+ add example script for using the built-in stats system
+	+ README updates
+
 - 0.4.14
 	+ rename return from command-line helper from r.ret to r.cli
 
 - 0.4.13
 	+ fix README documention, "failed" was renamed to "missing" a while ago
-	+ add helper function to run command-line programs in the worker
+	+ add helper function to run command-line programs in the worker (with example paramsurvey-cli.py)
 
 - 0.4.12
 	+ update changelog before tagging next time, eh

@@ -13,6 +13,8 @@ from . import pslogger
 
 pool = None
 our_ncores = None
+finalize_needed = False
+max_tasks_per_child_seen = False
 
 
 def init(system_kwargs, backend_kwargs):
@@ -33,19 +35,35 @@ def init(system_kwargs, backend_kwargs):
     max_tasks_per_child = system_kwargs.pop('max_tasks_per_child', None)
     if max_tasks_per_child:
         backend_kwargs['maxtasksperchild'] = max_tasks_per_child
+        global max_tasks_per_child_seen
+        max_tasks_per_child_seen = True
 
     verbose = system_kwargs['verbose']
     pslogger.log('initializing multiprocessing pool with {} processes'.format(ncores), stderr=verbose)
     pslogger.log('Pool() kwargs are', backend_kwargs, stderr=verbose > 1)
 
     pool = multiprocessing.Pool(**backend_kwargs)
+    global finalize_needed
+    finalize_needed = True
 
 
 def finalize():
-    # needed to make things like pytest coverage reporting work
+    global finalize_needed
+    if not finalize_needed:
+        return
+    finalize_needed = False
+
     pslogger.finalize()
+
+    # close and join are needed to make things like pytest coverage reporting work
     pool.close()
-    pool.join()
+
+    # pool.join tends to hang when used with max_tasks_per_child
+    # https://bugs.python.org/issue10332
+    # https://bugs.python.org/issue38799
+    # and many more.
+    if not max_tasks_per_child_seen:
+        pool.join()
 
 
 def _core_count():
@@ -192,13 +210,13 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
     progress = system_kwargs['progress']
     cores = current_core_count()
 
-    # make a cut-down copy to minimize size of args
+    # make a cut-down copy to minimize size of args passed
     worker_system_kwargs = {}
     for key in ('raise_in_wrapper', 'out_subdirs', 'chdir', 'name'):
         if key in system_kwargs:
             worker_system_kwargs[key] = system_kwargs[key]
 
-    factor = 2.4  # XXX should be set based on args size
+    factor = utils.pick_factor((func, worker_system_kwargs, user_kwargs, psets[0:0]))  # TODO: eventually will adjust group_size
 
     if group_size is None:
         # make this dynamic someday

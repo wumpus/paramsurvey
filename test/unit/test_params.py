@@ -18,11 +18,17 @@ def test__coerce_to_category():
     s1 = pd.Series(range(10))
     s2 = paramsurvey.params._coerce_to_category(s1)
     assert s2.dtype == 'category'
+    s2 = paramsurvey.params._coerce_to_category(s2)
+    assert s2.dtype == 'category'
+
+    s1 = pd.Series([[0]] * 10)  # unhashable type
+    s2 = paramsurvey.params._coerce_to_category(s1)
+    assert s1.equals(s2)
 
     s1 = pd.Series([[0]] * 10)  # unhashable type
     s2 = paramsurvey.params._infer_category(s1)
     assert s1.equals(s2)
-    #assert s2.dtype != 'category'  # can't do this thanks to pandas
+    #assert s2.dtype != 'category'  # can't do this thanks to older pandas
     assert s2.dtype == 'object'
 
 

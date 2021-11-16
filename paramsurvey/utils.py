@@ -10,7 +10,7 @@ import traceback
 import warnings
 import platform
 import subprocess
-import functools
+import pickle5
 
 import pandas as pd
 from pandas_appender import DF_Appender
@@ -18,12 +18,14 @@ from pandas_appender import DF_Appender
 from . import stats
 from . import pslogger
 from . import psresource
+from . import carbon
 
 
 class MapProgress(object):
     '''Class to track progress of a map()'''
     # would be perfect as a dataclass, once python 3.7 is our minimum
-    def __init__(self, name, d={}, verbose=1, progress_dt=None):
+    def __init__(self, name, d={}, verbose=1, progress_dt=None,
+                 carbon_server=None, carbon_port=None, carbon_prefix=None):
         self.name = name
         self.print_last = time.time()
         if progress_dt is not None:
@@ -32,6 +34,14 @@ class MapProgress(object):
             self.print_dt = self.pick_dt(verbose)
         self.print_log_last = time.time()
         self.print_log_dt = 30  # hardwired
+        self.carbon_server = carbon_server
+        self.carbon_port = carbon_port
+        if carbon_prefix:
+            self.carbon_prefix = carbon_prefix.rstrip('.')
+        else:
+            self.carbon_prefix = None
+        if carbon_server and carbon_port:
+            carbon.init()
 
         self.total = d.get('total', 0)
         self.active = d.get('active', 0)
@@ -80,6 +90,17 @@ class MapProgress(object):
 
         if final or last or log_last:
             pslogger.log(self.name, 'progress:', str(self), stderr=final or last)
+            if self.carbon_server and self.carbon_port:
+                carbon.carbon_push_pickle(self.construct_tuples(),
+                                          carbon_server=self.carbon_server,
+                                          carbon_port=self.carbon_port)
+
+    def construct_tuples(self):
+        # [(path, (timestamp, value)), ...]
+        timestamp = time.time()
+
+        attrs = ('total', 'active', 'finished', 'failures', 'exceptions')
+        return [(self.carbon_prefix+'.'+k, (timestamp, getattr(self, k))) for k in attrs]
 
 
 class MapResults(pd.DataFrame):
@@ -152,6 +173,9 @@ class DFIterDictsWrapper(pd.DataFrame):
     def to_df(self):
         return pd.DataFrame(self)
 
+    def to_psets(self):
+        return pd.DataFrame(self).drop(columns=['_exception', '_traceback'])
+
 
 class DFListDictIter:
     def __init__(self, df):
@@ -212,7 +236,12 @@ def map_prep(psets, name, system_kwargs, chdir, out_subdirs, keep_results=True, 
     if system_kwargs['limit'] is not None and system_kwargs['limit'] >= 0:
         psets = psets.iloc[:system_kwargs['limit']]
 
-    system_kwargs['progress'] = MapProgress(name, {'total': len(psets)}, verbose=verbose, progress_dt=progress_dt)
+    carbon_server = system_kwargs['carbon_server']
+    carbon_port = system_kwargs['carbon_port']
+    carbon_prefix = system_kwargs['carbon_prefix']
+    system_kwargs['progress'] = MapProgress(name, {'total': len(psets)},
+                                            verbose=verbose, progress_dt=progress_dt,
+                                            carbon_server=carbon_server, carbon_port=carbon_port, carbon_prefix=carbon_prefix)
 
     if keep_results:
         system_kwargs['results'] = DF_Appender(ignore_index=True)
@@ -326,6 +355,7 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
             if 'traceback' in user_ret:
                 system_kwargs['pset_ids'][pset_id]['_traceback'] = user_ret['traceback']
                 pslogger.log('traceback:\n' + user_ret['traceback'], stderr=verbose > 1)
+                pslogger.traceback(True)
                 if verbose > 0:
                     print('(traceback is in', pslogger.logger_filename+')', file=sys.stderr)
         else:
@@ -352,6 +382,7 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
                 progress.failures += 1
                 pslogger.log('saw exception in a user-supplied out_func:', repr(e), stderr=verbose)
                 pslogger.log('traceback:\n' + traceback.format_exc(), stderr=verbose)
+                pslogger.traceback(True)
 
     progress.report()
     system_stats.report()
@@ -360,7 +391,7 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
 def initialize_kwargs(global_kwargs, kwargs):
     for k, v in global_kwargs.items():
         value = None
-        if v['env'] in os.environ:
+        if 'env' in v and v['env'] in os.environ:
             value = os.environ[v['env']]
             v['strong'] = True
         elif kwargs.get(k) is not None:
@@ -436,9 +467,33 @@ def subprocess_run_worker(pset, system_kwargs, user_kwargs):
     elif user_kwargs:
         run_kwargs = user_kwargs.get('run_kwargs', {})
 
-    ret = subprocess.run(pset['run_args'], **run_kwargs)
-
-    # TODO
-    # emit a warning if exception=FileNotFoundError and shell=True not present and there's a space in the arg string
+    try:
+        ret = subprocess.run(pset['run_args'], **run_kwargs)
+    except FileNotFoundError:
+        if not run_kwargs.get('shell', False) and isinstance(pset['run_args'], str):
+            if ' ' in pset['run_args']:
+                # we are in the worker so we can't use pslogger()
+                print('utils.subprocess_run_worker: space in command string, did you need to set shell=True?', file=sys.stderr)
+        raise
 
     return {'cli': ret}
+
+
+def pick_factor(args):
+    try:
+        size = len(pickle5.dumps(args))
+    except Exception as e:
+        if str(e) != "cannot pickle '_io.FileIO' object":  # a test causes this one
+            pslogger.log('pick_factor: could not estimate arguments size due to pickle5 exception '+str(e), stderr=True)
+        size = 0
+
+    million = 1000000
+    if size > million:
+        mbytes = size / million
+        pslogger.log('worker args looks awfully large ({:.1f} megabytes)'.format(mbytes), stderr=True)
+
+    # also needs: memory, group size, ncores
+    # TODO if memory usage is too large, and group size was automatic, decrease group size
+    # TODO if after that memory usage is still big, reduce factor
+
+    return 2.4
