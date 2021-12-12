@@ -15,7 +15,7 @@ requires = [
     'hdrhistogram',
     'pandas',
     'pandas-appender>=0.9.1',
-    'pickle5',
+    #'pickle5',
 ]
 
 extras_require = {

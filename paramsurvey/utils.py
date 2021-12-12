@@ -11,7 +11,7 @@ import traceback
 import warnings
 import platform
 import subprocess
-import pickle5
+#import pickle5
 
 import pandas as pd
 from pandas_appender import DF_Appender
@@ -487,7 +487,9 @@ def subprocess_run_worker(pset, system_kwargs, user_kwargs):
 
 def pick_factor(args):
     try:
-        size = len(pickle5.dumps(args))
+        # pickle5 causes ray to fail https://github.com/ray-project/ray/issues/19938
+        #size = len(pickle5.dumps(args))
+        size = 0
     except Exception as e:
         if str(e) != "cannot pickle '_io.FileIO' object":  # a test causes this one
             pslogger.log('pick_factor: could not estimate arguments size due to pickle5 exception '+str(e), stderr=True)
