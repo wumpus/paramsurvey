@@ -5,6 +5,8 @@ import functools
 import time
 import multiprocessing
 
+import psutil
+
 from . import utils
 from . import stats
 from . import pslogger
@@ -66,10 +68,15 @@ def finalize():
 
 def _core_count():
     try:
+        # recent Linux
         return len(os.sched_getaffinity(0))
     except (AttributeError, NotImplementedError, OSError):
-        return multiprocessing.cpu_count()
-    # Windows: len(psutil.Process().cpu_affinity())
+        try:
+            # Windows, MacOS, FreeBSD
+            return len(psutil.Process().cpu_affinity())
+        except (AttributeError, NotImplementedError, OSError):
+            # older Linux, MacOS. Can raise NotImplementedError
+            return multiprocessing.cpu_count()
 
 
 def current_core_count():
@@ -77,6 +84,15 @@ def current_core_count():
         return our_ncores
     else:
         return _core_count()
+
+
+def current_resources():
+    # return a Ray-esque resource dict for our one node
+    # in theory /sys/fs/cgroup/memory/ has a useful number, but sadly, it doesn't
+    # XXX document find a gpu:
+    # import torch
+    # use_cuda = torch.cuda_is_available()
+    return [{'num_cores': current_core_count, 'memory': psutil.virtual_memory().total}]
 
 
 def pick_chunksize(length, cores, factor=4):

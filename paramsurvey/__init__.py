@@ -25,6 +25,7 @@ def lazy_load_ray():
         'init': psray.init,
         'map': psray.map,
         'current_core_count': psray.current_core_count,
+        'current_resources': psray.current_resources,
         'finalize': psray.finalize,
     }
 
@@ -47,6 +48,7 @@ backends = {
         'init': psmultiprocessing.init,
         'map': psmultiprocessing.map,
         'current_core_count': psmultiprocessing.current_core_count,
+        'current_resources': psmultiprocessing.current_resources,
         'finalize': psmultiprocessing.finalize,
     },
     'ray': {
@@ -171,6 +173,16 @@ def current_core_count(*args, **kwargs):
     int
     '''
     return our_backend['current_core_count'](*args, **kwargs)
+
+
+def current_resources(*args, **kwargs):
+    '''Returns a description of the current cluster.
+
+    Returns
+    -------
+    list of resources dictionaries, with keys: num_cores, num_gpus, memory (bytes)
+    '''
+    return our_backend['current_resources'](*args, **kwargs)
 
 
 def map(*args, **kwargs):

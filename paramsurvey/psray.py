@@ -71,6 +71,29 @@ def current_core_count():
     return int(cores)
 
 
+def current_resources():
+    # cluster_resources -- everything
+    # available_resources -- what's not in use
+    # @ray.remote has memory in bytes
+
+    # slurm: --mem 4g --gres=gpu:1 
+    # ray.nodes()
+    # 'Resources': {'object_store_memory': 112329590784.0, 'memory': 252102378496.0, 'accelerator_type:V100': 1.0, 'GPU': 1.0, 'node:10.31.143.116': 1.0, 'CPU': 32.0}}
+
+    nodes = []
+    for node in ray.nodes():
+        if not node.get('Alive', False):  # pragma: no cover
+            continue
+        resources = node.get('Resources', {})
+        this_node = {}
+        for k1, k2 in (('num_cores', 'CPU'), ('num_gpus', 'GPU'), ('memory', 'memory')):
+            if k2 in resources:
+                this_node[k1] = k2
+        # somewhere between ray 0.X and ray 1.2, memory changed from units of 50 megabytes to units of bytes
+        nodes.append(this_node)
+    return nodes
+
+
 @ray.remote
 def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
     if 'raise_in_wrapper' in system_kwargs and any(pset.get('actually_raise', False) for pset in psets):

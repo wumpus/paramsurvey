@@ -362,3 +362,13 @@ def test_subprocess_run():
         assert isinstance(r.cli, subprocess.CompletedProcess)
         assert r.cli.stdout.rstrip() == '/'
         assert r.cli.returncode == 0
+
+
+def test_resources():
+    resources = paramsurvey.current_resources()
+
+    # should be a list of dicts with known keys
+    for r in resources:
+        for field in ('num_cores', 'memory'):
+            assert field in r
+        assert len(r) <= 3
