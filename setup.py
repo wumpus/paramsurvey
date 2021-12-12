@@ -16,6 +16,7 @@ requires = [
     'pandas',
     'pandas-appender>=0.9.1',
     #'pickle5',
+    'psutil',
 ]
 
 extras_require = {
