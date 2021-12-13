@@ -312,7 +312,6 @@ def test_invalid_kwarg(paramsurvey_init):
         paramsurvey.map(sleep_worker, [{}], doesnotexist=True)
     with pytest.raises(TypeError):
         paramsurvey.map(sleep_worker, [{}], ray={'doesnotexist': True}, multiprocessing={'doesnotexist': True})
-    pass
 
 
 def test_overlarge_pset():
@@ -369,6 +368,31 @@ def test_resources():
 
     # should be a list of dicts with known keys
     for r in resources:
+        print(r)
         for field in ('num_cores', 'memory'):
             assert field in r
+            print('r field', r[field])
+            assert float(r[field])
         assert len(r) <= 3
+
+
+def worker_pset_backend_args(pset, system_kwargs, user_kwargs):
+    print('system_kwargs', system_kwargs)
+    if 'ray' in system_kwargs:
+        return {'r': 'PASS'}
+    return {'r': 'FAIL'}
+
+
+def test_pset_backend_args():
+    print('backend', paramsurvey.backend())
+    if paramsurvey.backend() != 'ray':
+        pytest.skip('this test only valid for ray backend')
+
+    psets = [{'foo': 1, 'ray': {'memory': 100 * 1024 * 1024}}]  # 50 megabyte minimum
+    results = paramsurvey.map(worker_pset_backend_args, psets, name='test_pset_backend_args')
+    assert results.progress.finished == 1
+    assert next(results.itertuples()).r == 'PASS', 'worker saw ray backend pset config'
+
+    psets = [{'foo': 1, 'ray': {'thisoptiondoesnotexist': 1}}]
+    with pytest.raises(TypeError):
+        results = paramsurvey.map(worker_pset_backend_args, psets, name='test_pset_backend_args')

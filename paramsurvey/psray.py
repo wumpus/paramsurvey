@@ -84,7 +84,7 @@ def current_resources():
         this_node = {}
         for k1, k2 in (('num_cores', 'CPU'), ('num_gpus', 'GPU'), ('memory', 'memory')):
             if k2 in resources:
-                this_node[k1] = k2
+                this_node[k1] = resources[k2]
         # somewhere between ray 0.X and ray 1.2, memory changed from units of 50 megabytes to units of bytes
         nodes.append(this_node)
     return nodes
@@ -258,6 +258,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
                 if 'num_cores' in r:
                     r['num_cpus'] = r.pop('num_cores')
                 our_wrapper = wrapper.options(**r)
+                worker_system_kwargs['ray'] = r
 
             futures.append(our_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
             progress.active += len(pset_group)

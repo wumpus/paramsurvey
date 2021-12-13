@@ -1,5 +1,5 @@
 - 0.4.16 (not yet tagged)
-	+ backend-specific args for psets
+	+ backend-specific args for non-grouped psets
 	+ arg size warning reverted due to ray/pickle5 bug
 	+ add current_resources() call
 	+ add carbon stats collection for "progress" (likely to be replaced by influx soon)

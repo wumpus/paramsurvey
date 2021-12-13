@@ -98,7 +98,7 @@ def current_resources():
     # XXX document find a gpu:
     # import torch
     # use_cuda = torch.cuda_is_available()
-    return [{'num_cores': current_core_count, 'memory': psutil.virtual_memory().total}]
+    return [{'num_cores': current_core_count(), 'memory': psutil.virtual_memory().total}]
 
 
 def pick_chunksize(length, cores, factor=4):
