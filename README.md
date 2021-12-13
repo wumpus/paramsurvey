@@ -135,8 +135,8 @@ exceptions.
 If you have bugs in your code that raise exceptions, paramsurvey will
 diligently collect the exceptions and tracebacks and will print them
 into the output (verbose=2 or more) and also in the hidden logfile
-`.paramusurvey-DATE-TIME.log` mentioned in the previous section.
-Any pset causing an exception will be in the `results.missing` DataFrame.
+`.paramusurvey-DATE-TIME.log` mentioned above.  Any pset causing an
+exception will be in the `results.missing` DataFrame.
 
 In addition to exceptions thrown by user code, the paramsurvey module
 and the laptop or cluster its running on can experience two kinds of
@@ -154,7 +154,7 @@ slowly, but aren't totally dead.
 
 ## Debugging checklist
 
-* Check the hidden logfail for details of previous runs
+* Check the hidden logfile for details of previous runs
 * Use environment variables to shrink your run to a single pset, as mentioned above:
 ```
 $ PARAMSURVEY_BACKEND=multiprocessing PARAMSURVEY_VERBOSE=3 PARAMSURVEY_LIMIT=1 ./myprogram.py
