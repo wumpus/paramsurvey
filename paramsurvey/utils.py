@@ -70,6 +70,7 @@ class MapProgress(object):
 
         # fixup wrapper failures
         if actual_failures > failures:
+            # this seems to happen occasionally in the azure pipeline, disappears on a rerun. always on 38verbose
             pslogger.log('correcting failure count from {} to {}'.format(failures, actual_failures))
             self.failures = actual_failures
         elif actual_failures < failures:
