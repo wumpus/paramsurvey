@@ -1,5 +1,8 @@
 - 0.4.16 (not yet tagged)
-	+ add carbon stats collection for "progress"
+	+ backend-specific args for psets
+	+ arg size warning reverted due to ray/pickle5 bug
+	+ add current_resources() call
+	+ add carbon stats collection for "progress" (likely to be replaced by influx soon)
 	+ made "finalize" function run atexit, removed explicit calls from tests
 
 - 0.4.15

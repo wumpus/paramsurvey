@@ -72,13 +72,9 @@ def current_core_count():
 
 
 def current_resources():
-    # cluster_resources -- everything
-    # available_resources -- what's not in use
-    # @ray.remote has memory in bytes
-
     # slurm: --mem 4g --gres=gpu:1 
-    # ray.nodes()
     # 'Resources': {'object_store_memory': 112329590784.0, 'memory': 252102378496.0, 'accelerator_type:V100': 1.0, 'GPU': 1.0, 'node:10.31.143.116': 1.0, 'CPU': 32.0}}
+    # as you can see the memory limit is not visible
 
     nodes = []
     for node in ray.nodes():
@@ -100,7 +96,6 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
         raise system_kwargs['raise_in_wrapper']  # for testing
 
     if 'out_subdirs' in system_kwargs:
-        # the entire pset group gets the same out_subdir
         system_kwargs['out_subdir'] = utils.make_subdir_name(system_kwargs['out_subdirs'])
 
     # ray workers start at "cd ~"
@@ -246,10 +241,25 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
             if len(pset_group) == 0:
                 break
 
+            if 'out_subdirs' in system_kwargs:
+                if len(pset_group) > 1:
+                    raise ValueError('out_subdirs does not work with pset groups')
+
             pset_group, pset_ids = utils.make_pset_ids(pset_group)
             system_kwargs['pset_ids'].update(pset_ids)
 
-            futures.append(wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
+            our_wrapper = wrapper
+            if 'ray' in pset_group[0]:
+                if len(pset_group) > 1:
+                    raise ValueError('pset ray overrides are not allowed in groups')
+
+                # name, memory, num_cpus, num_gpus
+                r = pset_group[0]['ray']
+                if 'num_cores' in r:
+                    r['num_cpus'] = r.pop('num_cores')
+                our_wrapper = wrapper.options(**r)
+
+            futures.append(our_wrapper.remote(func, worker_system_kwargs, user_kwargs, pset_group))
             progress.active += len(pset_group)
             progress.report()
             system_stats.report()

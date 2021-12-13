@@ -115,6 +115,12 @@ ignored by other backends. For example, to pass an argument only used by the `ra
 paramsurvey.map(..., ray={'num_gpus': 1})
 ```
 
+Individual psets can also have backend-specific arguments, in the case
+where different units of work need different memory limits or
+different thread counts. The complete list of ray arguments is:
+`name`, `memory`, `num_cpus`, and `num_gpus`. There is also
+`num_cores` as an alias for `num_cpus`.
+
 ## The MapResults object
 
 The MapResults object has several properties:
