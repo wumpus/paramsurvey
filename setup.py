@@ -73,6 +73,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        #'Programming Language :: Python :: 3.10',  # awaiting a ray wheel, https://github.com/ray-project/ray/issues/19116
         'Programming Language :: Python :: 3 :: Only',
     ],
 )
