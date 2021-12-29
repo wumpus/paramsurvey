@@ -106,6 +106,16 @@ every run, named `.paramusurvey-DATE-TIME.log`. For example, this
 hidden logfile will always contain information about any exceptions
 raised in your worker code.
 
+### Pandas-related quirks
+
+To preserve memory in the case of large numbers of psets, the psets and the results are stored as
+a Pandas DataFrame. This creates a couple of quirks visible to user code:
+
+* A key that exists in any pset or result will exist in every pset or result, with a default value of `nan`
+* If you treat `nan` as a boolean in Python, it evaluates to `True`
+* Because of a (fixable) quirk in `pandas-appender`, columns are not automatically promoted from integer
+to float. So if you have a large number of psets with an integer value, and then throw in a float, it will be rounded to an integer.
+
 ### Backend-specific arguments
 
 Both `init()` and `map()` take a backend-specific keyword argument named for the backend, and
