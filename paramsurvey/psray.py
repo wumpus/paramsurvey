@@ -45,7 +45,7 @@ def init(system_kwargs, backend_kwargs):
         # this is a hack that works, if it is used before the workers are instantiated
         do_work_wrapper._max_calls = max_tasks_per_child
 
-    if 'address' not in backend_kwargs and '_redis_password' not in backend_kwargs:
+    if 'address' not in backend_kwargs:
         address, password = read_ray_config()
         backend_kwargs['address'] = address
         backend_kwargs['_redis_password'] = password  # added the leading _ in ray 1.0.0

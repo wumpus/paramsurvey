@@ -122,6 +122,8 @@ Both `init()` and `map()` take a backend-specific keyword argument named for the
 ignored by other backends. For example, to pass an argument only used by the `ray` backend,
 
 ```
+paramsurvey.init(..., ray={'address': 'auto'})
+...
 paramsurvey.map(..., ray={'num_gpus': 1})
 ```
 

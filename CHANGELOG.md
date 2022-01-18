@@ -1,4 +1,5 @@
-- 0.4.16 (not yet tagged)
+- 0.4.16
+	+ allow 'address': 'auto' for ray in a cluster. 'password' is now optional.
 	+ backend-specific args for non-grouped psets
 	+ arg size warning reverted due to ray/pickle5 bug
 	+ add current_resources() call
