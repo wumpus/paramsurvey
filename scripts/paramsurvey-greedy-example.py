@@ -35,6 +35,8 @@ def main():
         psets = list({'station': s, 'existing_stations': picked_stations} for s in stations)
         results = paramsurvey.map(metric, psets, verbose=0)
 
+        assert results.progress.failures == 0
+
         best_metric = max(r.metric for r in results.itertuples())
         best_stations = [r.station for r in results.itertuples() if r.metric == best_metric]
         print('picking station(s)', *best_stations)

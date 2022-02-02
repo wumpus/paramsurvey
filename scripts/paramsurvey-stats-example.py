@@ -26,6 +26,8 @@ def main():
 
     results = paramsurvey.map(stats_worker, psets, name='stats-example', verbose=0)
 
+    assert results.progress.failures == 0
+
     results.stats.print_histograms()
 
 

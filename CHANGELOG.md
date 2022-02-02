@@ -1,3 +1,7 @@
+- 0.4.17 (not yet tagged)
+	+ scripts/paramsurvey-cli.py had a bug and was failing yet passing crash-only-testing
+	+ make sure scripts/*.py fails testing if fail
+
 - 0.4.16
 	+ allow 'address': 'auto' for ray in a cluster. 'password' is now optional.
 	+ backend-specific args for non-grouped psets

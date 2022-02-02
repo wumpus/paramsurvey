@@ -19,6 +19,8 @@ def main():
 
     results = paramsurvey.map(sleep_worker, psets, verbose=2)
 
+    assert results.progress.failures == 0
+
 
 if __name__ == '__main__':
     main()

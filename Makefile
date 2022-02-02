@@ -5,6 +5,7 @@ unit:
 	PYTHONPATH=. pytest test/unit ${PYTEST_STDERR_VISIBLE}
 
 scripts:
+	# crash testing only
 	PYTHONPATH=.:scripts python scripts/paramsurvey-readme-example.py
 	PYTHONPATH=.:scripts python scripts/paramsurvey-greedy-example.py
 	PYTHONPATH=.:scripts python scripts/paramsurvey-multistage-example.py

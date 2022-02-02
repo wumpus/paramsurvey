@@ -22,10 +22,12 @@ def main():
     psets = paramsurvey.params.product({'a': [1, 2, 3], 'b': [4, 5, 6]})
 
     results = paramsurvey.map(first_stage, psets, verbose=2)
+    assert results.progress.failures == 0
 
     psets = paramsurvey.params.product(results, {'c': [7, 8, 9]})
 
     results = paramsurvey.map(second_stage, psets, verbose=2)
+    assert results.progress.failures == 0
 
     print(results.to_df())
 

@@ -18,6 +18,8 @@ def main():
 
     results = paramsurvey.map(sleep_worker, psets, verbose=2)
 
+    assert results.progress.failures == 0
+
     for r in results.itertuples():
         print(r.duration, r.slept)
     for r in results.iterdicts():
