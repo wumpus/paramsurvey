@@ -55,7 +55,7 @@ def finalize():
 
     pslogger.finalize()
 
-    pool.close()
+    pool.terminate()
 
     # pytest expects that both pool.close and pool.join are called to collect coverage
     # pool.join makes sure that the children have all exited
