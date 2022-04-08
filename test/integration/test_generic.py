@@ -64,6 +64,7 @@ def test_basics(paramsurvey_init):
     assert elapsed > duration*3, 'must take at least {} time'.format(duration)
     assert len(results) == len(psets)
     assert results.progress.total == len(psets)
+    assert results.progress.active == 0
     assert results.progress.finished == len(psets)
     assert results.progress.failures == 0
     assert results.progress.exceptions == 0
@@ -193,6 +194,7 @@ def test_worker_exception(capsys, paramsurvey_init):
     assert '_exception' in m1
     assert '_traceback' in m1
     assert results.progress.total == 7
+    assert results.progress.active == 0
     assert results.progress.finished == 6
     assert results.progress.failures == 1
     assert results.progress.exceptions == 1
@@ -247,6 +249,7 @@ def test_wrapper_exception(capsys, paramsurvey_init):
     assert len(results) == 3
     assert len(results.missing) == 2
     assert results.progress.total == 5
+    assert results.progress.active == 0
     assert results.progress.finished == 3
     assert results.progress.failures == 2
 
@@ -279,6 +282,7 @@ def test_bad_user_function(paramsurvey_init):
 
     assert len(results.missing) == 2
     assert results.progress.total == 2
+    assert results.progress.active == 0
     assert results.progress.finished == 0
     assert results.progress.failures == 2
     assert results.progress.exceptions == 2
@@ -323,6 +327,7 @@ def test_subprocess_run():
     results = paramsurvey.map(subprocess_run_worker, psets)
     assert len(results) == len(psets)
     assert results.progress.total == len(psets)
+    assert results.progress.active == 0
     assert results.progress.finished == len(psets)
     assert [r.cli.returncode == 0 for r in results.itertuples()], 'everyone exited 0'
 
@@ -330,6 +335,7 @@ def test_subprocess_run():
     results = paramsurvey.map(subprocess_run_worker, psets)
     assert len(results) == 0
     assert results.progress.total == len(psets)
+    assert results.progress.active == 0
     assert results.progress.finished == 0
     assert results.progress.exceptions == len(psets)
     for r in results.missing.iterdicts():
@@ -339,6 +345,7 @@ def test_subprocess_run():
     results = paramsurvey.map(subprocess_run_worker, psets)
     assert len(results) == 0
     assert results.progress.total == len(psets)
+    assert results.progress.active == 0
     assert results.progress.finished == 0
     assert results.progress.exceptions == len(psets)
     for r in results.missing.iterdicts():
