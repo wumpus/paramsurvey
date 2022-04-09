@@ -159,16 +159,15 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
 
 
 def callback(out_func, system_stats, system_kwargs, user_kwargs, ret):
-    system_kwargs['outstanding'] -= 1
     utils.handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs)
+    system_kwargs['outstanding'] -= 1
 
 
 def error_callback(out_func, system_stats, system_kwargs, user_kwargs, e):
-    system_kwargs['outstanding'] -= 1
-
     pslogger.log('python multiprocessing error_callback, exception is', repr(e))
     # do not raise here, it causes a hang
     # we do not know the pset, so we cannot fake a return value
+    system_kwargs['outstanding'] -= 1
 
 
 def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, user_kwargs, group_size):
