@@ -24,6 +24,10 @@ def sums(n):
     results = paramsurvey.map(add_worker, psets, name='stress_{}'.format(n))
 
     assert len(results) == n**2
+    if results.missing.empty:
+        print('missing')
+        print(results.missing)
+    assert results.progress.active == 0
     assert len(results.missing) == 0
     assert results.to_df()['c'].sum() == n * n * (n-1)
 
@@ -35,7 +39,7 @@ def test_stress_10(paramsurvey_init):
     assert vmem1 - vmem0 < 0.01  # gigabytes
 
 
-def test_stress_100(paramsurvey_init):
+def test_stress_50(paramsurvey_init):
     vmem0 = paramsurvey.utils.vmem()
     sums(50)  # 2,500 ... 6 seconds on 4 cores
     vmem1 = paramsurvey.utils.vmem()

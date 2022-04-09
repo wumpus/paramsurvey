@@ -413,7 +413,11 @@ def handle_return_common(out_func, ret, system_stats, system_kwargs, user_kwargs
 def initialize_kwargs(global_kwargs, kwargs):
     for k, v in global_kwargs.items():
         value = None
-        if 'env' in v and v['env'] in os.environ:
+        try_env = 'env' in v and v['env'] in os.environ
+        if try_env and os.environ[v['env']] == '':
+            pslogger.log('empty value for env variable {} ignored'.format(v['env']), stderr=True)
+
+        if try_env and os.environ[v['env']] != '':
             value = os.environ[v['env']]
             v['strong'] = True
         elif kwargs.get(k) is not None:

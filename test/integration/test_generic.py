@@ -268,7 +268,7 @@ def test_wrapper_exception(capsys, paramsurvey_init):
 
 
 def bad_user_function(pset, system_kwargs, user_kwargs):
-    return 3
+    return 3  # not a dict
 
 
 def test_bad_user_function(paramsurvey_init):

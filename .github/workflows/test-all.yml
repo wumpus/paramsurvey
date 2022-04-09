@@ -1,0 +1,75 @@
+name: test-all
+
+on: 
+  push:
+    branches:
+    - master
+  pull_request:
+
+jobs:
+  linux-macos:
+    name: test-all ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.VERBOSE }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        include:
+          - python-version: 3.6
+            os: ubuntu-latest
+            # make sure that the most verbose level is not crashy
+            VERBOSE: verbose  # does work
+            PARAMSURVEY_VERBOSE: 3
+            PYTEST_STDERR_VISIBLE: -s
+          - python-version: '3.10'
+            os: ubuntu-latest
+            ONLY_BUILTINS: 1  # no ray wheel yet on 3.10
+          - python-version: 3.9
+            os: macos-latest
+            ONLY_BUILTINS: 1  # no ray on macos py38, but there is for py39
+
+    environment: paramsurvey-test
+
+    steps:
+
+    - name: 'printenv'
+      run: |
+        printenv
+
+    - uses: actions/checkout@v3
+    - name: set up python
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: x64
+
+    - name: 'Install dependencies'
+      run: |
+        python -m pip install --upgrade pip
+        pip install . .[test]
+
+    - name: 'Install ray if needed'
+      if: ${{ ! matrix.ONLY_BUILTINS }}
+      run: |
+        pip install .[ray]
+
+    - name: 'pytest'
+      run: |
+        make test_coverage
+      env:
+        PARAMSURVEY_VERBOSE: ${{ matrix.PARAMSURVEY_VERBOSE }}
+        PYTEST_STDERR_VISIBLE: ${{ matrix.PYTEST_STDERR_VISIBLE }}
+        ONLY_BUILTINS: ${{ matrix.ONLY_BUILTINS }}
+
+    - name: 'coveralls'
+      run: |
+        pip install coveralls
+        coveralls
+      env:
+        CIRCLECI: 1
+        CIRCLE_BRANCH: ${{ env.GITHUB_REF_NAME }}
+        CIRCLE_BUILD_NUM: ${{ env.GITHUB_RUN_NUMBER }}
+        # github -> settings -> environments -> paramsurvey-test 
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
