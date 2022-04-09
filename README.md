@@ -1,11 +1,12 @@
 # paramsurvey
 
-[![Build Status](https://github.com/Smithsonian/paramsurvey/actions/workflows/test-all.yml/badge.svg)](https://github.com/Smithsonian/paramsurvey/actions/workflows/test-all.yml) [![Coverage](https://coveralls.io/repos/github/wumpus/paramsurvey/badge.svg?branch=main)](https://coveralls.io/github/wumpus/paramsurvey?branch=main) [![Apache License 2.0](https://img.shields.io/github/license/wumpus/paramsurvey.svg)](LICENSE)
+[![Build Status](https://github.com/Smithsonian/paramsurvey/actions/workflows/test-all.yml/badge.svg)](https://github.com/Smithsonian/paramsurvey/actions/workflows/test-all.yml) [![Coverage](https://coveralls.io/repos/github/Smithsonian/paramsurvey/badge.svg?branch=main)](https://coveralls.io/github/Smithsonian/paramsurvey?branch=main) [![Apache License 2.0](https://img.shields.io/github/license/Smithsonian/paramsurvey.svg)](LICENSE)
 
-paramsurvey is a set of tools for creating and executing parameter surveys.
+paramsurvey is a set of tools for creating and executing parameter
+surveys, on systems ranging from laptops to supercomputing clusters.
 
 paramsurvey has a pluggable parallel backend. The supported backends at present
-are python's multiprocessing module, and computing cluster software `ray`. An `mpi` backend is planned.
+are python's multiprocessing module, and computing cluster software `ray`.
 
 ## Example
 
@@ -35,13 +36,13 @@ prints, in addition to some debugging output, a result from each of the 5 sleep_
 
 Here are a few more examples:
 
-* [The above example, with a few notes](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-readme-example.py)
-* [An example of a multi-stage computation](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-multistage-example.py), running several `map()` functions in a row
-* [An example of greedy optimization](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-greedy-example.py), selecting the best alternative from each `map()` result
-* [An example that runs a command-line program for each pset](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-cli.py)
-* [An example of using helper functions to create the list of psets to compute](https://github.com/wumpus/paramsurvey/blob/main/scripts/pset-creation-example.py)
-* [An example of using the stats to time subsections of your worker function](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-stats-example.py)
-* [An example of using results.missing to re-run missing psets](https://github.com/wumpus/paramsurvey/blob/main/scripts/paramsurvey-rerun-missing.py)
+* [The above example, with a few notes](https://github.com/Smithsonian/paramsurvey/blob/main/scripts/paramsurvey-readme-example.py)
+* [An example of a multi-stage computation](https://github.com/Smithsonian/paramsurvey/blob/main/scripts/paramsurvey-multistage-example.py), running several `map()` functions in a row
+* [An example of greedy optimization](https://github.com/Smithsonian/paramsurvey/blob/main/scripts/paramsurvey-greedy-example.py), selecting the best alternative from each `map()` result
+* [An example that runs a command-line program for each pset](https://github.com/Smithsonian/paramsurvey/blob/main/scripts/paramsurvey-cli.py)
+* [An example of using helper functions to create the list of psets to compute](https://github.com/Smithsonian/paramsurvey/blob/main/scripts/pset-creation-example.py)
+* [An example of using the stats to time subsections of your worker function](https://github.com/Smithsonian/paramsurvey/blob/main/scripts/paramsurvey-stats-example.py)
+* [An example of using results.missing to re-run missing psets](https://github.com/Smithsonian/paramsurvey/blob/main/scripts/paramsurvey-rerun-missing.py)
 
 These examples are installed with the package, so you can run them like this:
 
@@ -188,7 +189,7 @@ If you'd like to monitor your paramsurvey run in real-time on one of those fancy
 pass details to `paramsurvey.init(..., carbon_server="127.0.0.1", carbon_port=2004, carbon_prefix="paramsurvey")`
 The integrated code only knows how to send `pickle` and (so far) only records progress.
 
-![Progress graph example](https://github.com/wumpus/paramsurvey/blob/main/images/paramsurvey-graphite-graph.png)
+![Progress graph example](https://github.com/Smithsonian/paramsurvey/blob/main/images/paramsurvey-graphite-graph.png)
 
 ## Worker function limitations
 
