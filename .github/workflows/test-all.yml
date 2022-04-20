@@ -30,7 +30,7 @@ jobs:
             os: macos-latest
             ONLY_BUILTINS: 1  # no ray on macos py38, but there is for py39
 
-    environment: paramsurvey-multimpi-test
+    environment: paramsurvey-test
 
     steps:
 
