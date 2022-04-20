@@ -3,7 +3,7 @@ name: test-all
 on: 
   push:
     branches:
-    - master
+    - main
   pull_request:
 
 jobs:
