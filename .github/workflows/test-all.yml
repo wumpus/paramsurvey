@@ -30,7 +30,7 @@ jobs:
             os: macos-latest
             ONLY_BUILTINS: 1  # no ray on macos py38, but there is for py39
 
-    environment: paramsurvey-test
+    environment: paramsurvey-multimpi-test
 
     steps:
 
@@ -71,5 +71,5 @@ jobs:
         CIRCLECI: 1
         CIRCLE_BRANCH: ${{ env.GITHUB_REF_NAME }}
         CIRCLE_BUILD_NUM: ${{ env.GITHUB_RUN_NUMBER }}
-        # github -> settings -> environments -> paramsurvey-test 
+        # github -> settings -> environments -> paramsurvey-multimpi-test 
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
