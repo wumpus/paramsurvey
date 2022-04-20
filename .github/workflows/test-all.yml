@@ -34,10 +34,6 @@ jobs:
 
     steps:
 
-    - name: 'printenv'
-      run: |
-        printenv
-
     - uses: actions/checkout@v3
     - name: set up python
       uses: actions/setup-python@v3

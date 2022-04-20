@@ -43,6 +43,9 @@ test_coverage: clean_coverage unit_coverage scripts integration_coverage
 
 test_coverage_verbose: clean_coverage unit_coverage_verbose scripts integration_coverage_verbose
 
+check_action:
+	python -c 'import yaml, sys; print(yaml.safe_load(sys.stdin))' < .github/workflows/test-all.yml > /dev/null
+
 distclean:
 	rm -rf dist/
 
