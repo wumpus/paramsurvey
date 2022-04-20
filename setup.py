@@ -20,7 +20,7 @@ requires = [
 ]
 
 extras_require = {
-    'ray': ['ray>=1'],
+    'ray': ['ray>=1', 'boto3'],  # boto3 needed for 'ray exec'
     'mpi': ['mpi4py'],
     'test': test_requirements,  # setup no longer tests, so make them an extra
 }
