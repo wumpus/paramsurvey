@@ -1,6 +1,9 @@
-- 0.4.17 (not yet tagged)
+- 0.4.17
 	+ scripts/paramsurvey-cli.py had a bug and was failing yet passing crash-only-testing
 	+ make sure scripts/*.py fails testing if fail
+	+ use Github Actions for CI
+	+ don't be misled by empty env variables
+	+ fixed hard-to-trigger race condition, reliably triggered by Github Actions
 
 - 0.4.16
 	+ allow 'address': 'auto' for ray in a cluster. 'password' is now optional.

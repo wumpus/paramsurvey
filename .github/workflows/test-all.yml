@@ -1,6 +1,6 @@
 name: test-all
 
-on: 
+on:
   push:
     branches:
     - main
