@@ -73,7 +73,7 @@ def init(pslogger_prefix='.paramsurvey-', pslogger_fd=None, **kwargs):
     print('python modules:', file=logfd)
     for k in sorted(sys.modules):
         v = sys.modules[k]
-        ver = getattr(v, '__version__', None)
+        ver = getattr(v, '__version__', None) or getattr(v, 'version', None)
         if ver is not None:
             print(' ', k, ver, file=logfd)
 
