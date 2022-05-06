@@ -1,6 +1,6 @@
 import math
 import time
-import sys
+import pytest
 
 from paramsurvey import stats
 
@@ -10,17 +10,34 @@ def test_stats():
     raw_stats = {
         'foo': [0.1, 0.3],
         'bar': [3.0, 4.0, 5.0],
+        'baz': [3.0, -4.0, 5.0],
     }
     s.combine_stats(raw_stats)
 
     assert s.read_stats('barf') is None
 
-    assert len(s.all_stat_names()) == 2
+    assert len(s.all_stat_names()) == len(raw_stats.keys())
 
     for name in s.all_stat_names():
         count, avg, hist = s.read_stats(name)
+
         assert count == len(raw_stats[name])
         assert math.isclose(avg, sum(raw_stats[name])/count)
+
+        assert count == hist.get_total_count(), 'histogram did count the negative value'
+        hist99 = hist.get_value_at_percentile(99)/1000.
+        biggest = max(raw_stats[name])
+        assert math.isclose(hist99, biggest, rel_tol=.01)
+
+        hist0 = hist.get_value_at_percentile(0)/1000.
+        smallest = min(raw_stats[name])
+        if smallest <= 0:
+            with pytest.raises(AssertionError):
+                assert math.isclose(hist0, smallest, rel_tol=.01)
+            smallest = 1 / 1000.  # this is what we send to HdrHist for <=0. values
+        assert math.isclose(hist0, smallest, rel_tol=.01)
+
+        # TODO: make sure that value too big causes a dropped data point warning in s.print_percentile()
 
 
 def test_record_wallclock():

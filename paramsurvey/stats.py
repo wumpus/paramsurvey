@@ -28,20 +28,25 @@ class PerfStats(object):
             return 1000000
 
     def combine_stats(self, raw_stats):
+        # XXX there are built in functions that should replace passing raw_stats
+        # histoblob = histogram.encode()  # this is bytes
+        # h = HdrHistogram.decode(histoblob) OR h.decode_and_add(histoblob)
         for name, elapsed in raw_stats.items():
             g = self.d.get(name, defaultdict(float))
             if 'hist' not in g:
+                # elapsed is either the first data point, or, the first set of incoming raw_stats
                 maxelapsed = max(elapsed)
                 maxhist = max(maxelapsed * 2, 600) * 1000  # milliseconds, minimum 10 minutes
-                g['hist'] = HdrHistogram(10, int(maxhist), 2)  # 10 milliseconds-..., 2 sig figs
+                g['hist'] = HdrHistogram(1, int(maxhist), 2)  # 1 millisecond to max, 2 sig figs
                 g['maxhist'] = int(maxhist)
             for e in elapsed:
                 g['count'] += 1.0
                 g['time'] += e
-                g['hist'].record_value(int(e * 1000))
-                if e * 1000 > g['maxhist']:
-                    # will be silently not recorded in hist
-                    pass
+                value = int(e * 1000)
+                if value <= 0:
+                    # hdrhistorgram does not count zeros. count a minimum value.
+                    value = 1
+                g['hist'].record_value(value)
             self.d[name] = g
         #for k in list(raw_stats.keys()):
         #    del raw_stats[k]
@@ -77,8 +82,16 @@ class PerfStats(object):
         if name in self.d:
             hist = self.d[name]['hist']
             total = self.d[name]['time']
-            mean = total / self.d[name]['count']
-            pslogger.log('counter {}, total {:.0f}s, mean {:.2f}s, counts {}'.format(name, total, mean, hist.get_total_count()), stderr=stderr)
+            our_count = self.d[name]['count']
+            mean = total / our_count
+            hist_count = hist.get_total_count()
+
+            if our_count != hist_count:
+                # this shouldn't happen unless something generates <= 0 values,
+                # or maxhist was too small at hist creation
+                pslogger.log('counter {} dropped {} data points from the histogram'.format(name, our_count - hist_count), stderr=stderr)
+
+            pslogger.log('counter {}, total {:.0f}s, mean {:.2f}s, counts {}'.format(name, total, mean, hist_count), stderr=stderr)
             for pct in (50, 90, 95, 99):
                 pslogger.log('counter {}, {}%tile: {:.2f}s'.format(name, pct, hist.get_value_at_percentile(pct)/1000.), stderr=stderr)
 
@@ -126,9 +139,15 @@ def record_iowait(name, raw_stats=None, obj=None):
     finally:
         duration = time.time() - start_t
         cpu = time.process_time() - start_c
+        iowait = duration - cpu
+
+        if iowait < 0.:
+            # perhaps we are multi-threaded?! then cpu > duration
+            iowait = 0.
+
         if raw_stats is not None:
             if name not in raw_stats:
                 raw_stats[name] = []
-            raw_stats[name].append(duration - cpu)
+            raw_stats[name].append(iowait)
         if obj:
-            obj.combine_stats({name: [duration - cpu]})
+            obj.combine_stats({name: [iowait]})
