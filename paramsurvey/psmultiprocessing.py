@@ -174,7 +174,7 @@ def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, u
     progress = system_kwargs['progress']
 
     while system_kwargs['outstanding'] > cores*factor:
-        time.sleep(0.1)
+        time.sleep(0.001)  # apparently needs to be short to avoid a hang if verbose 
         progress.report()
         system_stats.report()
 

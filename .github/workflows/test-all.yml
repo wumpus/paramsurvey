@@ -17,12 +17,14 @@ jobs:
         os: [ubuntu-latest]
         python-version: [3.6, 3.7, 3.8, 3.9]
         include:
+        EXTRA: [false]  # used to force includes to get included
           - python-version: 3.6
             os: ubuntu-latest
             # make sure that the most verbose level is not crashy
             VERBOSE: verbose  # does work
             PARAMSURVEY_VERBOSE: 3
             PYTEST_STDERR_VISIBLE: -s
+            EXTRA: true
           - python-version: '3.10'
             os: ubuntu-latest
             ONLY_BUILTINS: 1  # no ray wheel yet on 3.10
