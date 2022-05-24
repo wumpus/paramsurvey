@@ -16,8 +16,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: [3.6, 3.7, 3.8, 3.9]
-        include:
         EXTRA: [false]  # used to force includes to get included
+        include:
           - python-version: 3.6
             os: ubuntu-latest
             # make sure that the most verbose level is not crashy
