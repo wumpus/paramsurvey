@@ -112,16 +112,23 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
         user_ret = {'pset': pset}
 
         try:
+            if 'pset_pre' in system_kwargs:
+                system_kwargs['pset_pre'](pset, user_kwargs)
+
             with stats.record_wallclock(name+'_wallclock', raw_stats):
                 with stats.record_iowait(name+'_iowait', raw_stats):
                     result = func(pset, system_kwargs, user_kwargs)
             user_ret['result'] = result
+
+            if 'pset_post' in system_kwargs:
+                system_kwargs['pset_post'](pset, user_kwargs)
+
         except Exception as e:
             user_ret['exception'] = repr(e)
+            user_ret['traceback'] = traceback.format_exc()
             #print('saw an exception in the worker function', file=sys.stderr)
             #print('it was working on', json.dumps(pset, sort_keys=True), file=sys.stderr)
             #traceback.print_exc()
-            user_ret['traceback'] = traceback.format_exc()
         ret.append([user_ret, system_ret])
     return ret
 
@@ -194,7 +201,8 @@ def progress_until_fewer(futures, cores, factor, out_func, system_stats, system_
 
 
 def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=None, out_subdirs=None,
-        progress_dt=None, group_size=None, name='default', backend_kwargs={}, **kwargs):
+        progress_dt=None, group_size=None, name='default', backend_kwargs={},
+        pset_pre=None, pset_post=None, **kwargs):
 
     verbose = system_kwargs['verbose']
     vstats = system_kwargs['vstats']
@@ -203,7 +211,9 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
         return
 
     psets, system_stats, system_kwargs = utils.map_prep(psets, name, system_kwargs, chdir,
-                                                        out_subdirs, progress_dt=progress_dt, **kwargs)
+                                                        out_subdirs, progress_dt=progress_dt,
+                                                        pset_pre=pset_pre, pset_post=pset_post, **kwargs)
+
     if 'chdir' not in system_kwargs:
         # ray workers default to ~
         system_kwargs['chdir'] = os.getcwd()

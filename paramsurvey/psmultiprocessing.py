@@ -133,10 +133,16 @@ def do_work_wrapper(func, system_kwargs, user_kwargs, psets):
             user_ret = {'pset': pset}
 
             try:
+                if 'pset_pre' in system_kwargs:
+                    system_kwargs['pset_pre'](pset, user_kwargs)
+
                 with stats.record_wallclock(name+'_wallclock', raw_stats):
                     with stats.record_iowait(name+'_iowait', raw_stats):
                         result = func(pset, system_kwargs, user_kwargs)
                 user_ret['result'] = result
+
+                if 'pset_post' in system_kwargs:
+                    system_kwargs['pset_post'](pset, user_kwargs)
             except Exception as e:
                 user_ret['exception'] = repr(e)
                 user_ret['traceback'] = traceback.format_exc()
@@ -183,7 +189,7 @@ def progress_until_fewer(cores, factor, out_func, system_stats, system_kwargs, u
 
 def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=None, out_subdirs=None,
         progress_dt=None, group_size=None, name='default', max_tasks_per_child=None, backend_kwargs={},
-        **kwargs):
+        pset_pre=None, pset_post=None, **kwargs):
 
     verbose = system_kwargs['verbose']
     vstats = system_kwargs['vstats']
@@ -195,7 +201,8 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
         raise TypeError('multiprocessing.map does not currently take any backend kwargs')
 
     psets, system_stats, system_kwargs = utils.map_prep(psets, name, system_kwargs, chdir,
-                                                        out_subdirs, progress_dt=progress_dt, **kwargs)
+                                                        out_subdirs, progress_dt=progress_dt,
+                                                        pset_pre=pset_pre, pset_post=pset_post, **kwargs)
 
     if max_tasks_per_child is not None:
         pslogger.log('max_tasks_per_child={} is ignored by the multiprocessing map() call, do it in init()'.format(max_tasks_per_child), stderr=verbose)
@@ -205,7 +212,7 @@ def map(func, psets, out_func=None, system_kwargs=None, user_kwargs=None, chdir=
 
     # make a cut-down copy to minimize size of args passed
     worker_system_kwargs = {}
-    for key in ('raise_in_wrapper', 'out_subdirs', 'chdir', 'name'):
+    for key in ('raise_in_wrapper', 'out_subdirs', 'chdir', 'name', 'pset_pre', 'pset_post'):  # XXX flip the meaning of this list?
         if key in system_kwargs:
             worker_system_kwargs[key] = system_kwargs[key]
 

@@ -19,6 +19,7 @@ scripts:
 	PYTHONPATH=.:scripts python scripts/pset-creation-example.py
 	PYTHONPATH=.:scripts python scripts/paramsurvey-rerun-missing.py
 	PYTHONPATH=.:scripts python scripts/paramsurvey-stats-example.py
+	PYTHONPATH=.:scripts python scripts/paramsurvey-pre-post.py
 	#paramsurvey-carbon-example.py  # needs a carbon server
 
 integration:
