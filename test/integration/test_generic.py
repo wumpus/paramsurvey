@@ -307,14 +307,14 @@ def test_map_ncores(paramsurvey_init):
 
 @pytest.mark.skip(reason='cannot call paramsurvey.init twice in a session')
 def test_invalid_kwarg_init():
-    with pytest.raises(TypeError):
+    with pytest.raises((TypeError, ValueError)):  # ValueError in ray >= 1.15.0
         paramsurvey.init(doesnotexist=True)
 
 
 def test_invalid_kwarg(paramsurvey_init):
-    with pytest.raises(TypeError):
+    with pytest.raises((TypeError, ValueError)):  # ValueError in ray >= 1.15.0
         paramsurvey.map(sleep_worker, [{}], doesnotexist=True)
-    with pytest.raises(TypeError):
+    with pytest.raises((TypeError, ValueError)):  # ValueError in ray >= 1.15.0
         paramsurvey.map(sleep_worker, [{}], ray={'doesnotexist': True}, multiprocessing={'doesnotexist': True})
 
 
@@ -401,5 +401,5 @@ def test_pset_backend_args():
     assert next(results.itertuples()).r == 'PASS', 'worker saw ray backend pset config'
 
     psets = [{'foo': 1, 'ray': {'thisoptiondoesnotexist': 1}}]
-    with pytest.raises(TypeError):
+    with pytest.raises((TypeError, ValueError)):  # ValueError ray >= 1.15.0
         results = paramsurvey.map(worker_pset_backend_args, psets, name='test_pset_backend_args')
