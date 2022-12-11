@@ -46,6 +46,9 @@ test_coverage_verbose: clean_coverage unit_coverage_verbose scripts integration_
 check_action:
 	python -c 'import yaml, sys; print(yaml.safe_load(sys.stdin))' < .github/workflows/test-all.yml > /dev/null
 
+check_azure:
+	python -c 'import yaml, sys; print(yaml.safe_load(sys.stdin))' < ./azure-pipelines.yml > /dev/null
+
 distclean:
 	rm -rf dist/
 

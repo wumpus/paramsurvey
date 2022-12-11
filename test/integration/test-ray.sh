@@ -16,6 +16,7 @@ ray disable-usage-stats || /bin/true
 
 RPORT=6379
 OPORT=8076
+CLIENT=10001
 
 REDIS_PASSWORD=thehfhghedhdjfhgfhdhdhdf
 # should this be RPORT or OPORT?
