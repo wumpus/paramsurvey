@@ -52,7 +52,7 @@ jobs:
           export $(myenv)
         fi
         if [ -z "$ONLY_BUILTINS" ]; then
-          pip .[ray]
+          pip install .[ray]
         fi
       displayName: 'Install dependencies'
 
