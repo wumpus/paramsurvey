@@ -50,7 +50,7 @@ setup(
     long_description_content_type='text/markdown',
     author='Greg Lindahl and others',
     author_email='lindahl@pbm.com',
-    url='https://github.com/Smithsonian/paramsurvey',
+    url='https://github.com/wumpus/paramsurvey',
     packages=packages,
     python_requires=">=3.6.*",
     extras_require=extras_require,
