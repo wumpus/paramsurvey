@@ -1,6 +1,7 @@
 import sys
 from pkg_resources import get_distribution, DistributionNotFound
 import atexit
+import os
 
 from . import psmultiprocessing
 from .utils import flatten_results, initialize_kwargs, resolve_kwargs
@@ -122,6 +123,10 @@ def init(**kwargs):
     pslogger.init(**kwargs)
     kwargs.pop('pslogger_prefix', None)
     kwargs.pop('pslogger_fd', None)
+
+    if 'OMP_NUM_THREADS' not in os.environ:
+        pslogger.log('paramsurvey warning: OMP_NUM_THREADS undefined, setting it to "1" to prevent foot-cannon', stderr=verbose)
+        os.environ['OMP_NUM_THREADS'] = '1'
 
     global our_backend
 

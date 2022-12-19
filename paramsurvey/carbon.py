@@ -13,7 +13,8 @@ def init():
     global pool
 
     if not pool:
-        pool = multiprocessing.Pool(processes=4)
+        ctx = multiprocessing.get_context('spawn')
+        pool = ctx.Pool(processes=4)
 
 
 class TimeBin:

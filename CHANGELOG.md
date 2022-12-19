@@ -1,6 +1,10 @@
 - 0.4.18 (not yet tagged)
 	+ support python 3.10, thanks to a ray wheel ray>=1.13
 	+ drop python 3.6, due to setuptools_scm dropping it
+	+ support python 3.10, which now has a ray wheel
+	+ support python 3.11, no ray wheel
+	+ bugfix, switch to multiprocessing spawn, seems to fix some mysterious hangs on laptops
+	+ bugfix, set OMP_NUM_THREADS=1 if undefined. ray already does this.
 
 - 0.4.17
 	+ scripts/paramsurvey-cli.py had a bug and was failing yet passing crash-only-testing

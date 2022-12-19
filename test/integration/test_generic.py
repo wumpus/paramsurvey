@@ -31,6 +31,7 @@ def readouterr_and_dump(capsys):
 
 
 def test_basics(paramsurvey_init):
+    assert os.environ['OMP_NUM_THREADS'] == '1'
     ncores = max(4, paramsurvey.current_core_count())
 
     duration = 0.1

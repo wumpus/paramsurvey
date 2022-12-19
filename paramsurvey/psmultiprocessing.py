@@ -42,7 +42,8 @@ def init(system_kwargs, backend_kwargs):
     pslogger.log('initializing multiprocessing pool with {} processes'.format(ncores), stderr=verbose)
     pslogger.log('Pool() kwargs are', backend_kwargs, stderr=verbose > 1)
 
-    pool = multiprocessing.Pool(**backend_kwargs)
+    ctx = multiprocessing.get_context('spawn')
+    pool = ctx.Pool(**backend_kwargs)
     global finalize_needed
     finalize_needed = True
 
