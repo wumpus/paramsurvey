@@ -1,4 +1,4 @@
-- 0.4.18 (not yet tagged)
+- 0.4.18
 	+ support python 3.10, thanks to a ray wheel ray>=1.13
 	+ drop python 3.6, due to setuptools_scm dropping it
 	+ support python 3.10, which now has a ray wheel
