@@ -52,7 +52,7 @@ setup(
     author_email='lindahl@pbm.com',
     url='https://github.com/wumpus/paramsurvey',
     packages=packages,
-    python_requires=">=3.7.*",
+    python_requires=">=3.7",
     extras_require=extras_require,
     setup_requires=setup_requires,
     install_requires=requires,
@@ -74,7 +74,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',  # no ray wheel yet https://github.com/ray-project/ray/issues/27881
+        'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3 :: Only',
     ],
 )
