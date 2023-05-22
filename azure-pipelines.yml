@@ -31,7 +31,7 @@ jobs:
           python.version: '3.9'
         Python310:
           python.version: '3.10'
-        Python311noray:
+        Python311:
           python.version: '3.11'
         #Python312:
           # requires allowUnstable
