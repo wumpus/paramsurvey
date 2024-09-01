@@ -2,10 +2,9 @@ import pytest
 from unittest.mock import patch
 import os
 
-import pandas as pd
-
 import paramsurvey
 from paramsurvey import utils
+import pandas as pd
 
 
 def test_psets_prep():

@@ -2,7 +2,7 @@ import math
 import time
 import pytest
 
-from paramsurvey import stats
+import paramsurvey.stats as stats
 
 
 def test_stats():
