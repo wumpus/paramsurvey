@@ -15,7 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.7, 3.8, 3.9, '3.10', '3.11', '3.12']
+        python-version: [3.7, 3.8, 3.9, '3.10', '3.11']
+        # 3.12 has no pandas wheel, takes a long time to build
         EXTRA: [false]  # used to force includes to get included
         include:
           - python-version: 3.7
