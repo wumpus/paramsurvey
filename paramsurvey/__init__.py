@@ -119,6 +119,7 @@ def init(**kwargs):
     '''
 
     # tolerate numpy < 1.8 by doing what numpy-1.8 does
+    import warnings
     warnings.filterwarnings("ignore", message="numpy.dtype size changed")
     warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
