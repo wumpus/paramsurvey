@@ -117,6 +117,11 @@ def init(**kwargs):
     Any additional keyword arguments will be passed to the `.init()` call
     for the backend.
     '''
+
+    # tolerate numpy < 1.8 by doing what numpy-1.8 does
+    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+
     initialize_kwargs(global_kwargs, kwargs)
     verbose = global_kwargs['verbose']['value']
     backend = global_kwargs['backend']['value']
