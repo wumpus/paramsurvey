@@ -3,6 +3,12 @@ from pkg_resources import get_distribution, DistributionNotFound
 import atexit
 import os
 
+# tolerate numpy < 1.8 by doing what numpy-1.8 does
+# this must come before the import of psmultiprocessing
+import warnings
+warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+
 from . import psmultiprocessing
 from .utils import flatten_results, initialize_kwargs, resolve_kwargs
 from . import pslogger
@@ -117,11 +123,6 @@ def init(**kwargs):
     Any additional keyword arguments will be passed to the `.init()` call
     for the backend.
     '''
-
-    # tolerate numpy < 1.8 by doing what numpy-1.8 does
-    import warnings
-    warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
     initialize_kwargs(global_kwargs, kwargs)
     verbose = global_kwargs['verbose']['value']
