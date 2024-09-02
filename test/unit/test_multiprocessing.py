@@ -2,7 +2,6 @@ import platform
 import os
 import pytest
 
-import paramsurvey  # needed to suppress numpy warning
 import paramsurvey.psmultiprocessing
 
 

@@ -3,8 +3,6 @@ import sys
 import pytest
 import os
 
-import paramsurvey  # needed to suppress numpy warning
-
 import pandas as pd
 import numpy as np
 
