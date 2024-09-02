@@ -55,7 +55,8 @@ distcheck: distclean
 
 dist: distclean
 	echo "reminder, you must have tagged this commit or you'll end up failing"
-	echo "  finish the CHANGELOG"
+	echo "  finish the CHANGELOG, commit it, push it"
+	echo "  git tag --list"
 	echo "  git tag v0.x.x"
 	echo "  git push --tags"
 	python ./setup.py sdist

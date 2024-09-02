@@ -1,3 +1,9 @@
+- 0.4.20
+	+ moved CI to Github Actions, dropped py3.7
+	+ moved coverage to CodeCov
+	+ python 3.12 has no pandas wheel so it is not tested (too slow)
+	+ added temporary (?) numpy<2 and pandas<2 because pandas-appender needs updating
+
 - 0.4.19
 	+ update setup.py for new setuptools strictness
 	+ python 3.11 now has a ray wheel
