@@ -1,7 +1,16 @@
 import sys
-from pkg_resources import get_distribution, DistributionNotFound
 import atexit
 import os
+
+try:
+    from importlib.metadata import version
+except ImportError:
+    import pkg_resources
+    def version(package):
+        try:
+            return pkg_resources.get_distribution(package).version
+        except pkg_resources.DistributionNotFound:
+            return '__unknown__'
 
 # tolerate numpy < 1.8 by doing what numpy-1.8 does
 # this must come before the import of psmultiprocessing
@@ -16,11 +25,7 @@ from . import pslogger
 
 our_backend = None
 
-
-try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:  # pragma: no cover
-    __version__ = 'unknown'
+__version__ = version(__name__)
 
 
 def lazy_load_ray():
