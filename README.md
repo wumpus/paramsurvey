@@ -1,6 +1,6 @@
 # paramsurvey
 
-[![Build Status](https://dev.azure.com/lindahl0577/paramsurvey/_apis/build/status/wumpus.paramsurvey?branchName=main)](https://dev.azure.com/lindahl0577/paramsurvey/_build?definitionId=1) [![Coverage](https://coveralls.io/repos/github/wumpus/paramsurvey/badge.svg?branch=main)](https://coveralls.io/github/wumpus/paramsurvey?branch=main) [![Apache License 2.0](https://img.shields.io/github/license/wumpus/paramsurvey.svg)](LICENSE)
+[![build](https://github.com/wumpus/paramsurvey/actions/workflows/test-all.yml/badge.svg)](https://github.com/wumpus/paramsurvey/actions/workflows/test-all.yml) [![coverage](https://codecov.io/gh/wumpus/paramsurvey/graph/badge.svg?token=KYHT7WH9H2)](https://codecov.io/gh/wumpus/paramsurvey) [![Apache License 2.0](https://img.shields.io/github/license/wumpus/paramsurvey.svg)](LICENSE)
 
 paramsurvey is a set of tools for creating and executing parameter
 surveys, on systems ranging from laptops to supercomputing clusters.

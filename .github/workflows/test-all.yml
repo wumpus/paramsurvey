@@ -15,7 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.7, 3.8, 3.9, '3.10']
+        python-version: [3.7, 3.8, 3.9, '3.10', '3.11']
+        # 3.12 has no pandas wheel, takes a long time to build
         EXTRA: [false]  # used to force includes to get included
         include:
           - python-version: 3.7
@@ -25,20 +26,21 @@ jobs:
             PARAMSURVEY_VERBOSE: 3
             PYTEST_STDERR_VISIBLE: -s
             EXTRA: true
-          - python-version: '3.10'
-            os: macos-latest
-            ONLY_BUILTINS: 1  # no ray on macos py38, but there is for py39
-
-    environment: paramsurvey-test
 
     steps:
 
-    - uses: actions/checkout@v3
-    - name: set up python
-      uses: actions/setup-python@v3
+    - name: checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-        architecture: x64
+
+    - name: Install setuptools on python 3.12+
+      if: ${{ matrix.python-version >= '3.12' }}
+      run: |
+        pip install setuptools
 
     - name: 'Install dependencies'
       run: |
@@ -58,13 +60,7 @@ jobs:
         PYTEST_STDERR_VISIBLE: ${{ matrix.PYTEST_STDERR_VISIBLE }}
         ONLY_BUILTINS: ${{ matrix.ONLY_BUILTINS }}
 
-    - name: 'coveralls'
-      run: |
-        pip install coveralls
-        coveralls
-      env:
-        CIRCLECI: 1
-        CIRCLE_BRANCH: ${{ env.GITHUB_REF_NAME }}
-        CIRCLE_BUILD_NUM: ${{ env.GITHUB_RUN_NUMBER }}
-        # github -> settings -> environments -> paramsurvey-multimpi-test 
-        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}

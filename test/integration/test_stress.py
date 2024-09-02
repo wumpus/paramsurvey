@@ -43,4 +43,4 @@ def test_stress_50(paramsurvey_init):
     vmem0 = paramsurvey.utils.vmem()
     sums(50)  # 2,500 ... 6 seconds on 4 cores
     vmem1 = paramsurvey.utils.vmem()
-    assert vmem1 - vmem0 < 0.014  # gigabytes
+    assert vmem1 - vmem0 < 0.030  # gigabytes

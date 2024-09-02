@@ -8,14 +8,13 @@ packages = [
     'paramsurvey',
 ]
 
-test_requirements = ['pytest>=4.6', 'coverage', 'pytest-cov', 'pytest-sugar', 'coveralls', 'numpy', 'pyfakefs']
-# pytest-cov requires pytest >= 4.6, dunno why this doesn't just work in travis-ci
+test_requirements = ['pytest', 'coverage', 'pytest-cov', 'pytest-sugar', 'pyfakefs']
 
 requires = [
     'hdrhistogram',
-    'pandas',
+    'pandas<2',  # temporary until pandas-appender is fixed
+    'numpy<2',  # temporary until pandas-appender is fixed
     'pandas-appender>=0.9.1',
-    #'pickle5',
     'psutil',
 ]
 
