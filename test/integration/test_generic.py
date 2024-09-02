@@ -180,6 +180,7 @@ def test_args(capsys, paramsurvey_init):
 
 def do_raise(pset, system_kwargs, user_kwargs):
     if 'raises' in pset and pset['raises']:
+        # interestingly, when a worker does this it's visible in the CI
         raise ValueError('foo')
     return {'foo': 'bar'}
 
