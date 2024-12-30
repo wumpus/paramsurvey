@@ -12,8 +12,6 @@ test_requirements = ['pytest', 'coverage', 'pytest-cov', 'pytest-sugar', 'pyfake
 
 requires = [
     'hdrhistogram',
-    'pandas<2',  # temporary until pandas-appender is fixed
-    'numpy<2',  # temporary until pandas-appender is fixed
     'pandas-appender>=0.9.1',
     'psutil',
 ]

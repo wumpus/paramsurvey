@@ -8,17 +8,21 @@ on:
 
 jobs:
   linux-macos:
-    name: test-all ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.VERBOSE }}
+    name: test-all ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.VERBOSE }} ${{ matrix.ONE }} ${{ matrix.ONLY_BUILTINS }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.7, 3.8, 3.9, '3.10', '3.11']
-        # 3.12 has no pandas wheel, takes a long time to build
+        python-version: [3.7, 3.8, 3.9, '3.10', '3.11', '3.12', '3.13']
         EXTRA: [false]  # used to force includes to get included
+        ONLY_BUILTINS: [false]  # used to turn off ray
+        ONE: [false]  # used to force pandas<2
         include:
+          - python-version: 3.7
+            os: ubuntu-20.04  # oldest LTS in github actions
+            EXTRA: true
           - python-version: 3.7
             os: ubuntu-latest
             # make sure that the most verbose level is not crashy
@@ -26,6 +30,36 @@ jobs:
             PARAMSURVEY_VERBOSE: 3
             PYTEST_STDERR_VISIBLE: -s
             EXTRA: true
+          - python-version: 3.7
+            os: ubuntu-latest
+            EXTRA: true
+            ONE: true
+          - python-version: '3.11'
+            os: macos-latest
+            EXTRA: true
+            ONLY_BUILTINS: true
+          - python-version: '3.11'
+            os: macos-latest
+            EXTRA: true
+            ONE: true  # this wheel exists, does not in 3.13
+            ONLY_BUILTINS: true
+          - python-version: '3.13'
+            os: macos-latest
+            EXTRA: true
+            ONLY_BUILTINS: true
+          - python-version: '3.7'
+            os: windows-latest
+            EXTRA: true
+            ONLY_BUILTINS: true
+          - python-version: '3.7'
+            os: windows-latest
+            EXTRA: true
+            ONE: true  # this wheel exists, does not in 3.13
+            ONLY_BUILTINS: true
+          - python-version: '3.13'
+            os: windows-latest
+            EXTRA: true
+            ONLY_BUILTINS: true
 
     steps:
 
@@ -37,10 +71,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install setuptools on python 3.12+
-      if: ${{ matrix.python-version >= '3.12' }}
+    - name: Install pandas<2 if needed
+      if: ${{ matrix.ONE }}
       run: |
-        pip install setuptools
+        pip install 'numpy<2'  # or macos screws up
+        pip install 'pandas<2'
 
     - name: 'Install dependencies'
       run: |
