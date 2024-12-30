@@ -12,8 +12,6 @@ test_requirements = ['pytest', 'coverage', 'pytest-cov', 'pytest-sugar', 'pyfake
 
 requires = [
     'hdrhistogram',
-    'pandas<2',  # temporary until pandas-appender is fixed
-    'numpy<2',  # temporary until pandas-appender is fixed
     'pandas-appender>=0.9.1',
     'psutil',
 ]
@@ -74,6 +72,8 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
         'Programming Language :: Python :: 3 :: Only',
     ],
 )
