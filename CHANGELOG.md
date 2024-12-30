@@ -1,3 +1,8 @@
+- 0.4.21
+    + removed numpy<2 pandas<2 now that pandas-appender is updated
+	+ test on macos and windows
+	+ test pandas<2 just to be sure
+
 - 0.4.20
 	+ moved CI to Github Actions, dropped py3.7
 	+ moved coverage to CodeCov
