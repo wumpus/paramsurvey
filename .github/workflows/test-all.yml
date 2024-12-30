@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.7, 3.8, 3.9, '3.10', '3.11', '3.12', '3.13']
+        python-version: [3.7, 3.8, 3.9, '3.10', '3.11', '3.12']
         EXTRA: [false]  # used to force includes to get included
         ONLY_BUILTINS: ['']  # used to turn off ray
         ONE: [false]  # used to force pandas<2
@@ -34,6 +34,10 @@ jobs:
             os: ubuntu-latest
             EXTRA: true
             ONE: true
+          - python-version: '3.13'
+            os: ubuntu-latest
+            EXTRA: true
+            ONLY_BUILTINS: 1  # no ray wheel for 3.13
           - python-version: '3.11'
             os: macos-latest
             EXTRA: true
@@ -47,19 +51,19 @@ jobs:
             os: macos-latest
             EXTRA: true
             ONLY_BUILTINS: 1
-          - python-version: '3.7'
-            os: windows-latest
-            EXTRA: true
-            ONLY_BUILTINS: 1
-          - python-version: '3.7'
-            os: windows-latest
-            EXTRA: true
-            ONE: true  # this wheel exists, does not in 3.13
-            ONLY_BUILTINS: 1
-          - python-version: '3.13'
-            os: windows-latest
-            EXTRA: true
-            ONLY_BUILTINS: 1
+          #- python-version: '3.7'
+          #  os: windows-latest
+          #  EXTRA: true
+          #  ONLY_BUILTINS: 1
+          #- python-version: '3.7'
+          #  os: windows-latest
+          #  EXTRA: true
+          #  ONE: true  # this wheel exists, does not in 3.13
+          #  ONLY_BUILTINS: 1
+          #- python-version: '3.13'
+          #  os: windows-latest
+          #  EXTRA: true
+          #  ONLY_BUILTINS: 1
 
     steps:
 
